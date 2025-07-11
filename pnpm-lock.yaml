@@ -40,6 +40,9 @@ importers:
       typescript:
         specifier: 5.2.2
         version: 5.2.2
+      viem:
+        specifier: 2.21.0
+        version: 2.21.0(typescript@5.2.2)
 
   generated:
     dependencies:
