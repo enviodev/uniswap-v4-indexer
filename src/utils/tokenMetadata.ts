@@ -1,6 +1,4 @@
 import { createPublicClient, http, getContract, type PublicClient } from "viem";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { join } from "path";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
 import * as dotenv from "dotenv";
@@ -45,17 +43,6 @@ const ERC20_ABI = [
     type: "function",
   },
 ] as const;
-
-// Create .cache directory if it doesn't exist
-const CACHE_DIR = join(__dirname, "../../.cache");
-if (!existsSync(CACHE_DIR)) {
-  mkdirSync(CACHE_DIR, { recursive: true });
-}
-
-// Function to get cache path for a specific chain
-const getCachePath = (chainId: number): string => {
-  return join(CACHE_DIR, `tokenMetadata_${chainId}.json`);
-};
 
 const TokenMetadata = S.schema({
   name: S.string,
@@ -111,7 +98,9 @@ const getClient = (chainId: number): PublicClient => {
     try {
       // Create a simpler client configuration
       clients[chainId] = createPublicClient({
-        transport: http(getRpcUrl(chainId)),
+        transport: http(getRpcUrl(chainId), {
+          batch: true,
+        }),
       });
       console.log(`Created client for chain ${chainId}`);
     } catch (e) {
@@ -120,40 +109,6 @@ const getClient = (chainId: number): PublicClient => {
     }
   }
   return clients[chainId];
-};
-
-// Cache of metadata per chainId
-const metadataCaches: Record<number, Record<string, TokenMetadata>> = {};
-
-// Load cache for a specific chain
-const loadCache = (chainId: number): Record<string, TokenMetadata> => {
-  if (!metadataCaches[chainId]) {
-    const cachePath = getCachePath(chainId);
-    if (existsSync(cachePath)) {
-      try {
-        metadataCaches[chainId] = JSON.parse(readFileSync(cachePath, "utf8"));
-      } catch (e) {
-        console.error(
-          `Error loading token metadata cache for chain ${chainId}:`,
-          e
-        );
-        metadataCaches[chainId] = {};
-      }
-    } else {
-      metadataCaches[chainId] = {};
-    }
-  }
-  return metadataCaches[chainId];
-};
-
-// Save cache for a specific chain
-const saveCache = (chainId: number): void => {
-  const cachePath = getCachePath(chainId);
-  try {
-    writeFileSync(cachePath, JSON.stringify(metadataCaches[chainId], null, 2));
-  } catch (e) {
-    console.error(`Error saving token metadata cache for chain ${chainId}:`, e);
-  }
 };
 
 // Add this function to sanitize strings by removing null bytes and other problematic characters
@@ -172,12 +127,9 @@ export const getTokenMetadata = experimental_createEffect(
       chainId: S.number,
     },
     output: TokenMetadata,
-    // cache: true,
+    cache: true,
   },
-  async ({ input: { address, chainId } }) => {
-    // Load cache for this chain
-    const metadataCache = loadCache(chainId);
-
+  async ({ context, input: { address, chainId } }) => {
     // Handle native token
     if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
       const chainConfig = getChainConfig(chainId);
@@ -202,25 +154,13 @@ export const getTokenMetadata = experimental_createEffect(
       };
     }
 
-    // Check cache
-    const normalizedAddress = address;
-    if (metadataCache[normalizedAddress]) {
-      return metadataCache[normalizedAddress];
-    }
-
     try {
       // Use the multicall implementation for efficiency
-      const metadata = await fetchTokenMetadataMulticall(address, chainId);
-
-      // Update cache
-      metadataCache[normalizedAddress] = metadata;
-      saveCache(chainId);
-
-      return metadata;
+      return await fetchTokenMetadataMulticall(address, chainId);
     } catch (e) {
-      console.error(
+      context.log.error(
         `Error fetching metadata for ${address} on chain ${chainId}:`,
-        e
+        e as Error
       );
       throw e;
     }

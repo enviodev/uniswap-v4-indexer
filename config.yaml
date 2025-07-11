@@ -33,29 +33,29 @@ contracts:
       - event: Transfer(address indexed from, address indexed to, uint256 indexed id)
       - event: Unsubscription(uint256 indexed tokenId, address indexed subscriber)
 networks:
-  # - id: 1
-  #   start_block: 0
-  #   end_block: 21800000
-  #   contracts:
-  #     - name: PositionManager
-  #       address:
-  #         - 0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e
-  #     - name: PoolManager
-  #       address:
-  #         - "0x000000000004444c5dc75cB358380D2e3dE08A90"
-  # - id: 10
-  #   start_block: 0
-  #   end_block: 131503000
-  #   contracts:
-  #     - name: PositionManager
-  #       address:
-  #         - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
-  #     - name: PoolManager
-  #       address:
-  #         - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
+  - id: 1
+    start_block: 0
+    end_block: 22890000
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e
+      - name: PoolManager
+        address:
+          - "0x000000000004444c5dc75cB358380D2e3dE08A90"
+  - id: 10
+    start_block: 0
+    end_block: 138312710
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
+      - name: PoolManager
+        address:
+          - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
   - id: 8453
     start_block: 0
-    end_block: 25700000
+    end_block: 32717433
     contracts:
       - name: PositionManager
         address:

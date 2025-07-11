@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 2.25.0
-        version: 2.25.0(typescript@5.2.2)
+        specifier: file:../../envio/hyperindex/codegenerator/cli/npm/envio
+        version: file:../../envio/hyperindex/codegenerator/cli/npm/envio(typescript@5.2.2)
     optionalDependencies:
       generated:
         specifier: ./generated
@@ -553,18 +553,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@2.25.0:
-    resolution: {integrity: sha512-HWjnXdRd18fnnaseIwdEoO2MAJbnkQsKiTHiY+lNuGH9Guc2c86iNYFHsoq/zGE4WkrVk3SHcR9lVMvE/u/dzA==}
-    cpu: [arm64]
-    os: [darwin]
-
   envio-darwin-x64@2.24.0:
     resolution: {integrity: sha512-xbRDj4yph9ture0P2UQp+DrlNbJhAwaN5KW+6v/69ikqqn60QizLRm2Rjx4v7Rja75aLUf4f1PaDZt8wJul5UA==}
-    cpu: [x64]
-    os: [darwin]
-
-  envio-darwin-x64@2.25.0:
-    resolution: {integrity: sha512-sms3H58XT8t+Wl1+L8KS5Yo7zlReA0YVq27HTKBp1yy8vC4qBKazkzLDASQnhwTv+NYJfxgX6zcP4vm2h8ZJXQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -573,18 +563,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@2.25.0:
-    resolution: {integrity: sha512-AAhTOR/EbnWb/Mi4/D54OZByMf13EKVLt8I3koQVQxO2nmANonyGfMyRFH+HcWqIssXqTEAwlGPim3Gh0znFdQ==}
-    cpu: [arm64]
-    os: [linux]
-
   envio-linux-x64@2.24.0:
     resolution: {integrity: sha512-7fVTdKEClIaSU6FFdRyHQhheCe3Ct2CeMao5jJoYBcd9Y/Zr+/9wkw8KOqYNOQrMYo9SwJyrWZ2KoQLGYk/M0w==}
-    cpu: [x64]
-    os: [linux]
-
-  envio-linux-x64@2.25.0:
-    resolution: {integrity: sha512-IgeORIEpN++U0gwHOPRqcT/d2G0v/GM2fYo0w2uwduHsCyTXT7Z1Npo8aGvRPcifczrUBvzBEVbXbegQgdu3dg==}
     cpu: [x64]
     os: [linux]
 
@@ -592,8 +572,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@2.25.0:
-    resolution: {integrity: sha512-RHtCFHXxdMcd1agewkGFZxtuEzareXaPa7uahu+8KPl82sckhxlz0GOBcTG0pv5Teu/Zw85Xh2SQMKlqQewyBg==}
+  envio@file:../../envio/hyperindex/codegenerator/cli/npm/envio:
+    resolution: {directory: ../../envio/hyperindex/codegenerator/cli/npm/envio, type: directory}
     hasBin: true
 
   es-define-property@1.0.1:
@@ -1855,25 +1835,13 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@2.25.0:
-    optional: true
-
   envio-darwin-x64@2.24.0:
-    optional: true
-
-  envio-darwin-x64@2.25.0:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@2.25.0:
-    optional: true
-
   envio-linux-x64@2.24.0:
-    optional: true
-
-  envio-linux-x64@2.25.0:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -1897,7 +1865,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@2.25.0(typescript@5.2.2):
+  envio@file:../../envio/hyperindex/codegenerator/cli/npm/envio(typescript@5.2.2):
     dependencies:
       '@envio-dev/hypersync-client': 0.6.5
       bignumber.js: 9.1.2
@@ -1907,11 +1875,6 @@ snapshots:
       rescript: 11.1.3
       rescript-schema: 9.3.0(rescript@11.1.3)
       viem: 2.21.0(typescript@5.2.2)
-    optionalDependencies:
-      envio-darwin-arm64: 2.25.0
-      envio-darwin-x64: 2.25.0
-      envio-linux-arm64: 2.25.0
-      envio-linux-x64: 2.25.0
     transitivePeerDependencies:
       - bufferutil
       - typescript
