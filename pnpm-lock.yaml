@@ -28,6 +28,9 @@ importers:
       chai:
         specifier: 4.3.10
         version: 4.3.10
+      dotenv:
+        specifier: 16.4.5
+        version: 16.4.5
       mocha:
         specifier: 10.2.0
         version: 10.2.0
