@@ -1,9 +1,10 @@
 import { createPublicClient, http, getContract, type PublicClient } from "viem";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
 import * as dotenv from "dotenv";
+import { experimental_createEffect, S } from "envio";
 
 dotenv.config();
 
@@ -56,11 +57,12 @@ const getCachePath = (chainId: number): string => {
   return join(CACHE_DIR, `tokenMetadata_${chainId}.json`);
 };
 
-interface TokenMetadata {
-  name: string;
-  symbol: string;
-  decimals: number;
-}
+const TokenMetadata = S.schema({
+  name: S.string,
+  symbol: S.string,
+  decimals: S.number,
+});
+type TokenMetadata = S.Output<typeof TokenMetadata>;
 
 const getRpcUrl = (chainId: number): string => {
   switch (chainId) {
@@ -162,60 +164,68 @@ function sanitizeString(str: string): string {
   return str.replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim();
 }
 
-export async function getTokenMetadata(
-  address: string,
-  chainId: number
-): Promise<TokenMetadata> {
-  // Load cache for this chain
-  const metadataCache = loadCache(chainId);
+export const getTokenMetadata = experimental_createEffect(
+  {
+    name: "getTokenMetadata",
+    input: {
+      address: S.string,
+      chainId: S.number,
+    },
+    output: TokenMetadata,
+    // cache: true,
+  },
+  async ({ input: { address, chainId } }) => {
+    // Load cache for this chain
+    const metadataCache = loadCache(chainId);
 
-  // Handle native token
-  if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
+    // Handle native token
+    if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
+      const chainConfig = getChainConfig(chainId);
+      return {
+        name: chainConfig.nativeTokenDetails.name,
+        symbol: chainConfig.nativeTokenDetails.symbol,
+        decimals: Number(chainConfig.nativeTokenDetails.decimals),
+      };
+    }
+
+    // Check for token overrides in chain config
     const chainConfig = getChainConfig(chainId);
-    return {
-      name: chainConfig.nativeTokenDetails.name,
-      symbol: chainConfig.nativeTokenDetails.symbol,
-      decimals: Number(chainConfig.nativeTokenDetails.decimals),
-    };
-  }
-
-  // Check for token overrides in chain config
-  const chainConfig = getChainConfig(chainId);
-  const tokenOverride = chainConfig.tokenOverrides.find(
-    (t) => t.address.toLowerCase() === address.toLowerCase()
-  );
-
-  if (tokenOverride) {
-    return {
-      name: tokenOverride.name,
-      symbol: tokenOverride.symbol,
-      decimals: Number(tokenOverride.decimals),
-    };
-  }
-
-  // Check cache
-  const normalizedAddress = address;
-  if (metadataCache[normalizedAddress]) {
-    return metadataCache[normalizedAddress];
-  }
-
-  try {
-    // Use the multicall implementation for efficiency
-    const metadata = await fetchTokenMetadataMulticall(address, chainId);
-
-    // Update cache
-    metadataCache[normalizedAddress] = metadata;
-    saveCache(chainId);
-
-    return metadata;
-  } catch (e) {
-    console.error(
-      `Error fetching metadata for ${address} on chain ${chainId}:`,
-      e
+    const tokenOverride = chainConfig.tokenOverrides.find(
+      (t) => t.address.toLowerCase() === address.toLowerCase()
     );
-    throw e;
+
+    if (tokenOverride) {
+      return {
+        name: tokenOverride.name,
+        symbol: tokenOverride.symbol,
+        decimals: Number(tokenOverride.decimals),
+      };
+    }
+
+    // Check cache
+    const normalizedAddress = address;
+    if (metadataCache[normalizedAddress]) {
+      return metadataCache[normalizedAddress];
+    }
+
+    try {
+      // Use the multicall implementation for efficiency
+      const metadata = await fetchTokenMetadataMulticall(address, chainId);
+
+      // Update cache
+      metadataCache[normalizedAddress] = metadata;
+      saveCache(chainId);
+
+      return metadata;
+    } catch (e) {
+      console.error(
+        `Error fetching metadata for ${address} on chain ${chainId}:`,
+        e
+      );
+      throw e;
+    }
   }
-}
+);
 
 // Update the fetchTokenMetadataMulticall function to sanitize name and symbol
 async function fetchTokenMetadataMulticall(

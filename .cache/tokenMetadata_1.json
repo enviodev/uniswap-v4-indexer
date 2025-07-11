@@ -19743,5 +19743,10 @@
     "name": "Tether USD",
     "symbol": "USDT",
     "decimals": 18
+  },
+  "0x6123B0049F904d730dB3C36a31167D9d4121fA6B": {
+    "name": "Ribbon",
+    "symbol": "RBN",
+    "decimals": 18
   }
 }
