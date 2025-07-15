@@ -35,7 +35,7 @@ contracts:
 networks:
   - id: 1
     start_block: 0
-    end_block: 22890000
+    end_block: 21850000
     contracts:
       - name: PositionManager
         address:
@@ -45,7 +45,7 @@ networks:
           - "0x000000000004444c5dc75cB358380D2e3dE08A90"
   - id: 10
     start_block: 0
-    end_block: 138312710
+    end_block: 131903000
     contracts:
       - name: PositionManager
         address:
@@ -55,7 +55,7 @@ networks:
           - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
   - id: 8453
     start_block: 0
-    end_block: 32717433
+    end_block: 25780000
     contracts:
       - name: PositionManager
         address:
