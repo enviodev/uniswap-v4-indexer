@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 2.25.1
-        version: 2.25.1(typescript@5.2.2)
+        specifier: 2.25.2
+        version: 2.25.2(typescript@5.2.2)
     optionalDependencies:
       generated:
         specifier: ./generated
@@ -28,6 +28,9 @@ importers:
       chai:
         specifier: 4.3.10
         version: 4.3.10
+      dotenv:
+        specifier: 16.4.5
+        version: 16.4.5
       mocha:
         specifier: 10.2.0
         version: 10.2.0
@@ -37,6 +40,9 @@ importers:
       typescript:
         specifier: 5.2.2
         version: 5.2.2
+      viem:
+        specifier: 2.21.0
+        version: 2.21.0(typescript@5.2.2)
 
   generated:
     dependencies:
@@ -547,8 +553,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@2.25.1:
-    resolution: {integrity: sha512-EXq9bWaspBPatOU/eF+GhTaESTOvY8tT78S81UcHFWw7GmiPSaqE7pHHeW8lErkk69hhyWp145NemE378fP6+A==}
+  envio-darwin-arm64@2.25.2:
+    resolution: {integrity: sha512-o65smhHMLc439Q2nSH0beuM0Re6rI8VwTp/ygCJHFViIve75+BUJ6GvQkjEgW44JbAtG0VkMERKubwMWgZqO/Q==}
     cpu: [arm64]
     os: [darwin]
 
@@ -557,8 +563,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@2.25.1:
-    resolution: {integrity: sha512-4r3MPOWbqfNLYK1nGLqKprwroYCoGkObRBO1dXpYOhzIRHksR1HIqpuyyWFvpXVAQmppoW6HEYzq14FeAXfDjg==}
+  envio-darwin-x64@2.25.2:
+    resolution: {integrity: sha512-l4hECi36FwHzfhXasxHP+Ozw80blcHR1+uhyRg9BY0YXPhU/Wv6wlyugfP1MwkhfizcAyW9EBZW5FS6bmJaeVQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -567,8 +573,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@2.25.1:
-    resolution: {integrity: sha512-OZO71BwrvRFR8G6q6nb8JeUuzk3EfcXCR8eaS7I8zuHtEey8ixDniVN/3083en7VuhVZ1dmtZQSw9OPGEL8gmQ==}
+  envio-linux-arm64@2.25.2:
+    resolution: {integrity: sha512-VWpYuIHCzwdUDjA1kWA8QCPCHoSPL4sk7mWRZVfri8iWjDmzWZlpLyfcf33ti8UwyjU51WDrpVDq9YkjrdyVRg==}
     cpu: [arm64]
     os: [linux]
 
@@ -577,8 +583,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@2.25.1:
-    resolution: {integrity: sha512-Xk+2fnl632Iog7L5FhaNlHBU9ZSeByx37Jg9/nx09C03lQFiR99B0yAA5ncvVrFsNOmiaJR9D0ug/XVA//jqRA==}
+  envio-linux-x64@2.25.2:
+    resolution: {integrity: sha512-FN2A7O0+hX/NpQoPOl1c5qhiU7jVksUquU7+GdX88ClRHHG7arqbqKHXKeWXiLTXB5+lHLLNYW+yQ1OIQYS8Hw==}
     cpu: [x64]
     os: [linux]
 
@@ -586,8 +592,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@2.25.1:
-    resolution: {integrity: sha512-lkswvK3R1WcvGYui88dkqlkHCFYyrx6uxSKtWA4SXEpQF3qscmotvIXghbBppSLPZ2SSaw+eHFyDym65dAGkHA==}
+  envio@2.25.2:
+    resolution: {integrity: sha512-pIFzUDIqzXYyuuRMDC4wBhnytxbIeBaXli4+7U8BYsJ388pcXXRMuxkp0JLF15QVlk0wyaOfZBrRG6RGnXA5+w==}
     hasBin: true
 
   es-define-property@1.0.1:
@@ -1849,25 +1855,25 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@2.25.1:
+  envio-darwin-arm64@2.25.2:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@2.25.1:
+  envio-darwin-x64@2.25.2:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@2.25.1:
+  envio-linux-arm64@2.25.2:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@2.25.1:
+  envio-linux-x64@2.25.2:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -1891,7 +1897,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@2.25.1(typescript@5.2.2):
+  envio@2.25.2(typescript@5.2.2):
     dependencies:
       '@envio-dev/hypersync-client': 0.6.5
       bignumber.js: 9.1.2
@@ -1902,10 +1908,10 @@ snapshots:
       rescript-schema: 9.3.0(rescript@11.1.3)
       viem: 2.21.0(typescript@5.2.2)
     optionalDependencies:
-      envio-darwin-arm64: 2.25.1
-      envio-darwin-x64: 2.25.1
-      envio-linux-arm64: 2.25.1
-      envio-linux-x64: 2.25.1
+      envio-darwin-arm64: 2.25.2
+      envio-darwin-x64: 2.25.2
+      envio-linux-arm64: 2.25.2
+      envio-linux-x64: 2.25.2
     transitivePeerDependencies:
       - bufferutil
       - typescript
