@@ -23,7 +23,7 @@
     "viem": "2.21.0"
   },
   "dependencies": {
-    "envio": "file:../../envio/hyperindex/codegenerator/cli/npm/envio"
+    "envio": "2.26.0-alpha.4"
   },
   "optionalDependencies": {
     "generated": "./generated"
