@@ -44,11 +44,18 @@ const ERC20_ABI = [
   },
 ] as const;
 
-const TokenMetadata = S.schema({
-  name: S.string,
-  symbol: S.string,
-  decimals: S.number,
-});
+const TokenMetadata = S.union([
+  S.shape(S.schema(0), (_) => ({
+    name: "unknown",
+    symbol: "UNKNOWN",
+    decimals: 18,
+  })),
+  {
+    name: S.string,
+    symbol: S.string,
+    decimals: S.number,
+  },
+]);
 type TokenMetadata = S.Output<typeof TokenMetadata>;
 
 const getRpcUrl = (chainId: number): string => {
@@ -122,11 +129,12 @@ function sanitizeString(str: string): string {
 export const getTokenMetadata = experimental_createEffect(
   {
     name: "getTokenMetadata",
-    input: {
-      address: S.string,
-      chainId: S.number,
-    },
+    input: S.tuple((t) => ({
+      address: t.item(0, S.string),
+      chainId: t.item(1, S.number),
+    })),
     output: TokenMetadata,
+    cache: true,
   },
   async ({ context, input: { address, chainId } }) => {
     // Handle native token
