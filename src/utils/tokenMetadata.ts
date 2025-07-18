@@ -127,7 +127,6 @@ export const getTokenMetadata = experimental_createEffect(
       chainId: S.number,
     },
     output: TokenMetadata,
-    cache: true,
   },
   async ({ context, input: { address, chainId } }) => {
     // Handle native token

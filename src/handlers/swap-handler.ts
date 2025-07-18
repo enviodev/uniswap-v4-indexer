@@ -11,7 +11,7 @@ import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 
 PoolManager.Swap.handlerWithLoader({
   loader: async ({ event, context }) => {
-    const [poolManager, pool, bundle] = await Promise.all([
+    let [poolManager, pool, bundle] = await Promise.all([
       context.PoolManager.get(`${event.chainId}_${event.srcAddress}`),
       context.Pool.get(`${event.chainId}_${event.params.id}`),
       context.Bundle.get(event.chainId.toString()),
@@ -25,23 +25,6 @@ PoolManager.Swap.handlerWithLoader({
       ]);
     }
 
-    return {
-      poolManager,
-      pool,
-      bundle: bundle || {
-        id: event.chainId.toString(),
-        ethPriceUSD: new BigDecimal("0"),
-      },
-      token0,
-      token1,
-    };
-  },
-  handler: async ({ event, context, loaderReturn }) => {
-    const { bundle } = loaderReturn;
-    let poolManager = loaderReturn.poolManager;
-    let pool = loaderReturn.pool;
-    let token0 = loaderReturn.token0;
-    let token1 = loaderReturn.token1;
     if (!poolManager || !pool || !token0 || !token1) {
       return;
     }
@@ -55,6 +38,11 @@ PoolManager.Swap.handlerWithLoader({
     if (chainConfig.poolsToSkip.includes(event.params.id)) {
       return;
     }
+
+    bundle = bundle || {
+      id: event.chainId.toString(),
+      ethPriceUSD: new BigDecimal("0"),
+    };
 
     // Update tokens' derivedETH values first
     token0 = {
@@ -77,6 +65,11 @@ PoolManager.Swap.handlerWithLoader({
         chainConfig.minimumNativeLocked
       ),
     };
+
+    if (context.isPreload) {
+      return;
+    }
+
     const prices = sqrtPriceX96ToTokenPrices(
       event.params.sqrtPriceX96,
       token0,
@@ -285,4 +278,5 @@ PoolManager.Swap.handlerWithLoader({
       }
     }
   },
+  handler: async (_) => {},
 });
