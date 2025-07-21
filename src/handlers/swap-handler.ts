@@ -66,6 +66,13 @@ PoolManager.Swap.handlerWithLoader({
       ),
     };
 
+    const ethPriceUSD = await getNativePriceInUSD(
+      context,
+      event.chainId.toString(),
+      chainConfig.stablecoinWrappedNativePoolId,
+      chainConfig.stablecoinIsToken0
+    );
+
     if (context.isPreload) {
       return;
     }
@@ -216,12 +223,7 @@ PoolManager.Swap.handlerWithLoader({
     // Use immutability pattern
     context.Bundle.set({
       ...bundle,
-      ethPriceUSD: await getNativePriceInUSD(
-        context,
-        event.chainId.toString(),
-        chainConfig.stablecoinWrappedNativePoolId,
-        chainConfig.stablecoinIsToken0
-      ),
+      ethPriceUSD,
     });
     context.Pool.set(pool);
     context.PoolManager.set(poolManager);
