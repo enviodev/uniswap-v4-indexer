@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: v2.26.0-alpha.7
+        specifier: 2.26.0-alpha.7
         version: 2.26.0-alpha.7(typescript@5.2.2)
     optionalDependencies:
       generated:
