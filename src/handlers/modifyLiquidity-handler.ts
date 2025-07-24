@@ -1,7 +1,11 @@
 /*
  * Liquidity event handlers for Uniswap v4 pools
  */
-import { PoolManager } from "generated";
+import {
+  LoaderContext,
+  PoolManager,
+  PoolManager_ModifyLiquidity_event,
+} from "generated";
 import {
   getAmount0,
   getAmount1,
@@ -9,6 +13,65 @@ import {
 import { convertTokenToDecimal } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
+
+const updateTicks = async (
+  context: LoaderContext,
+  event: PoolManager_ModifyLiquidity_event,
+  poolId: string
+) => {
+  // tick entities
+  const lowerTickIdx = Number(event.params.tickLower);
+  const upperTickIdx = Number(event.params.tickUpper);
+
+  const lowerTickId = poolId + "#" + BigInt(event.params.tickLower).toString();
+  const upperTickId = poolId + "#" + BigInt(event.params.tickUpper).toString();
+
+  let [lowerTick, upperTick] = await Promise.all([
+    context.Tick.get(lowerTickId),
+    context.Tick.get(upperTickId),
+  ]);
+
+  if (context.isPreload) {
+    return;
+  }
+
+  if (!lowerTick) {
+    lowerTick = createInitialTick(
+      lowerTickId,
+      lowerTickIdx,
+      poolId,
+      BigInt(event.chainId),
+      BigInt(event.block.timestamp),
+      BigInt(event.block.number)
+    );
+  }
+  if (!upperTick) {
+    upperTick = createInitialTick(
+      upperTickId,
+      upperTickIdx,
+      poolId,
+      BigInt(event.chainId),
+      BigInt(event.block.timestamp),
+      BigInt(event.block.number)
+    );
+  }
+
+  const amount = event.params.liquidityDelta;
+  lowerTick = {
+    ...lowerTick,
+    liquidityGross: lowerTick.liquidityGross + amount,
+    liquidityNet: lowerTick.liquidityNet + amount,
+  };
+  upperTick = {
+    ...upperTick,
+    liquidityGross: upperTick.liquidityGross + amount,
+    liquidityNet: upperTick.liquidityNet - amount,
+  };
+
+  // Save tick entities
+  context.Tick.set(lowerTick);
+  context.Tick.set(upperTick);
+};
 
 PoolManager.ModifyLiquidity.handlerWithLoader({
   loader: async ({ event, context }) => {
@@ -39,62 +102,7 @@ PoolManager.ModifyLiquidity.handlerWithLoader({
       `${event.chainId}_${event.srcAddress}`
     );
 
-    await (async () => {
-      // tick entities
-      const lowerTickIdx = Number(event.params.tickLower);
-      const upperTickIdx = Number(event.params.tickUpper);
-
-      const lowerTickId =
-        pool.id + "#" + BigInt(event.params.tickLower).toString();
-      const upperTickId =
-        pool.id + "#" + BigInt(event.params.tickUpper).toString();
-
-      let [lowerTick, upperTick] = await Promise.all([
-        context.Tick.get(lowerTickId),
-        context.Tick.get(upperTickId),
-      ]);
-
-      if (context.isPreload) {
-        return;
-      }
-
-      if (!lowerTick) {
-        lowerTick = createInitialTick(
-          lowerTickId,
-          lowerTickIdx,
-          pool.id,
-          BigInt(event.chainId),
-          BigInt(event.block.timestamp),
-          BigInt(event.block.number)
-        );
-      }
-      if (!upperTick) {
-        upperTick = createInitialTick(
-          upperTickId,
-          upperTickIdx,
-          pool.id,
-          BigInt(event.chainId),
-          BigInt(event.block.timestamp),
-          BigInt(event.block.number)
-        );
-      }
-
-      const amount = event.params.liquidityDelta;
-      lowerTick = {
-        ...lowerTick,
-        liquidityGross: lowerTick.liquidityGross + amount,
-        liquidityNet: lowerTick.liquidityNet + amount,
-      };
-      upperTick = {
-        ...upperTick,
-        liquidityGross: upperTick.liquidityGross + amount,
-        liquidityNet: upperTick.liquidityNet - amount,
-      };
-
-      // Save tick entities
-      context.Tick.set(lowerTick);
-      context.Tick.set(upperTick);
-    })();
+    await updateTicks(context, event, pool.id);
 
     if (context.isPreload) {
       return;
