@@ -16,16 +16,27 @@ PoolManager.Swap.handlerWithLoader({
       context.Pool.get(`${event.chainId}_${event.params.id}`),
       context.Bundle.get(event.chainId.toString()),
     ]);
-    let token0;
-    let token1;
-    if (pool) {
-      [token0, token1] = await Promise.all([
-        context.Token.get(pool.token0),
-        context.Token.get(pool.token1),
-      ]);
+
+    if (!pool || !poolManager) {
+      return;
     }
 
-    if (!poolManager || !pool || !token0 || !token1) {
+    let token0;
+    let token1;
+    let poolHookStats;
+
+    const isHookedPool =
+      pool.hooks !== "0x0000000000000000000000000000000000000000";
+
+    [token0, token1, poolHookStats] = await Promise.all([
+      context.Token.get(pool.token0),
+      context.Token.get(pool.token1),
+      isHookedPool
+        ? context.HookStats.get(`${event.chainId}_${pool.hooks}`)
+        : undefined,
+    ]);
+
+    if (!token0 || !token1) {
       return;
     }
 
@@ -231,9 +242,6 @@ PoolManager.Swap.handlerWithLoader({
     context.Token.set(token0);
     context.Token.set(token1);
 
-    const isHookedPool =
-      pool.hooks !== "0x0000000000000000000000000000000000000000";
-
     poolManager = {
       ...poolManager,
       numberOfSwaps: poolManager.numberOfSwaps + 1n,
@@ -245,39 +253,33 @@ PoolManager.Swap.handlerWithLoader({
     context.PoolManager.set(poolManager);
 
     // After processing the swap, update HookStats if it's a hooked pool
-    if (isHookedPool) {
-      const hookStatsId = `${event.chainId}_${pool.hooks}`;
-      let hookStats = await context.HookStats.get(hookStatsId);
+    if (poolHookStats) {
+      // Calculate volume and fees, using untracked volume as fallback
+      const volumeToAdd = amountTotalUSDTracked.gt(new BigDecimal("0"))
+        ? amountTotalUSDTracked
+        : amountTotalUSDUntracked;
 
-      if (hookStats) {
-        // Calculate volume and fees, using untracked volume as fallback
-        const volumeToAdd = amountTotalUSDTracked.gt(new BigDecimal("0"))
-          ? amountTotalUSDTracked
-          : amountTotalUSDUntracked;
+      // Calculate fees based on the volume we're using (use the same calculation as earlier in the code)
+      const feesToAdd = amountTotalUSDTracked.gt(new BigDecimal("0"))
+        ? feesUSD
+        : amountTotalUSDUntracked.times(
+            new BigDecimal(pool.feeTier.toString()).div(
+              new BigDecimal("1000000")
+            )
+          );
 
-        // Calculate fees based on the volume we're using (use the same calculation as earlier in the code)
-        const feesToAdd = amountTotalUSDTracked.gt(new BigDecimal("0"))
-          ? feesUSD
-          : amountTotalUSDUntracked.times(
-              new BigDecimal(pool.feeTier.toString()).div(
-                new BigDecimal("1000000")
-              )
-            );
-
-        hookStats = {
-          ...hookStats,
-          numberOfSwaps: hookStats.numberOfSwaps + 1n,
-          totalVolumeUSD: hookStats.totalVolumeUSD.plus(volumeToAdd), // right now this is includes untracked volume
-          untrackedVolumeUSD: hookStats.untrackedVolumeUSD.plus(
-            amountTotalUSDUntracked
-          ),
-          totalFeesUSD: hookStats.totalFeesUSD.plus(feesToAdd),
-          totalValueLockedUSD: hookStats.totalValueLockedUSD
-            .minus(currentPoolTvlUSD) // Remove old TVL
-            .plus(pool.totalValueLockedUSD), // Add new TVL
-        };
-        context.HookStats.set(hookStats);
-      }
+      context.HookStats.set({
+        ...poolHookStats,
+        numberOfSwaps: poolHookStats.numberOfSwaps + 1n,
+        totalVolumeUSD: poolHookStats.totalVolumeUSD.plus(volumeToAdd), // right now this is includes untracked volume
+        untrackedVolumeUSD: poolHookStats.untrackedVolumeUSD.plus(
+          amountTotalUSDUntracked
+        ),
+        totalFeesUSD: poolHookStats.totalFeesUSD.plus(feesToAdd),
+        totalValueLockedUSD: poolHookStats.totalValueLockedUSD
+          .minus(currentPoolTvlUSD) // Remove old TVL
+          .plus(pool.totalValueLockedUSD), // Add new TVL
+      });
     }
   },
   handler: async (_) => {},
