@@ -44,18 +44,11 @@ const ERC20_ABI = [
   },
 ] as const;
 
-const TokenMetadata = S.union([
-  S.shape(S.schema(0), (_) => ({
-    name: "unknown",
-    symbol: "UNKNOWN",
-    decimals: 18,
-  })),
-  {
-    name: S.string,
-    symbol: S.string,
-    decimals: S.number,
-  },
-]);
+const TokenMetadata = S.schema({
+  name: S.string,
+  symbol: S.string,
+  decimals: S.number,
+});
 type TokenMetadata = S.Output<typeof TokenMetadata>;
 
 const getRpcUrl = (chainId: number): string => {
