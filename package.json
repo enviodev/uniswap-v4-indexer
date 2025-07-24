@@ -18,10 +18,12 @@
     "ts-mocha": "^10.0.0",
     "typescript": "5.2.2",
     "chai": "4.3.10",
-    "mocha": "10.2.0"
+    "mocha": "10.2.0",
+    "dotenv": "16.4.5",
+    "viem": "2.21.0"
   },
   "dependencies": {
-    "envio": "2.24.0"
+    "envio": "2.26.0-rc.2"
   },
   "optionalDependencies": {
     "generated": "./generated"

@@ -1,9 +1,8 @@
 import { createPublicClient, http, getContract, type PublicClient } from "viem";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { join, dirname } from "path";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
 import * as dotenv from "dotenv";
+import { experimental_createEffect, S } from "envio";
 
 dotenv.config();
 
@@ -45,22 +44,12 @@ const ERC20_ABI = [
   },
 ] as const;
 
-// Create .cache directory if it doesn't exist
-const CACHE_DIR = join(__dirname, "../../.cache");
-if (!existsSync(CACHE_DIR)) {
-  mkdirSync(CACHE_DIR, { recursive: true });
-}
-
-// Function to get cache path for a specific chain
-const getCachePath = (chainId: number): string => {
-  return join(CACHE_DIR, `tokenMetadata_${chainId}.json`);
-};
-
-interface TokenMetadata {
-  name: string;
-  symbol: string;
-  decimals: number;
-}
+const TokenMetadata = S.schema({
+  name: S.string,
+  symbol: S.string,
+  decimals: S.number,
+});
+type TokenMetadata = S.Output<typeof TokenMetadata>;
 
 const getRpcUrl = (chainId: number): string => {
   switch (chainId) {
@@ -109,7 +98,9 @@ const getClient = (chainId: number): PublicClient => {
     try {
       // Create a simpler client configuration
       clients[chainId] = createPublicClient({
-        transport: http(getRpcUrl(chainId)),
+        transport: http(getRpcUrl(chainId), {
+          batch: true,
+        }),
       });
       console.log(`Created client for chain ${chainId}`);
     } catch (e) {
@@ -120,40 +111,6 @@ const getClient = (chainId: number): PublicClient => {
   return clients[chainId];
 };
 
-// Cache of metadata per chainId
-const metadataCaches: Record<number, Record<string, TokenMetadata>> = {};
-
-// Load cache for a specific chain
-const loadCache = (chainId: number): Record<string, TokenMetadata> => {
-  if (!metadataCaches[chainId]) {
-    const cachePath = getCachePath(chainId);
-    if (existsSync(cachePath)) {
-      try {
-        metadataCaches[chainId] = JSON.parse(readFileSync(cachePath, "utf8"));
-      } catch (e) {
-        console.error(
-          `Error loading token metadata cache for chain ${chainId}:`,
-          e
-        );
-        metadataCaches[chainId] = {};
-      }
-    } else {
-      metadataCaches[chainId] = {};
-    }
-  }
-  return metadataCaches[chainId];
-};
-
-// Save cache for a specific chain
-const saveCache = (chainId: number): void => {
-  const cachePath = getCachePath(chainId);
-  try {
-    writeFileSync(cachePath, JSON.stringify(metadataCaches[chainId], null, 2));
-  } catch (e) {
-    console.error(`Error saving token metadata cache for chain ${chainId}:`, e);
-  }
-};
-
 // Add this function to sanitize strings by removing null bytes and other problematic characters
 function sanitizeString(str: string): string {
   if (!str) return "";
@@ -162,60 +119,53 @@ function sanitizeString(str: string): string {
   return str.replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim();
 }
 
-export async function getTokenMetadata(
-  address: string,
-  chainId: number
-): Promise<TokenMetadata> {
-  // Load cache for this chain
-  const metadataCache = loadCache(chainId);
+export const getTokenMetadata = experimental_createEffect(
+  {
+    name: "getTokenMetadata",
+    input: S.tuple((t) => ({
+      address: t.item(0, S.string),
+      chainId: t.item(1, S.number),
+    })),
+    output: TokenMetadata,
+    cache: true,
+  },
+  async ({ context, input: { address, chainId } }) => {
+    // Handle native token
+    if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
+      const chainConfig = getChainConfig(chainId);
+      return {
+        name: chainConfig.nativeTokenDetails.name,
+        symbol: chainConfig.nativeTokenDetails.symbol,
+        decimals: Number(chainConfig.nativeTokenDetails.decimals),
+      };
+    }
 
-  // Handle native token
-  if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
+    // Check for token overrides in chain config
     const chainConfig = getChainConfig(chainId);
-    return {
-      name: chainConfig.nativeTokenDetails.name,
-      symbol: chainConfig.nativeTokenDetails.symbol,
-      decimals: Number(chainConfig.nativeTokenDetails.decimals),
-    };
-  }
-
-  // Check for token overrides in chain config
-  const chainConfig = getChainConfig(chainId);
-  const tokenOverride = chainConfig.tokenOverrides.find(
-    (t) => t.address.toLowerCase() === address.toLowerCase()
-  );
-
-  if (tokenOverride) {
-    return {
-      name: tokenOverride.name,
-      symbol: tokenOverride.symbol,
-      decimals: Number(tokenOverride.decimals),
-    };
-  }
-
-  // Check cache
-  const normalizedAddress = address;
-  if (metadataCache[normalizedAddress]) {
-    return metadataCache[normalizedAddress];
-  }
-
-  try {
-    // Use the multicall implementation for efficiency
-    const metadata = await fetchTokenMetadataMulticall(address, chainId);
-
-    // Update cache
-    metadataCache[normalizedAddress] = metadata;
-    saveCache(chainId);
-
-    return metadata;
-  } catch (e) {
-    console.error(
-      `Error fetching metadata for ${address} on chain ${chainId}:`,
-      e
+    const tokenOverride = chainConfig.tokenOverrides.find(
+      (t) => t.address.toLowerCase() === address.toLowerCase()
     );
-    throw e;
+
+    if (tokenOverride) {
+      return {
+        name: tokenOverride.name,
+        symbol: tokenOverride.symbol,
+        decimals: Number(tokenOverride.decimals),
+      };
+    }
+
+    try {
+      // Use the multicall implementation for efficiency
+      return await fetchTokenMetadataMulticall(address, chainId);
+    } catch (e) {
+      context.log.error(
+        `Error fetching metadata for ${address} on chain ${chainId}:`,
+        e as Error
+      );
+      throw e;
+    }
   }
-}
+);
 
 // Update the fetchTokenMetadataMulticall function to sanitize name and symbol
 async function fetchTokenMetadataMulticall(
