@@ -2,14 +2,13 @@ import { BigDecimal } from "generated";
 import { ONE_BD, ZERO_BI } from "./constants";
 import { fastExponentiation, safeDiv } from "./index";
 
-export async function createTick(
+export function createInitialTick(
   tickId: string,
   tickIdx: number,
   poolId: string,
   chainId: bigint,
   timestamp: bigint,
-  blockNumber: bigint,
-  context: any
+  blockNumber: bigint
 ) {
   const tick = {
     id: tickId,

@@ -36,7 +36,7 @@ type PoolManager {
   hookedSwaps: BigInt! # number of swaps through hooked pools
 }
 
-type Pool @entity {
+type Pool {
   id: ID!
   chainId: BigInt!
   name: String!
@@ -73,7 +73,7 @@ type Pool @entity {
   ticks: [Tick!]! @derivedFrom(field: "pool")
 }
 
-type Tick @entity {
+type Tick {
   id: ID! # <pool address>#<tickIdx>
   chainId: BigInt!
   pool: Pool! # Pointer back to Pool
@@ -86,7 +86,7 @@ type Tick @entity {
   createdAtBlockNumber: BigInt!
 }
 
-type Token @entity {
+type Token {
   id: ID!
   chainId: BigInt!
   symbol: String!
@@ -107,13 +107,13 @@ type Token @entity {
 }
 
 # stores for USD calculations
-type Bundle @entity {
+type Bundle {
   id: ID!
   # price of ETH in usd
   ethPriceUSD: BigDecimal!
 }
 
-type HookStats @entity {
+type HookStats {
   id: ID! # hook address
   chainId: BigInt!
   numberOfPools: BigInt!
@@ -125,7 +125,7 @@ type HookStats @entity {
   totalFeesUSD: BigDecimal! # Total fees across all pools using this hook
 }
 
-type ModifyLiquidity @entity {
+type ModifyLiquidity {
   id: ID!
   chainId: BigInt!
   transaction: String! # Instead of Transaction reference

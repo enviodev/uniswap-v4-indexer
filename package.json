@@ -8,21 +8,22 @@
     "mocha": "ts-mocha test/**/*.ts",
     "codegen": "envio codegen",
     "dev": "envio dev",
-    "test": "pnpm mocha",
-    "start": "ts-node generated/src/Index.bs.js"
+    "start": "envio start",
+    "test": "pnpm mocha"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",
     "@types/mocha": "10.0.6",
     "@types/node": "20.8.8",
     "ts-mocha": "^10.0.0",
-    "ts-node": "10.9.1",
     "typescript": "5.2.2",
     "chai": "4.3.10",
-    "mocha": "10.2.0"
+    "mocha": "10.2.0",
+    "dotenv": "16.4.5",
+    "viem": "2.21.0"
   },
   "dependencies": {
-    "envio": "2.24.0"
+    "envio": "2.26.0-rc.2"
   },
   "optionalDependencies": {
     "generated": "./generated"
