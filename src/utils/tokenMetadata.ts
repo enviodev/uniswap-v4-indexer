@@ -234,6 +234,14 @@ async function fetchTokenMetadataMulticall(
   return {
     name: name || "unknown",
     symbol: symbol || "UNKNOWN",
-    decimals: typeof decimalsResult === "number" ? decimalsResult : 18,
+    decimals:
+      typeof decimalsResult === "number" &&
+      // There's a token on base with decimals ~= 9132491757359273498234t629765928734n
+      // which literally crashes our indexer. To prevent it from happening
+      // use 18 for all tokens with decimals > 50
+      // This is the biggest decimals we've seen so far for other tokens.
+      decimalsResult <= 50
+        ? decimalsResult
+        : 18,
   };
 }
