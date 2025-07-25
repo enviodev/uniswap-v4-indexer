@@ -9,12 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 2.25.2
+        specifier: ^2.25.0
         version: 2.25.2(typescript@5.2.2)
-    optionalDependencies:
-      generated:
-        specifier: ./generated
-        version: link:generated
     devDependencies:
       '@types/chai':
         specifier: ^4.3.11
@@ -43,6 +39,10 @@ importers:
       viem:
         specifier: 2.21.0
         version: 2.21.0(typescript@5.2.2)
+    optionalDependencies:
+      generated:
+        specifier: ./generated
+        version: link:generated
 
   generated:
     dependencies:
