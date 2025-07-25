@@ -63,6 +63,8 @@ http://localhost:8080
 
 This will open the Hasura console where you can explore and query the indexed data using GraphQL.
 
+test
+
 ### RPC Configuration
 
 RPC endpoints for each chain can be customized through environment variables prefixed with `ENVIO_`.
