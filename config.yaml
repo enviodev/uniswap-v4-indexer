@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 name: uniswap-v4-indexer
 unordered_multichain_mode: true # When true, strict cross chain ordering of event processing will not be obeyed.
-rollback_on_reorg: true
+rollback_on_reorg: false
 contracts:
   - name: PoolManager
     handler: src/EventHandlers.ts
