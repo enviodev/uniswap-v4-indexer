@@ -2,6 +2,7 @@
 name: uniswap-v4-indexer
 unordered_multichain_mode: true # When true, strict cross chain ordering of event processing will not be obeyed.
 rollback_on_reorg: false
+preload_handlers: true
 contracts:
   - name: PoolManager
     handler: src/EventHandlers.ts
