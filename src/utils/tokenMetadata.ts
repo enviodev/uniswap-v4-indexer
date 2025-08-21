@@ -98,6 +98,9 @@ const getClient = (chainId: number): PublicClient => {
     try {
       // Create a simpler client configuration
       clients[chainId] = createPublicClient({
+        batch: {
+          multicall: true,
+        },
         transport: http(getRpcUrl(chainId), {
           batch: true,
         }),
