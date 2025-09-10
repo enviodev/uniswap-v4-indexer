@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 name: uniswap-v4-indexer
 unordered_multichain_mode: true # When true, strict cross chain ordering of event processing will not be obeyed.
-rollback_on_reorg: false
+rollback_on_reorg: true
 preload_handlers: true
 contracts:
   - name: PoolManager
@@ -43,15 +43,15 @@ networks:
       - name: PoolManager
         address:
           - "0x000000000004444c5dc75cB358380D2e3dE08A90"
-  - id: 10
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
-      - name: PoolManager
-        address:
-          - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
+  # - id: 10
+  #   start_block: 0
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
+  #     - name: PoolManager
+  #       address:
+  #         - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
   - id: 8453
     start_block: 0
     contracts:
@@ -61,15 +61,15 @@ networks:
       - name: PoolManager
         address:
           - 0x498581ff718922c3f8e6a244956af099b2652b2b
-  - id: 42161
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
-      - name: PoolManager
-        address:
-          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  # - id: 42161
+  #   start_block: 0
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
+  #     - name: PoolManager
+  #       address:
+  #         - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
   - id: 137
     start_block: 0
     contracts:
