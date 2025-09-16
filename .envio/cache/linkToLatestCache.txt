@@ -1,0 +1,5 @@
+Due to GitHub file size limitations, the latest cache file is temporarily hosted on Google Drive.
+
+To update your local cache:
+1. Download the latest cache file from: https://drive.google.com/drive/folders/1PNodRythHPOwbIEr9k5jPwx4gg1TTwKH?usp=sharing
+2. Replace your current cache file with the downloaded version
