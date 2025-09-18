@@ -2,7 +2,7 @@
  * Liquidity event handlers for Uniswap v4 pools
  */
 import {
-  LoaderContext,
+  handlerContext,
   PoolManager,
   PoolManager_ModifyLiquidity_event,
 } from "generated";
@@ -15,7 +15,7 @@ import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
 
 const updateTicks = async (
-  context: LoaderContext,
+  context: handlerContext,
   event: PoolManager_ModifyLiquidity_event,
   poolId: string
 ) => {
