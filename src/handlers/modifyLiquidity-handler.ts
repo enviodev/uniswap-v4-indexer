@@ -85,7 +85,10 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     return;
   }
 
-  let pool = await context.Pool.get(`${event.chainId}_${event.params.id}`);
+  const poolId = `${event.chainId}_${event.params.id}`;
+  await updateTicks(context, event, poolId);
+
+  let pool = await context.Pool.get(poolId);
   if (!pool) return;
 
   let [token0, token1] = await Promise.all([
@@ -100,8 +103,6 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   let poolManager = await context.PoolManager.getOrThrow(
     `${event.chainId}_${event.srcAddress}`
   );
-
-  await updateTicks(context, event, pool.id);
 
   if (context.isPreload) {
     return;
