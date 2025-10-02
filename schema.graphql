@@ -1,4 +1,6 @@
-type Swap {
+type Swap
+  @index(fields: ["timestamp", "pool"])
+  @index(fields: ["amountUSD", "pool"]) {
   id: ID!
   chainId: BigInt!
   transaction: String! # Instead of Transaction reference
@@ -54,11 +56,11 @@ type Pool {
   observationIndex: BigInt!
   volumeToken0: BigDecimal!
   volumeToken1: BigDecimal!
-  volumeUSD: BigDecimal!
+  volumeUSD: BigDecimal! @index
   untrackedVolumeUSD: BigDecimal!
   feesUSD: BigDecimal!
   feesUSDUntracked: BigDecimal!
-  txCount: BigInt!
+  txCount: BigInt! @index
   collectedFeesToken0: BigDecimal!
   collectedFeesToken1: BigDecimal!
   collectedFeesUSD: BigDecimal!
@@ -125,7 +127,9 @@ type HookStats {
   totalFeesUSD: BigDecimal! # Total fees across all pools using this hook
 }
 
-type ModifyLiquidity {
+type ModifyLiquidity
+  @index(fields: ["timestamp", "pool"])
+  @index(fields: ["amountUSD", "pool"]) {
   id: ID!
   chainId: BigInt!
   transaction: String! # Instead of Transaction reference
@@ -138,7 +142,7 @@ type ModifyLiquidity {
   amount: BigInt! # amount of liquidity modified
   amount0: BigDecimal! # amount of token 0 modified
   amount1: BigDecimal! # amount of token 1 modified
-  amountUSD: BigDecimal! # derived amount based on available prices of tokens
+  amountUSD: BigDecimal! @index # derived amount based on available prices of tokens
   tickLower: BigInt! # lower tick of the position
   tickUpper: BigInt! # upper tick of the position
   logIndex: BigInt! # index within the txn
