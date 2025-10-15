@@ -25,14 +25,14 @@ contracts:
             - "hash"
             - "from"
       - event: Transfer(address caller, address indexed from, address indexed to, uint256 indexed id, uint256 amount)
-# - name: PositionManager
-#   handler: src/EventHandlers.ts
-#   events:
-#   - event: Approval(address indexed owner, address indexed spender, uint256 indexed id)
-#   - event: ApprovalForAll(address indexed owner, address indexed operator, bool approved)
-#   - event: Subscription(uint256 indexed tokenId, address indexed subscriber)
-#   - event: Transfer(address indexed from, address indexed to, uint256 indexed id)
-#   - event: Unsubscription(uint256 indexed tokenId, address indexed subscriber)
+  - name: PositionManager
+    handler: src/EventHandlers.ts
+    events:
+      - event: Approval(address indexed owner, address indexed spender, uint256 indexed id)
+      - event: ApprovalForAll(address indexed owner, address indexed operator, bool approved)
+      - event: Subscription(uint256 indexed tokenId, address indexed subscriber)
+      - event: Transfer(address indexed from, address indexed to, uint256 indexed id)
+      - event: Unsubscription(uint256 indexed tokenId, address indexed subscriber)
 networks:
   - id: 1
     start_block: 0
