@@ -23,7 +23,7 @@
     "viem": "2.21.0"
   },
   "dependencies": {
-    "envio": "2.31.0"
+    "envio": "3.0.0-alpha-main-clickhouse-sink"
   },
   "optionalDependencies": {
     "generated": "./generated"

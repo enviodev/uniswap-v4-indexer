@@ -9,8 +9,12 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 2.31.0
-        version: 2.31.0(typescript@5.2.2)
+        specifier: 3.0.0-alpha-main-clickhouse-sink
+        version: 3.0.0-alpha-main-clickhouse-sink(typescript@5.2.2)
+    optionalDependencies:
+      generated:
+        specifier: ./generated
+        version: link:generated
     devDependencies:
       '@types/chai':
         specifier: ^4.3.11
@@ -39,10 +43,6 @@ importers:
       viem:
         specifier: 2.21.0
         version: 2.21.0(typescript@5.2.2)
-    optionalDependencies:
-      generated:
-        specifier: ./generated
-        version: link:generated
 
   generated:
     dependencies:
@@ -120,6 +120,13 @@ packages:
 
   '@adraffy/ens-normalize@1.10.0':
     resolution: {integrity: sha512-nA9XHtlAkYfJxY7bce8DcN7eKxWWCWkU+1GR9d+U6MbNpfwQp8TI7vqOsBsMcHoT4mBu2kypKoSKnghEzOOq5Q==}
+
+  '@clickhouse/client-common@1.12.1':
+    resolution: {integrity: sha512-ccw1N6hB4+MyaAHIaWBwGZ6O2GgMlO99FlMj0B0UEGfjxM9v5dYVYql6FpP19rMwrVAroYs/IgX2vyZEBvzQLg==}
+
+  '@clickhouse/client@1.12.1':
+    resolution: {integrity: sha512-7ORY85rphRazqHzImNXMrh4vsaPrpetFoTWpZYueCO2bbO6PXYDXp/GQ4DgxnGIqbWB/Di1Ai+Xuwq2o7DJ36A==}
+    engines: {node: '>=16'}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -633,8 +640,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@2.31.0:
-    resolution: {integrity: sha512-7Qrn6PC0BE9iUROfK1a1azDNen8mFzpGbEGApQIP1u8wjYZkAnki0/WaJjOefwtVBFywRCng6YE9d2fEpXR8lQ==}
+  envio-darwin-arm64@3.0.0-alpha-main-clickhouse-sink:
+    resolution: {integrity: sha512-DycI1k5+oJhl1UBr3P35W9KvXgwhoz49bIurzle/5i76bofAKjAYQx8Y5GVAvO4gDfekuxW3ygW7uBTNPG9VNg==}
     cpu: [arm64]
     os: [darwin]
 
@@ -643,8 +650,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@2.31.0:
-    resolution: {integrity: sha512-Kq0UIdC23MLcL6T4i7hHdj+bGIHiMDvfF2hMTDGRt5tv4WJ9uMiPV+DKLwfSbygxjiqqLPxB/ZwSCVbtUqplcw==}
+  envio-darwin-x64@3.0.0-alpha-main-clickhouse-sink:
+    resolution: {integrity: sha512-OJeRheYfmrUDQ5/LnEYFXXKi/RlwTnHPw75gsKeYcWgOT3+cYhxwOkSAf5GxZoLVfWHNseJkoGvvTRRJxezRdA==}
     cpu: [x64]
     os: [darwin]
 
@@ -653,8 +660,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@2.31.0:
-    resolution: {integrity: sha512-eieQHpqt8YlNd/z+uMFNjuOj4HLgh2YaxiT3HT0+XB2f5LK+V0Tkbohm5PdIe3MKe6Kxzw6d7rfH72KdynW8Cw==}
+  envio-linux-arm64@3.0.0-alpha-main-clickhouse-sink:
+    resolution: {integrity: sha512-+jGR0sDZQIyy4/1kW7v9YbDqO8nTOLK2PSbsgutVvZJfp7kmNn6QzQaXphKOSWd6+yWFzoB0KpGilb2OfreTtg==}
     cpu: [arm64]
     os: [linux]
 
@@ -663,8 +670,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@2.31.0:
-    resolution: {integrity: sha512-FzDxWH23Hz7E6vQ0+QEKgPonJJJH8g83XSxKf7Q2qYNCqM89zfMQhDuk8KM4L3k2U7M+96K29daYIcraTbJF4g==}
+  envio-linux-x64@3.0.0-alpha-main-clickhouse-sink:
+    resolution: {integrity: sha512-UJDKfkiZpHVm0km8cMkp+0p8FtCcX+vOeAPe5BcYvKZhHVGozDO70VCxmTY/7faOFnKpbniyWSqVut4OYTY26w==}
     cpu: [x64]
     os: [linux]
 
@@ -672,8 +679,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@2.31.0:
-    resolution: {integrity: sha512-JygGxP9yZLApF9vC205T/JQeU+u1vcqU1bZwAzG5XCNy3hwaKcc0Xivx8Q6Xx3g0BjeDbUUbrkkNTiZ6wb+gQQ==}
+  envio@3.0.0-alpha-main-clickhouse-sink:
+    resolution: {integrity: sha512-+lrBgSbBlBBpjONOU43S+Pj+ENCh/wjkHvRikCCdXjALcKKldTN3eaEQ/nyDSlGxrW9q1xtuoZUz7phQcl4/Cw==}
     hasBin: true
 
   es-define-property@1.0.1:
@@ -1560,6 +1567,12 @@ snapshots:
 
   '@adraffy/ens-normalize@1.10.0': {}
 
+  '@clickhouse/client-common@1.12.1': {}
+
+  '@clickhouse/client@1.12.1':
+    dependencies:
+      '@clickhouse/client-common': 1.12.1
+
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
@@ -1989,25 +2002,25 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@2.31.0:
+  envio-darwin-arm64@3.0.0-alpha-main-clickhouse-sink:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@2.31.0:
+  envio-darwin-x64@3.0.0-alpha-main-clickhouse-sink:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@2.31.0:
+  envio-linux-arm64@3.0.0-alpha-main-clickhouse-sink:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@2.31.0:
+  envio-linux-x64@3.0.0-alpha-main-clickhouse-sink:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -2031,8 +2044,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@2.31.0(typescript@5.2.2):
+  envio@3.0.0-alpha-main-clickhouse-sink(typescript@5.2.2):
     dependencies:
+      '@clickhouse/client': 1.12.1
       '@elastic/ecs-pino-format': 1.4.0
       '@envio-dev/hyperfuel-client': 1.2.2
       '@envio-dev/hypersync-client': 0.6.6
@@ -2044,10 +2058,10 @@ snapshots:
       rescript-schema: 9.3.0(rescript@11.1.3)
       viem: 2.21.0(typescript@5.2.2)
     optionalDependencies:
-      envio-darwin-arm64: 2.31.0
-      envio-darwin-x64: 2.31.0
-      envio-linux-arm64: 2.31.0
-      envio-linux-x64: 2.31.0
+      envio-darwin-arm64: 3.0.0-alpha-main-clickhouse-sink
+      envio-darwin-x64: 3.0.0-alpha-main-clickhouse-sink
+      envio-linux-arm64: 3.0.0-alpha-main-clickhouse-sink
+      envio-linux-x64: 3.0.0-alpha-main-clickhouse-sink
     transitivePeerDependencies:
       - bufferutil
       - typescript

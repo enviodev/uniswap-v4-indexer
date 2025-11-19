@@ -35,7 +35,7 @@ contracts:
       - event: Unsubscription(uint256 indexed tokenId, address indexed subscriber)
 networks:
   - id: 1
-    start_block: 23597758
+    start_block: 0
     contracts:
       - name: PositionManager
         address:
@@ -44,7 +44,7 @@ networks:
         address:
           - "0x000000000004444c5dc75cB358380D2e3dE08A90"
   - id: 10
-    start_block: 142554932
+    start_block: 0
     contracts:
       - name: PositionManager
         address:
@@ -52,53 +52,64 @@ networks:
       - name: PoolManager
         address:
           - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
-  - id: 8453
-    start_block: 36959646
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x7c5f5a4bbd8fd63184577525326123b519429bdc
-      - name: PoolManager
-        address:
-          - 0x498581ff718922c3f8e6a244956af099b2652b2b
-  - id: 42161
-    start_block: 390497947
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
-      - name: PoolManager
-        address:
-          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-  - id: 137
-    start_block: 77801953
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x1ec2ebf4f37e7363fdfe3551602425af0b3ceef9
-      - name: PoolManager
-        address:
-          - 0x67366782805870060151383f4bbff9dab53e5cd6
-  - id: 81457
-    start_block: 25949412
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad
-      - name: PoolManager
-        address:
-          - 0x1631559198a9e474033433b2958dabc135ab6446
-  - id: 7777777
-    start_block: 37007403
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
-      - name: PoolManager
-        address:
-          - 0x0575338e4c17006ae181b47900a84404247ca30f
-  # - id: 57073
+  # - id: 8453
+  #   start_block: 36959646
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0x7c5f5a4bbd8fd63184577525326123b519429bdc
+  #     - name: PoolManager
+  #       address:
+  #         - 0x498581ff718922c3f8e6a244956af099b2652b2b
+  # - id: 42161
+  #   start_block: 390497947
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
+  #     - name: PoolManager
+  #       address:
+  #         - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  # - id: 137
   #   start_block: 0
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0x1ec2ebf4f37e7363fdfe3551602425af0b3ceef9
+  #     - name: PoolManager
+  #       address:
+  #         - 0x67366782805870060151383f4bbff9dab53e5cd6
+  # - id: 81457
+  #   start_block: 25949412
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad
+  #     - name: PoolManager
+  #       address:
+  #         - 0x1631559198a9e474033433b2958dabc135ab6446
+  # - id: 7777777
+  #   start_block: 37007403
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
+  #     - name: PoolManager
+  #       address:
+  #         - 0x0575338e4c17006ae181b47900a84404247ca30f
+  # # - id: 57073
+  # #   start_block: 0
+  # #   contracts:
+  # #     - name: PositionManager
+  # #       address:
+  # #         - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
+  # #     - name: PoolManager
+  # #       address:
+  # #         - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  # - id: 1868
+  #   hypersync_config:
+  #     url: https://1868.hypersync.xyz
+  #   start_block: 13786932
   #   contracts:
   #     - name: PositionManager
   #       address:
@@ -106,37 +117,26 @@ networks:
   #     - name: PoolManager
   #       address:
   #         - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-  - id: 1868
-    hypersync_config:
-      url: https://1868.hypersync.xyz
-    start_block: 13786932
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
-      - name: PoolManager
-        address:
-          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-  - id: 43114
-    start_block: 70461143
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xb74b1f14d2754acfcbbe1a221023a5cf50ab8acd
-      - name: PoolManager
-        address:
-          - 0x06380c0e0912312b5150364b9dc4542ba0dbbc85
-  - id: 56
-    start_block: 64945459
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x7a4a5c919ae2541aed11041a1aeee68f1287f95b
-      - name: PoolManager
-        address:
-          - 0x28e2ea090877bf75740558f6bfb36a5ffee9e9df
+  # - id: 43114
+  #   start_block: 70461143
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xb74b1f14d2754acfcbbe1a221023a5cf50ab8acd
+  #     - name: PoolManager
+  #       address:
+  #         - 0x06380c0e0912312b5150364b9dc4542ba0dbbc85
+  # - id: 56
+  #   start_block: 64945459
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0x7a4a5c919ae2541aed11041a1aeee68f1287f95b
+  #     - name: PoolManager
+  #       address:
+  #         - 0x28e2ea090877bf75740558f6bfb36a5ffee9e9df
   - id: 130
-    start_block: 29960286
+    start_block: 0
     contracts:
       - name: PositionManager
         address:
@@ -144,12 +144,12 @@ networks:
       - name: PoolManager
         address:
           - 0x1F98400000000000000000000000000000000004
-  - id: 480
-    start_block: 20686498
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xc585e0f504613b5fbf874f21af14c65260fb41fa
-      - name: PoolManager
-        address:
-          - 0xb1860d529182ac3bc1f51fa2abd56662b7d13f33
+  # - id: 480
+  #   start_block: 20686498
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xc585e0f504613b5fbf874f21af14c65260fb41fa
+  #     - name: PoolManager
+  #       address:
+  #         - 0xb1860d529182ac3bc1f51fa2abd56662b7d13f33
