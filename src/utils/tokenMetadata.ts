@@ -83,6 +83,8 @@ const getRpcUrl = (chainId: number): string => {
       return (
         process.env.ENVIO_WORLDCHAIN_RPC_URL || "https://worldchain.drpc.org"
       );
+    case 143:
+      return process.env.ENVIO_MONAD_RPC_URL || "https://monad.drpc.org";
     // Add generic fallback for any chain
     default:
       throw new Error(`No RPC URL configured for chainId ${chainId}`);

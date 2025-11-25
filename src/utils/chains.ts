@@ -14,6 +14,7 @@ export enum ChainId {
   WORLD = 480,
   UNICHAIN = 130,
   SONEIUM = 1868,
+  MONAD = 143,
 }
 
 // Native token details interface
@@ -375,6 +376,36 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
       symbol: "ETH",
       name: "Ethereum",
       decimals: 18n,
+    },
+  },
+  [ChainId.MONAD]: {
+    poolManagerAddress: "0x188d586ddcf52439676ca21a244753fa19f9ea8e",
+    stablecoinWrappedNativePoolId:
+      "0x7d892749d0562b0f78a26cdec26e97ec9dc7f8d1997cb590643ab69f10a1da0e",
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0x0000000000000000000000000000000000000000", // Native MON
+    minimumNativeLocked: new BigDecimal("100000"),
+    stablecoinAddresses: [
+      "0x754704bc059f8c67012fed69bc8a327a5aafb603", // USDC
+      "0x00000000efe302beaa2b3e6e1b18d08d69a9012a", // AUSD
+      "0xe7cd86e13ac4309349f30b3435a9d337750fc82d", // USDT
+    ],
+    whitelistTokens: [
+      "0x3bd359c1119da7da1d913d1c4d2b7c461115433a", // WMON
+      "0x754704bc059f8c67012fed69bc8a327a5aafb603", // USDC
+      "0x00000000efe302beaa2b3e6e1b18d08d69a9012a", // AUSD
+      "0x0000000000000000000000000000000000000000", // Native MON
+      "0xe7cd86e13ac4309349f30b3435a9d337750fc82d", // USDT
+      "0xee8c0e9f1bffb4eb878d8f15f368a02a35481242", // WETH
+      "0xea17e5a9efebf1477db45082d67010e2245217f1", // WSOL
+      "0x0555e30da8f98308edb960aa94c0db47230d2b9c", // WBTC
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "MON",
+      name: "MON",
+      decimals: BigInt(18),
     },
   },
 };
