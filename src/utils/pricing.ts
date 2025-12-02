@@ -1,7 +1,7 @@
-import { BigDecimal, handlerContext } from "generated";
+import { BigDecimal, type handlerContext } from "generated";
 
 import { exponentToBigDecimal, safeDiv } from "../utils/index";
-import { Bundle, Pool, Token } from "generated";
+import { type Token } from "generated";
 import { ADDRESS_ZERO, ONE_BD, ZERO_BD, ZERO_BI } from "./constants";
 import { NativeTokenDetails } from "./nativeTokenDetails";
 
@@ -12,7 +12,7 @@ export function sqrtPriceX96ToTokenPrices(
   token0: Token,
   token1: Token,
   nativeTokenDetails: NativeTokenDetails
-): BigDecimal[] {
+): [BigDecimal, BigDecimal] {
   const token0Decimals =
     token0.id == ADDRESS_ZERO ? nativeTokenDetails.decimals : token0.decimals;
   const token1Decimals =
@@ -57,8 +57,8 @@ export async function findNativePerToken(
   stablecoinAddresses: string[],
   minimumNativeLocked: BigDecimal
 ): Promise<BigDecimal> {
-  const tokenAddress = token.id.split("_")[1];
-  const chainId = token.id.split("_")[0]; // Make sure this is being used for Bundle lookup
+  const tokenAddress = token.id.split("_")[1]!;
+  const chainId = token.id.split("_")[0]!; // Make sure this is being used for Bundle lookup
 
   if (tokenAddress == wrappedNativeAddress || tokenAddress == ADDRESS_ZERO) {
     return ONE_BD;
@@ -75,7 +75,7 @@ export async function findNativePerToken(
     priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD);
   } else {
     for (let i = 0; i < whiteList.length; ++i) {
-      const poolAddress = whiteList[i];
+      const poolAddress = whiteList[i]!;
       // Pool IDs already include chainId since we store them that way in whitelistPools
       const pool = await context.Pool.get(poolAddress);
 
@@ -143,8 +143,8 @@ export async function getTrackedAmountUSD(
   const price1USD = token1.derivedETH.times(bundle.ethPriceUSD);
 
   // Strip chainId prefix from token ids for whitelist comparison
-  const token0Address = token0.id.split("_")[1];
-  const token1Address = token1.id.split("_")[1];
+  const token0Address = token0.id.split("_")[1]!;
+  const token1Address = token1.id.split("_")[1]!;
 
   // both are whitelist tokens, return sum of both amounts
   if (

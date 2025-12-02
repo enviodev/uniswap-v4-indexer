@@ -2,9 +2,9 @@
  * Liquidity event handlers for Uniswap v4 pools
  */
 import {
-  handlerContext,
+  type handlerContext,
+  type PoolManager_ModifyLiquidity_event,
   PoolManager,
-  PoolManager_ModifyLiquidity_event,
 } from "generated";
 import {
   getAmount0,

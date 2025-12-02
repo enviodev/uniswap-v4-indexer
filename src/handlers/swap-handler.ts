@@ -1,7 +1,7 @@
 /*
  * Swap event handlers for Uniswap v4 pools
  */
-import { PoolManager, BigDecimal, Swap } from "generated";
+import { PoolManager, BigDecimal, type Swap } from "generated";
 import { getChainConfig } from "../utils/chains";
 import { convertTokenToDecimal } from "../utils";
 import { getTrackedAmountUSD, getNativePriceInUSD } from "../utils/pricing";

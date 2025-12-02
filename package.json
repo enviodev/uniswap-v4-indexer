@@ -1,11 +1,12 @@
 {
   "name": "uniswap-v4-indexer",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "clean": "tsc --clean",
-    "build": "tsc --build",
+    "build": "tsc",
     "watch": "tsc --watch",
-    "mocha": "ts-mocha test/**/*.ts",
+    "mocha": "tsc --noEmit && NODE_OPTIONS='--no-warnings --import tsx' mocha --exit test/**/*.ts",
     "codegen": "envio codegen",
     "dev": "envio dev",
     "start": "envio start",
@@ -15,15 +16,14 @@
     "@types/chai": "^4.3.11",
     "@types/mocha": "10.0.6",
     "@types/node": "20.8.8",
-    "ts-mocha": "^10.0.0",
-    "typescript": "5.2.2",
+    "typescript": "5.9.3",
     "chai": "4.3.10",
     "mocha": "10.2.0",
     "dotenv": "16.4.5",
     "viem": "2.21.0"
   },
   "dependencies": {
-    "envio": "2.32.3"
+    "envio": "3.0.0-alpha.0"
   },
   "optionalDependencies": {
     "generated": "./generated"

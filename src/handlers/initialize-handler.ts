@@ -218,7 +218,7 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
   const poolName = `${token0.symbol} / ${token1.symbol} - ${feeBps}%`;
 
   // Create new pool with prices
-  const pool = {
+  context.Pool.set({
     id: `${event.chainId}_${event.params.id}`,
     chainId: BigInt(event.chainId),
     name: poolName,
@@ -251,9 +251,7 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
     totalValueLockedUSDUntracked: new BigDecimal(0),
     liquidityProviderCount: 0n,
     hooks: event.params.hooks,
-  };
-
-  context.Pool.set(pool);
+  });
   context.PoolManager.set(poolManager);
   context.Token.set(token0);
   context.Token.set(token1);

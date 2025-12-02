@@ -2,7 +2,7 @@ import { createPublicClient, http, getContract, type PublicClient } from "viem";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
 import * as dotenv from "dotenv";
-import { experimental_createEffect, S } from "envio";
+import { createEffect, S } from "envio";
 
 dotenv.config();
 
@@ -124,7 +124,7 @@ function sanitizeString(str: string): string {
   return str.replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim();
 }
 
-export const getTokenMetadata = experimental_createEffect(
+export const getTokenMetadata = createEffect(
   {
     name: "getTokenMetadata",
     input: S.tuple((t) => ({
@@ -132,6 +132,7 @@ export const getTokenMetadata = experimental_createEffect(
       chainId: t.item(1, S.number),
     })),
     output: TokenMetadata,
+    rateLimit: false,
     cache: true,
   },
   async ({ context, input: { address, chainId } }) => {
