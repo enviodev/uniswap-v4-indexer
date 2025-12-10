@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 3.0.0-alpha.2
-        version: 3.0.0-alpha.2(typescript@5.9.3)
+        specifier: 3.0.0-alpha.3
+        version: 3.0.0-alpha.3(typescript@5.9.3)
     devDependencies:
       '@types/chai':
         specifier: ^4.3.11
@@ -623,8 +623,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@3.0.0-alpha.2:
-    resolution: {integrity: sha512-B/M/rf2VDwpuVSJEWE3TPov7wT8O6LUilBEdThadSt+F7oNAvvzPxEGsKOT8jT/DTTa1DB6gEk7L3osUYoVHpw==}
+  envio-darwin-arm64@3.0.0-alpha.3:
+    resolution: {integrity: sha512-THtnKJ9kBSYqUYk3CDzj3noJbISkW/+dfSDP71hnh5wnmGMaeYoDQsMpEyBQA0Mf43NjQAbyom5MSYFjZMdpFw==}
     cpu: [arm64]
     os: [darwin]
 
@@ -633,8 +633,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@3.0.0-alpha.2:
-    resolution: {integrity: sha512-JFIRgNRk+hFcTX55K8j9HVKnj4XdjPU+hJ+JYTA4Vf+YWOXIgr0T2e+6AhhR6LP4C//bJkfwUV7ym5883zpJnQ==}
+  envio-darwin-x64@3.0.0-alpha.3:
+    resolution: {integrity: sha512-r4TD/k5ceU7gLGTq0glyw1RhOCPeFLxa0GoTXOlmX5JlVPehtQhF9tdkQ9faAvNQ4Rgpn3pofFhGI+S6ULUmow==}
     cpu: [x64]
     os: [darwin]
 
@@ -643,8 +643,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@3.0.0-alpha.2:
-    resolution: {integrity: sha512-lMcXq7B5VqbuRWlSHWK5fJRighqjiR4oKGSl7oIVdQljCJ7+apCE6TDPxPS2x6mc+fFCtRMW2bfMd0+GniaDHA==}
+  envio-linux-arm64@3.0.0-alpha.3:
+    resolution: {integrity: sha512-Ec0QQaFvJrON4yMJ7mhGt7xL+kXr14ZMKXKoBA00WuiblV8ebdFZ5kk0Gun8Di/DI3n+LvhjwE+0cCUIBDJR4w==}
     cpu: [arm64]
     os: [linux]
 
@@ -653,8 +653,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@3.0.0-alpha.2:
-    resolution: {integrity: sha512-tkbvIQ6OPBpCZrv/4djTLR9CWHkSHJBM6I5KUgrMosl11Ucc5t+uYPG2y9igddIBAyKbGNbnyE4QrevBsYt4xw==}
+  envio-linux-x64@3.0.0-alpha.3:
+    resolution: {integrity: sha512-vLE8MHjlxRdevlgD00XWMp8gBQq5xiFHbKGN1AiuLB4iULTXOkEfjmRyA4vpAiDJvX2CRj3P4kehbqx0NbYZCA==}
     cpu: [x64]
     os: [linux]
 
@@ -662,8 +662,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@3.0.0-alpha.2:
-    resolution: {integrity: sha512-rcmsMo72UuXNkOLpifnkmREHohN41W6S6m7P5MTW8xeYyUbYmtA/Twyv2v0AwFIpgXeP5cKFBxH2j+w8ZKCWdA==}
+  envio@3.0.0-alpha.3:
+    resolution: {integrity: sha512-S6Gg24mWK35P6puiA/SYW8dfep+yagQbJNhADKqcWHr53/J6V9F3srmQPmdc6ud7ePdS+kqEZ0EFR/ADQPYvyw==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -1964,25 +1964,25 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@3.0.0-alpha.2:
+  envio-darwin-arm64@3.0.0-alpha.3:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@3.0.0-alpha.2:
+  envio-darwin-x64@3.0.0-alpha.3:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@3.0.0-alpha.2:
+  envio-linux-arm64@3.0.0-alpha.3:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@3.0.0-alpha.2:
+  envio-linux-x64@3.0.0-alpha.3:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -2006,13 +2006,14 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@3.0.0-alpha.2(typescript@5.9.3):
+  envio@3.0.0-alpha.3(typescript@5.9.3):
     dependencies:
       '@clickhouse/client': 1.12.1
       '@elastic/ecs-pino-format': 1.4.0
       '@envio-dev/hyperfuel-client': 1.2.2
       '@envio-dev/hypersync-client': 0.7.0
       bignumber.js: 9.1.2
+      date-fns: 3.3.1
       dotenv: 16.4.5
       eventsource: 4.1.0
       pino: 8.16.1
@@ -2023,10 +2024,10 @@ snapshots:
       rescript-schema: 9.3.4(rescript@11.1.3)
       viem: 2.21.0(typescript@5.9.3)
     optionalDependencies:
-      envio-darwin-arm64: 3.0.0-alpha.2
-      envio-darwin-x64: 3.0.0-alpha.2
-      envio-linux-arm64: 3.0.0-alpha.2
-      envio-linux-x64: 3.0.0-alpha.2
+      envio-darwin-arm64: 3.0.0-alpha.3
+      envio-darwin-x64: 3.0.0-alpha.3
+      envio-linux-arm64: 3.0.0-alpha.3
+      envio-linux-x64: 3.0.0-alpha.3
     transitivePeerDependencies:
       - bufferutil
       - typescript
