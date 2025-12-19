@@ -1,10 +1,7 @@
 import { createPublicClient, http, getContract, type PublicClient } from "viem";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
-import * as dotenv from "dotenv";
-import { createEffect, S } from "envio";
-
-dotenv.config();
+import { createEffect, S, type Address } from "envio";
 
 const ERC20_ABI = [
   {
@@ -128,7 +125,7 @@ export const getTokenMetadata = createEffect(
   {
     name: "getTokenMetadata",
     input: S.tuple((t) => ({
-      address: t.item(0, S.string),
+      address: t.item(0, S.address),
       chainId: t.item(1, S.number),
     })),
     output: TokenMetadata,
@@ -175,12 +172,12 @@ export const getTokenMetadata = createEffect(
 
 // Update the fetchTokenMetadataMulticall function to sanitize name and symbol
 async function fetchTokenMetadataMulticall(
-  address: string,
+  address: Address,
   chainId: number
 ): Promise<TokenMetadata> {
   const client = getClient(chainId);
   const contract = getContract({
-    address: address as `0x${string}`,
+    address,
     abi: ERC20_ABI,
     client,
   });

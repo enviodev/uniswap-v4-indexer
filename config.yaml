@@ -2,7 +2,6 @@
 name: uniswap-v4-indexer
 contracts:
   - name: PoolManager
-    handler: src/EventHandlers.ts
     events:
       - event: Approval(address indexed owner, address indexed spender, uint256 indexed id, uint256 amount)
       - event: Donate(bytes32 indexed id, address indexed sender, uint256 amount0, uint256 amount1)
@@ -23,7 +22,6 @@ contracts:
             - "from"
       - event: Transfer(address caller, address indexed from, address indexed to, uint256 indexed id, uint256 amount)
   - name: PositionManager
-    handler: src/EventHandlers.ts
     events:
       - event: Approval(address indexed owner, address indexed spender, uint256 indexed id)
       - event: ApprovalForAll(address indexed owner, address indexed operator, bool approved)
