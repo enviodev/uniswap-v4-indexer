@@ -1,4 +1,4 @@
-import { BigDecimal } from "generated";
+import { BigDecimal, type EvmChainId } from "generated";
 
 // Chain IDs
 export enum ChainId {
@@ -49,7 +49,7 @@ export interface StaticTokenDefinition {
 // Chain-specific configurations
 // Note: All token and pool addresses should be lowercase
 
-export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
+export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
   [ChainId.MAINNET]: {
     poolManagerAddress: "0x000000000004444c5dc75cb358380d2e3de08a90",
     stablecoinWrappedNativePoolId:
@@ -411,25 +411,10 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
 };
 
 // Helper function to get config for a specific chain
-export function getChainConfig(chainId: number): ChainConfig {
+export function getChainConfig(chainId: EvmChainId): ChainConfig {
   const config = CHAIN_CONFIGS[chainId];
   if (!config) {
     throw new Error(`Unsupported chain ID: ${chainId}`);
   }
   return config;
-}
-
-// Helper function to check if a token is whitelisted on a specific chain
-export function isTokenWhitelisted(
-  chainId: number,
-  tokenAddress: string
-): boolean {
-  const config = getChainConfig(chainId);
-  return config.whitelistTokens.includes(tokenAddress.toLowerCase());
-}
-
-// Helper function to check if a token is a stablecoin on a specific chain
-export function isStablecoin(chainId: number, tokenAddress: string): boolean {
-  const config = getChainConfig(chainId);
-  return config.stablecoinAddresses.includes(tokenAddress.toLowerCase());
 }

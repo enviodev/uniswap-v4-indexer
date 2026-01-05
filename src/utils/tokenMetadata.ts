@@ -2,6 +2,7 @@ import { createPublicClient, http, getContract, type PublicClient } from "viem";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
 import { createEffect, S, type Address } from "envio";
+import type { EvmChainId } from "generated";
 
 const ERC20_ABI = [
   {
@@ -126,7 +127,7 @@ export const getTokenMetadata = createEffect(
     name: "getTokenMetadata",
     input: S.tuple((t) => ({
       address: t.item(0, S.address),
-      chainId: t.item(1, S.number),
+      chainId: t.item(1, S.number as S.Schema<EvmChainId>),
     })),
     output: TokenMetadata,
     rateLimit: false,

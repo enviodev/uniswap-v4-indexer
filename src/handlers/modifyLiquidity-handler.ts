@@ -75,7 +75,7 @@ const updateTicks = async (
 
 PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   // Get chain config for pools to skip
-  const chainConfig = getChainConfig(Number(event.chainId));
+  const chainConfig = getChainConfig(event.chainId);
 
   // Check if this pool should be skipped
   // NOTE: Subgraph only has this check in Initialize handler since skipped pools
