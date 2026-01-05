@@ -28,7 +28,7 @@ We are also in the process of including Hook features.
 
 Before running the indexer, ensure you have the following installed:
 
-- Node.js (v18 or newer)
+- Node.js (v24 or newer is recommended)
 - pnpm (v8 or newer)
 - Docker Desktop
 
