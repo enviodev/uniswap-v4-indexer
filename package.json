@@ -6,23 +6,19 @@
     "clean": "tsc --clean",
     "build": "tsc",
     "watch": "tsc --watch",
-    "mocha": "tsc --noEmit && NODE_OPTIONS='--no-warnings --import tsx' mocha --exit test/**/*.ts",
     "codegen": "envio codegen",
     "dev": "envio dev",
     "start": "envio start",
-    "test": "pnpm mocha"
+    "test": "vitest run"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.11",
-    "@types/mocha": "10.0.6",
     "@types/node": "20.8.8",
     "typescript": "5.9.3",
-    "chai": "4.3.10",
-    "mocha": "10.2.0",
-    "viem": "2.21.0"
+    "viem": "2.21.0",
+    "vitest": "4.0.16"
   },
   "dependencies": {
-    "envio": "3.0.0-alpha.5"
+    "envio": "3.0.0-alpha.7"
   },
   "optionalDependencies": {
     "generated": "./generated"
