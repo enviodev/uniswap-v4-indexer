@@ -18,7 +18,7 @@
     "vitest": "4.0.16"
   },
   "dependencies": {
-    "envio": "3.0.0-alpha.7"
+    "envio": "3.0.0-alpha.9"
   },
   "optionalDependencies": {
     "generated": "./generated"
