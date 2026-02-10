@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 3.0.0-alpha.11
-        version: 3.0.0-alpha.11(react-dom@19.1.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
+        specifier: 3.0.0-alpha.13
+        version: 3.0.0-alpha.13(react-dom@19.1.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
     devDependencies:
       '@types/node':
         specifier: 20.8.8
@@ -929,8 +929,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@3.0.0-alpha.11:
-    resolution: {integrity: sha512-jQriVGMq2gsNaFNWDmVf/c0AhBha8147FfPgfoPFXAhr2TvrSslUyEtcR68nmIaYOqmjXEulJ6XCAMb/2QIyQg==}
+  envio-darwin-arm64@3.0.0-alpha.13:
+    resolution: {integrity: sha512-H3VAqfuA0MHcHo7KsIF7Knv8ZGZ6Tpg9PMC8kirNcL5PNPOnrIMM6S2LXqt6W36XZWbfYRIRmqZcc6xSnp9x5A==}
     cpu: [arm64]
     os: [darwin]
 
@@ -939,8 +939,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@3.0.0-alpha.11:
-    resolution: {integrity: sha512-rwHa/LVbnuXat9U9ceuU462uIk5VWI33FxUd1M2HTZtX2uLl2bdcQFV4GqTFu6W3PzE8uWSCcDETSLAHgUdqWw==}
+  envio-darwin-x64@3.0.0-alpha.13:
+    resolution: {integrity: sha512-o/HvOOE2IsfgYgCROVYz+38k/xeliOiFwyPuzfAVnl9WwjebU3Gvx5S5DN6mas84PFCPEC8MwxtL9Fz+HQFxtg==}
     cpu: [x64]
     os: [darwin]
 
@@ -949,8 +949,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@3.0.0-alpha.11:
-    resolution: {integrity: sha512-gXOUz3JqIAIKqyFJeOeFV+BWcxxco7F6b0We8oSVQXtQT2HmoUSGxjiyDE/0OEZVjNfeYMT89QJlTCh1Sj3qQg==}
+  envio-linux-arm64@3.0.0-alpha.13:
+    resolution: {integrity: sha512-sqFCIcHoKYUQDayFUTsGP3fEpzrYYYGShOL6FOS+4XTaYRtUY6x+2VCDDdTfz4QxD3KAuxzaUjl3fQsMOAGKHg==}
     cpu: [arm64]
     os: [linux]
 
@@ -959,8 +959,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@3.0.0-alpha.11:
-    resolution: {integrity: sha512-dItwOmEF2jbqgEXTMoqOZKEy22ZCg2POR3/t1GNLj93kZ2clAzjzoU47Js8++Bdh5ywgKNUFLVRPvNS72ahZ5Q==}
+  envio-linux-x64@3.0.0-alpha.13:
+    resolution: {integrity: sha512-ktVRP30jBpb/Nt9qrZDxr7j7tfEt/aZzrvNeixubp7pifnbptvJMbrk/ZPm4ZMuEXbrxKSmnN9BHzmzUNPhrEQ==}
     cpu: [x64]
     os: [linux]
 
@@ -968,8 +968,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@3.0.0-alpha.11:
-    resolution: {integrity: sha512-+R4EgkKKq/Vw6Uq4wRrrNpYGej24V0QzZzlw9KQ6wYiNFwWKBx48QgV0BRIGXs0LJENRPj0R7tmvYAWUA8XRvQ==}
+  envio@3.0.0-alpha.13:
+    resolution: {integrity: sha512-zS1CL6lV018RP9O7JH9tUtu2qfRBuMMB5M2exk1yQkvKf7T+EKq0XRGloI+UVFnGtpT/yrfeQGSScfSAfulyDg==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -2625,25 +2625,25 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@3.0.0-alpha.11:
+  envio-darwin-arm64@3.0.0-alpha.13:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@3.0.0-alpha.11:
+  envio-darwin-x64@3.0.0-alpha.13:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@3.0.0-alpha.11:
+  envio-linux-arm64@3.0.0-alpha.13:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@3.0.0-alpha.11:
+  envio-linux-x64@3.0.0-alpha.13:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -2667,7 +2667,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@3.0.0-alpha.11(react-dom@19.1.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3):
+  envio@3.0.0-alpha.13(react-dom@19.1.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3):
     dependencies:
       '@clickhouse/client': 1.12.1
       '@elastic/ecs-pino-format': 1.4.0
@@ -2693,10 +2693,10 @@ snapshots:
       viem: 2.21.0(typescript@5.9.3)
       yargs: 17.7.2
     optionalDependencies:
-      envio-darwin-arm64: 3.0.0-alpha.11
-      envio-darwin-x64: 3.0.0-alpha.11
-      envio-linux-arm64: 3.0.0-alpha.11
-      envio-linux-x64: 3.0.0-alpha.11
+      envio-darwin-arm64: 3.0.0-alpha.13
+      envio-darwin-x64: 3.0.0-alpha.13
+      envio-linux-arm64: 3.0.0-alpha.13
+      envio-linux-x64: 3.0.0-alpha.13
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
