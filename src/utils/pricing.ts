@@ -1,4 +1,4 @@
-import { BigDecimal, type handlerContext } from "generated";
+import { BigDecimal, type handlerContext, type Pool } from "generated";
 
 import { exponentToBigDecimal, safeDiv } from "../utils/index";
 import { type Token } from "generated";
@@ -74,46 +74,46 @@ export async function findNativePerToken(
   if (stablecoinAddresses.includes(tokenAddress)) {
     priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD);
   } else {
-    for (let i = 0; i < whiteList.length; ++i) {
-      const poolAddress = whiteList[i]!;
-      // Pool IDs already include chainId since we store them that way in whitelistPools
-      const pool = await context.Pool.get(poolAddress);
+    // Pool IDs already include chainId since we store them that way in whitelistPools
+    const pools = await Promise.all(
+      whiteList.map((poolAddress) => context.Pool.get(poolAddress))
+    );
 
-      if (pool) {
-        if (pool.liquidity > ZERO_BI) {
-          const poolToken0 = pool.token0.split("_")[1];
-          const poolToken1 = pool.token1.split("_")[1];
+    const tokenFetches: {
+      pool: Pool;
+      tokenId: string;
+      isToken0: boolean;
+    }[] = [];
+    for (const pool of pools) {
+      if (pool && pool.liquidity > ZERO_BI) {
+        const poolToken0 = pool.token0.split("_")[1];
+        const poolToken1 = pool.token1.split("_")[1];
+        if (poolToken0 == tokenAddress) {
+          tokenFetches.push({ pool, tokenId: pool.token1, isToken0: false });
+        }
+        if (poolToken1 == tokenAddress) {
+          tokenFetches.push({ pool, tokenId: pool.token0, isToken0: true });
+        }
+      }
+    }
+    const tokens = await Promise.all(
+      tokenFetches.map((f) => context.Token.get(f.tokenId))
+    );
 
-          if (poolToken0 == tokenAddress) {
-            const token1 = await context.Token.get(pool.token1);
-            if (token1) {
-              const ethLocked = pool.totalValueLockedToken1.times(
-                token1.derivedETH
-              );
-              if (
-                ethLocked.gt(largestLiquidityETH) &&
-                ethLocked.gt(minimumNativeLocked)
-              ) {
-                largestLiquidityETH = ethLocked;
-                priceSoFar = pool.token1Price.times(token1.derivedETH);
-              }
-            }
-          }
-          if (poolToken1 == tokenAddress) {
-            const token0 = await context.Token.get(pool.token0);
-            if (token0) {
-              const ethLocked = pool.totalValueLockedToken0.times(
-                token0.derivedETH
-              );
-              if (
-                ethLocked.gt(largestLiquidityETH) &&
-                ethLocked.gt(minimumNativeLocked)
-              ) {
-                largestLiquidityETH = ethLocked;
-                priceSoFar = pool.token0Price.times(token0.derivedETH);
-              }
-            }
-          }
+    for (const [i, { pool, isToken0 }] of tokenFetches.entries()) {
+      const token = tokens[i];
+      if (token) {
+        const ethLocked = isToken0
+          ? pool.totalValueLockedToken0.times(token.derivedETH)
+          : pool.totalValueLockedToken1.times(token.derivedETH);
+        if (
+          ethLocked.gt(largestLiquidityETH) &&
+          ethLocked.gt(minimumNativeLocked)
+        ) {
+          largestLiquidityETH = ethLocked;
+          priceSoFar = isToken0
+            ? pool.token0Price.times(token.derivedETH)
+            : pool.token1Price.times(token.derivedETH);
         }
       }
     }

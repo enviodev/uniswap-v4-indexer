@@ -10,10 +10,18 @@ import { findNativePerToken } from "../utils/pricing";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 
 PoolManager.Swap.handler(async ({ event, context }) => {
-  let [poolManager, pool, bundle] = await Promise.all([
+  const chainConfig = getChainConfig(event.chainId);
+
+  let [poolManager, pool, bundle, ethPriceUSD] = await Promise.all([
     context.PoolManager.get(`${event.chainId}_${event.srcAddress}`),
     context.Pool.get(`${event.chainId}_${event.params.id}`),
     context.Bundle.get(event.chainId.toString()),
+    getNativePriceInUSD(
+      context,
+      event.chainId.toString(),
+      chainConfig.stablecoinWrappedNativePoolId,
+      chainConfig.stablecoinIsToken0
+    ),
   ]);
 
   if (!pool || !poolManager) {
@@ -33,13 +41,12 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     isHookedPool
       ? context.HookStats.get(`${event.chainId}_${pool.hooks}`)
       : undefined,
+    ,
   ]);
 
   if (!token0 || !token1) {
     return;
   }
-
-  const chainConfig = getChainConfig(event.chainId);
 
   // Check if this pool should be skipped
   // NOTE: Subgraph only has this check in Initialize handler since skipped pools
@@ -55,33 +62,24 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   };
 
   // Update tokens' derivedETH values first
-  token0 = {
-    ...token0,
-    derivedETH: await findNativePerToken(
+  const [token0DerivedETH, token1DerivedETH] = await Promise.all([
+    findNativePerToken(
       context,
       token0,
       chainConfig.wrappedNativeAddress,
       chainConfig.stablecoinAddresses,
       chainConfig.minimumNativeLocked
     ),
-  };
-  token1 = {
-    ...token1,
-    derivedETH: await findNativePerToken(
+    findNativePerToken(
       context,
       token1,
       chainConfig.wrappedNativeAddress,
       chainConfig.stablecoinAddresses,
       chainConfig.minimumNativeLocked
     ),
-  };
-
-  const ethPriceUSD = await getNativePriceInUSD(
-    context,
-    event.chainId.toString(),
-    chainConfig.stablecoinWrappedNativePoolId,
-    chainConfig.stablecoinIsToken0
-  );
+  ]);
+  token0 = { ...token0, derivedETH: token0DerivedETH };
+  token1 = { ...token1, derivedETH: token1DerivedETH };
 
   if (context.isPreload) {
     return;
