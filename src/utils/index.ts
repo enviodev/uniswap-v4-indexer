@@ -49,7 +49,7 @@ export function fastExponentiation(
     return value;
   }
 
-  const halfPower = power / 2;
+  const halfPower = Math.floor(power / 2);
   const halfResult = fastExponentiation(value, halfPower);
 
   // Use the fact that x ^ (2n) = (x ^ n) * (x ^ n) and we can compute (x ^ n) only once.
