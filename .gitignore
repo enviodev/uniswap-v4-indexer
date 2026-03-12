@@ -35,3 +35,4 @@ logs
 build
 .DS_Store
 .env
+.pnpm-store
