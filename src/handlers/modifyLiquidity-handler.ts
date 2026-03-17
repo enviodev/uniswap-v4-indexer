@@ -1,11 +1,7 @@
 /*
  * Liquidity event handlers for Uniswap v4 pools
  */
-import {
-  type handlerContext,
-  type PoolManager_ModifyLiquidity_event,
-  PoolManager,
-} from "generated";
+import { PoolManager } from "generated";
 import {
   getAmount0,
   getAmount1,
@@ -13,65 +9,6 @@ import {
 import { convertTokenToDecimal } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
-
-const updateTicks = async (
-  context: handlerContext,
-  event: PoolManager_ModifyLiquidity_event,
-  poolId: string
-) => {
-  // tick entities
-  const lowerTickIdx = Number(event.params.tickLower);
-  const upperTickIdx = Number(event.params.tickUpper);
-
-  const lowerTickId = poolId + "#" + BigInt(event.params.tickLower).toString();
-  const upperTickId = poolId + "#" + BigInt(event.params.tickUpper).toString();
-
-  let [lowerTick, upperTick] = await Promise.all([
-    context.Tick.get(lowerTickId),
-    context.Tick.get(upperTickId),
-  ]);
-
-  if (context.isPreload) {
-    return;
-  }
-
-  if (!lowerTick) {
-    lowerTick = createInitialTick(
-      lowerTickId,
-      lowerTickIdx,
-      poolId,
-      BigInt(event.chainId),
-      BigInt(event.block.timestamp),
-      BigInt(event.block.number)
-    );
-  }
-  if (!upperTick) {
-    upperTick = createInitialTick(
-      upperTickId,
-      upperTickIdx,
-      poolId,
-      BigInt(event.chainId),
-      BigInt(event.block.timestamp),
-      BigInt(event.block.number)
-    );
-  }
-
-  const amount = event.params.liquidityDelta;
-  lowerTick = {
-    ...lowerTick,
-    liquidityGross: lowerTick.liquidityGross + amount,
-    liquidityNet: lowerTick.liquidityNet + amount,
-  };
-  upperTick = {
-    ...upperTick,
-    liquidityGross: upperTick.liquidityGross + amount,
-    liquidityNet: upperTick.liquidityNet - amount,
-  };
-
-  // Save tick entities
-  context.Tick.set(lowerTick);
-  context.Tick.set(upperTick);
-};
 
 PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   // Get chain config for pools to skip
@@ -86,30 +23,87 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   }
 
   const poolId = `${event.chainId}_${event.params.id}`;
-  await updateTicks(context, event, poolId);
 
-  let pool = await context.Pool.get(poolId);
-  if (!pool) return;
+  // tick entities
+  const lowerTickId = poolId + "#" + BigInt(event.params.tickLower).toString();
+  const upperTickId = poolId + "#" + BigInt(event.params.tickUpper).toString();
 
-  let [token0, token1] = await Promise.all([
-    context.Token.get(pool.token0),
-    context.Token.get(pool.token1),
-  ]);
-  if (!token0 || !token1) return;
+  // Fetch pool + ticks concurrently
+  const [existingPool, existingLowerTick, existingUpperTick] =
+    await Promise.all([
+      context.Pool.get(poolId),
+      context.Tick.get(lowerTickId),
+      context.Tick.get(upperTickId),
+    ]);
+  if (!existingPool) return;
 
-  const bundle = await context.Bundle.get(event.chainId.toString());
-  if (!bundle) return;
+  // Fetch tokens, bundle, poolManager, and hookStats concurrently
+  const isHookedPool =
+    existingPool.hooks !== "0x0000000000000000000000000000000000000000";
+  const hookStatsId = isHookedPool
+    ? `${event.chainId}_${existingPool.hooks}`
+    : undefined;
 
-  let poolManager = await context.PoolManager.getOrThrow(
-    `${event.chainId}_${event.srcAddress}`
-  );
+  const [existingToken0, existingToken1, bundle, existingPoolManager, existingHookStats] =
+    await Promise.all([
+      context.Token.get(existingPool.token0),
+      context.Token.get(existingPool.token1),
+      context.Bundle.get(event.chainId.toString()),
+      context.PoolManager.getOrThrow(
+        `${event.chainId}_${event.srcAddress}`
+      ),
+      hookStatsId ? context.HookStats.get(hookStatsId) : undefined,
+    ]);
+  if (!existingToken0 || !existingToken1 || !bundle) return;
 
   if (context.isPreload) {
     return;
   }
 
-  const currTick = pool.tick ?? 0n;
-  const currSqrtPriceX96 = pool.sqrtPrice ?? 0n;
+  // --- Tick updates ---
+  const lowerTickIdx = Number(event.params.tickLower);
+  const upperTickIdx = Number(event.params.tickUpper);
+  const amount = event.params.liquidityDelta;
+
+  let lowerTick =
+    existingLowerTick ??
+    createInitialTick(
+      lowerTickId,
+      lowerTickIdx,
+      poolId,
+      BigInt(event.chainId),
+      BigInt(event.block.timestamp),
+      BigInt(event.block.number)
+    );
+  let upperTick =
+    existingUpperTick ??
+    createInitialTick(
+      upperTickId,
+      upperTickIdx,
+      poolId,
+      BigInt(event.chainId),
+      BigInt(event.block.timestamp),
+      BigInt(event.block.number)
+    );
+
+  lowerTick = {
+    ...lowerTick,
+    liquidityGross: lowerTick.liquidityGross + amount,
+    liquidityNet: lowerTick.liquidityNet + amount,
+  };
+  upperTick = {
+    ...upperTick,
+    liquidityGross: upperTick.liquidityGross + amount,
+    liquidityNet: upperTick.liquidityNet - amount,
+  };
+
+  // Save tick entities
+  context.Tick.set(lowerTick);
+  context.Tick.set(upperTick);
+
+  // --- Pool, token, and manager updates ---
+  const currTick = existingPool.tick ?? 0n;
+  const currSqrtPriceX96 = existingPool.sqrtPrice ?? 0n;
   // Calculate the token amounts from the liquidity change
   const amount0Raw = getAmount0(
     event.params.tickLower,
@@ -126,20 +120,20 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     currSqrtPriceX96
   );
   // Convert to proper decimals
-  const amount0 = convertTokenToDecimal(amount0Raw, token0.decimals);
-  const amount1 = convertTokenToDecimal(amount1Raw, token1.decimals);
+  const amount0 = convertTokenToDecimal(amount0Raw, existingToken0.decimals);
+  const amount1 = convertTokenToDecimal(amount1Raw, existingToken1.decimals);
 
   // Calculate amountUSD based on token prices
   const amountUSD = amount0
-    .times(token0.derivedETH)
-    .plus(amount1.times(token1.derivedETH))
+    .times(existingToken0.derivedETH)
+    .plus(amount1.times(existingToken1.derivedETH))
     .times(bundle.ethPriceUSD);
 
   // Update pool TVL
-  pool = {
-    ...pool,
-    totalValueLockedToken0: pool.totalValueLockedToken0.plus(amount0),
-    totalValueLockedToken1: pool.totalValueLockedToken1.plus(amount1),
+  let pool = {
+    ...existingPool,
+    totalValueLockedToken0: existingPool.totalValueLockedToken0.plus(amount0),
+    totalValueLockedToken1: existingPool.totalValueLockedToken1.plus(amount1),
   };
   // Only update liquidity if position is in range
   if (
@@ -152,13 +146,13 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     };
   }
   // Update token TVL
-  token0 = {
-    ...token0,
-    totalValueLocked: token0.totalValueLocked.plus(amount0),
+  const token0 = {
+    ...existingToken0,
+    totalValueLocked: existingToken0.totalValueLocked.plus(amount0),
   };
-  token1 = {
-    ...token1,
-    totalValueLocked: token1.totalValueLocked.plus(amount1),
+  const token1 = {
+    ...existingToken1,
+    totalValueLocked: existingToken1.totalValueLocked.plus(amount1),
   };
   // Store current pool TVL for later
   const currentPoolTvlETH = pool.totalValueLockedETH;
@@ -175,11 +169,11 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
   };
   // Update PoolManager
-  poolManager = {
-    ...poolManager,
-    txCount: poolManager.txCount + 1n,
+  let poolManager = {
+    ...existingPoolManager,
+    txCount: existingPoolManager.txCount + 1n,
     // Reset and recalculate TVL
-    totalValueLockedETH: poolManager.totalValueLockedETH
+    totalValueLockedETH: existingPoolManager.totalValueLockedETH
       .minus(currentPoolTvlETH)
       .plus(pool.totalValueLockedETH),
   };
@@ -212,23 +206,14 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   };
 
   // Check if this is a hooked pool and update HookStats
-  const isHookedPool =
-    pool.hooks !== "0x0000000000000000000000000000000000000000";
-
-  if (isHookedPool) {
-    const hookStatsId = `${event.chainId}_${pool.hooks}`;
-    let hookStats = await context.HookStats.get(hookStatsId);
-
-    if (hookStats) {
-      // Update the TVL for this hook
-      hookStats = {
-        ...hookStats,
-        totalValueLockedUSD: hookStats.totalValueLockedUSD
-          .minus(currentPoolTvlUSD) // Remove old TVL
-          .plus(pool.totalValueLockedETH.times(bundle.ethPriceUSD)), // Add new TVL
-      };
-      context.HookStats.set(hookStats);
-    }
+  if (isHookedPool && existingHookStats) {
+    // Update the TVL for this hook
+    context.HookStats.set({
+      ...existingHookStats,
+      totalValueLockedUSD: existingHookStats.totalValueLockedUSD
+        .minus(currentPoolTvlUSD) // Remove old TVL
+        .plus(pool.totalValueLockedETH.times(bundle.ethPriceUSD)), // Add new TVL
+    });
   }
 
   context.ModifyLiquidity.set(modifyLiquidity);
