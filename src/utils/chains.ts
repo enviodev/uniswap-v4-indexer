@@ -69,8 +69,24 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
       "0x6b175474e89094c44da98b954eedeac495271d0f", // DAI
       "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
       "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
+      "0x0000000000085d4780b73119b644ae5ecd22b376", // TUSD
+      "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", // WBTC
+      "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643", // cDAI
+      "0x39aa39c021dfbae8fac545936693ac917d5e7563", // cUSDC
+      "0x86fadb80d8d2cff3c3680819e4da99c10232ba0f", // EBASE
+      "0x57ab1ec28d129707052df4df418d58a2d46d5f51", // sUSD
+      "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2", // MKR
+      "0xc00e94cb662c3520282e6f5717214004a7f26888", // COMP
+      "0x514910771af9ca656af840dff83e8264ecf986ca", // LINK
+      "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f", // SNX
+      "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", // YFI
+      "0x111111111117dc0aa78b770fa6a738034120c302", // 1INCH
+      "0xdf5e0e81dff6faf3a7e52ba697820c5e32d806a8", // yCurv
+      "0x956f47f50a910163d8bf957cf5846d573e7f87ca", // FEI
+      "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0", // MATIC
+      "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9", // AAVE
+      "0xfe2e637202056d30016725477c5da089ab0a043a", // sETH2
       "0x0000000000000000000000000000000000000000", // Native ETH
-      // Add other mainnet whitelisted tokens as needed
     ],
     tokenOverrides: [
       {
@@ -136,7 +152,10 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
       "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1", // DAI
       "0x7f5c764cbc14f9669b88837ca1490cca17c31607", // USDC.e
       "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58", // USDT
-      "0x4200000000000000000000000000000042000000", // OP
+      "0x4200000000000000000000000000000000000042", // OP
+      "0x9e1028f5f1d5ede59748ffcee5532509976840e0", // PERP
+      "0x50c5725949a6f0c72e6c4a641f24049a917db0cb", // LYRA
+      "0x68f180fcce6836688e9084f035309e29bf0a2095", // WBTC
       "0x0b2c639c533813f4aa9d7837caf62653d097ff85", // USDC
       "0x0000000000000000000000000000000000000000", // Native ETH
     ],
@@ -162,6 +181,7 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
       "0x4200000000000000000000000000000000000006", // WETH
       "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
       "0x0000000000000000000000000000000000000000", // Native ETH
+      "0x1111111111166b7fe7bd91427724b487980afc69", // ZORA
     ],
     tokenOverrides: [],
     poolsToSkip: [],
@@ -340,12 +360,15 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
     stablecoinAddresses: [
       "0x078d782b760474a361dda0af3839290b0ef57ad6", // USDC
       "0x20cab320a855b39f724131c69424240519573f81", // DAI
+      "0x9151434b16b9763660705744891fa906f660ecc5", // USDT0
     ],
     whitelistTokens: [
       "0x4200000000000000000000000000000000000006", // WETH
       "0x078d782b760474a361dda0af3839290b0ef57ad6", // USDC
       "0x20cab320a855b39f724131c69424240519573f81", // DAI
       "0x0000000000000000000000000000000000000000", // Native ETH
+      "0x9151434b16b9763660705744891fa906f660ecc5", // USDT0
+      "0x927b51f251480a681271180da4de28d44ec4afb8", // WBTC
     ],
     tokenOverrides: [],
     poolsToSkip: [],

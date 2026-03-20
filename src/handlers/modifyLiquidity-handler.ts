@@ -129,29 +129,34 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     .plus(amount1.times(existingToken1.derivedETH))
     .times(bundle.ethPriceUSD);
 
-  // Update pool TVL
+  // Update pool TVL and txCount
   let pool = {
     ...existingPool,
+    txCount: existingPool.txCount + 1n,
     totalValueLockedToken0: existingPool.totalValueLockedToken0.plus(amount0),
     totalValueLockedToken1: existingPool.totalValueLockedToken1.plus(amount1),
   };
-  // Only update liquidity if position is in range
+  // Only update liquidity if position is in range and tick is initialized
   if (
-    event.params.tickLower <= (pool.tick ?? 0n) &&
-    event.params.tickUpper > (pool.tick ?? 0n)
+    pool.tick !== null &&
+    pool.tick !== undefined &&
+    event.params.tickLower <= pool.tick &&
+    event.params.tickUpper > pool.tick
   ) {
     pool = {
       ...pool,
       liquidity: pool.liquidity + event.params.liquidityDelta,
     };
   }
-  // Update token TVL
-  const token0 = {
+  // Update token TVL and txCount
+  let token0 = {
     ...existingToken0,
+    txCount: existingToken0.txCount + 1n,
     totalValueLocked: existingToken0.totalValueLocked.plus(amount0),
   };
-  const token1 = {
+  let token1 = {
     ...existingToken1,
+    txCount: existingToken1.txCount + 1n,
     totalValueLocked: existingToken1.totalValueLocked.plus(amount1),
   };
   // Store current pool TVL for later
@@ -167,6 +172,19 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   pool = {
     ...pool,
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
+  };
+  // Update token totalValueLockedUSD
+  token0 = {
+    ...token0,
+    totalValueLockedUSD: token0.totalValueLocked.times(
+      token0.derivedETH.times(bundle.ethPriceUSD)
+    ),
+  };
+  token1 = {
+    ...token1,
+    totalValueLockedUSD: token1.totalValueLocked.times(
+      token1.derivedETH.times(bundle.ethPriceUSD)
+    ),
   };
   // Update PoolManager
   let poolManager = {

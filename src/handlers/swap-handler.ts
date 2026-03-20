@@ -151,9 +151,10 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   // Store current pool TVL values for later calculations
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
-  // Update pool values
+  // Update pool values (feeTier updated to actual swap fee for dynamic fee pools)
   pool = {
     ...pool,
+    feeTier: BigInt(event.params.fee),
     txCount: pool.txCount + 1n,
     sqrtPrice: event.params.sqrtPriceX96,
     tick: event.params.tick,
@@ -181,6 +182,39 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   pool = {
     ...pool,
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
+  };
+  // Update token0 data
+  token0 = {
+    ...token0,
+    volume: token0.volume.plus(amount0Abs),
+    totalValueLocked: token0.totalValueLocked.plus(amount0),
+    volumeUSD: token0.volumeUSD.plus(amountTotalUSDTracked),
+    untrackedVolumeUSD: token0.untrackedVolumeUSD.plus(amountTotalUSDUntracked),
+    feesUSD: token0.feesUSD.plus(feesUSD),
+    txCount: token0.txCount + 1n,
+  };
+  // Update token1 data
+  token1 = {
+    ...token1,
+    volume: token1.volume.plus(amount1Abs),
+    totalValueLocked: token1.totalValueLocked.plus(amount1),
+    volumeUSD: token1.volumeUSD.plus(amountTotalUSDTracked),
+    untrackedVolumeUSD: token1.untrackedVolumeUSD.plus(amountTotalUSDUntracked),
+    feesUSD: token1.feesUSD.plus(feesUSD),
+    txCount: token1.txCount + 1n,
+  };
+  // Update token totalValueLockedUSD
+  token0 = {
+    ...token0,
+    totalValueLockedUSD: token0.totalValueLocked.times(
+      token0.derivedETH.times(bundle.ethPriceUSD)
+    ),
+  };
+  token1 = {
+    ...token1,
+    totalValueLockedUSD: token1.totalValueLocked.times(
+      token1.derivedETH.times(bundle.ethPriceUSD)
+    ),
   };
   // Update PoolManager aggregates
   poolManager = {
