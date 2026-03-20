@@ -16,7 +16,6 @@ export enum ChainId {
   SONEIUM = 1868,
   MONAD = 143,
   LINEA = 59144,
-  MEGAETH = 6342,
   CELO = 42220,
 }
 
@@ -458,32 +457,6 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
       "0x2416092f143378750bb29b79ed961ab195cceea5", // EZETH
       "0x1bf74c010e6320bab11e2e5a532b5ac15e0b8aa6", // WEETH
       "0x79a02482a880bce3f13e09da970dc34db4cd24d1", // USDCE
-      "0x0000000000000000000000000000000000000000", // Native ETH
-    ],
-    tokenOverrides: [],
-    poolsToSkip: [],
-    nativeTokenDetails: {
-      symbol: "ETH",
-      name: "Ethereum",
-      decimals: BigInt(18),
-    },
-  },
-  [ChainId.MEGAETH]: {
-    poolManagerAddress: "0x58dd83c317b03e6ebd72c3e912adf60a8e97aa95",
-    stablecoinWrappedNativePoolId:
-      "0xf1fc7e1b96823086b3821db02223910112d139b28c6a132befccada2a3ecae89",
-    stablecoinIsToken0: false,
-    wrappedNativeAddress: "0x4200000000000000000000000000000000000006", // WETH
-    minimumNativeLocked: new BigDecimal("1"),
-    stablecoinAddresses: [
-      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDT0
-      "0xfafddbb3fc7688494971a79cc65dca3ef82079e7", // USDm
-    ],
-    whitelistTokens: [
-      "0x4200000000000000000000000000000000000006", // WETH
-      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDT0
-      "0xfafddbb3fc7688494971a79cc65dca3ef82079e7", // USDm
-      "0x28b7e77f82b25b95953825f1e3ea0e36c1c29861", // MEGA
       "0x0000000000000000000000000000000000000000", // Native ETH
     ],
     tokenOverrides: [],
