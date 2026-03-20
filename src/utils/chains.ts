@@ -15,6 +15,9 @@ export enum ChainId {
   UNICHAIN = 130,
   SONEIUM = 1868,
   MONAD = 143,
+  LINEA = 59144,
+  MEGAETH = 6342,
+  CELO = 42220,
 }
 
 // Native token details interface
@@ -428,6 +431,102 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
     nativeTokenDetails: {
       symbol: "MON",
       name: "MON",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.LINEA]: {
+    poolManagerAddress: "0x248083fb965359d82b06c1f5322480dcfc1ad857",
+    stablecoinWrappedNativePoolId:
+      "0x9949478188160639c18d4948d6d839d3937ffff34bbb3f62f7c557daab069bb9",
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f", // WETH
+    minimumNativeLocked: new BigDecimal("1"),
+    stablecoinAddresses: [
+      "0x176211869ca2b568f2a7d4ee941e073a821ee1ff", // USDC
+      "0xa219439258ca9da29e9cc4ce5596924745e12b93", // USDT
+      "0xaca92e438df0b2401ff60da7e4337b687a2435da", // MUSD
+      "0x79a02482a880bce3f13e09da970dc34db4cd24d1", // USDCE
+    ],
+    whitelistTokens: [
+      "0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f", // WETH
+      "0xa219439258ca9da29e9cc4ce5596924745e12b93", // USDT
+      "0xaca92e438df0b2401ff60da7e4337b687a2435da", // MUSD
+      "0x1789e0043623282d5dcc7f213d703c6d8bafbb04", // LINEA
+      "0x3aab2285ddcddad8edf438c1bab47e1a9d05a9b4", // WBTC
+      "0xe4eeb461ad1e4ef8b8ef71a33694ccd84af051c4", // REX33
+      "0xb5bedd42000b71fdde22d3ee8a79bd49a568fc8f", // WSTETH
+      "0x2416092f143378750bb29b79ed961ab195cceea5", // EZETH
+      "0x1bf74c010e6320bab11e2e5a532b5ac15e0b8aa6", // WEETH
+      "0x79a02482a880bce3f13e09da970dc34db4cd24d1", // USDCE
+      "0x0000000000000000000000000000000000000000", // Native ETH
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "ETH",
+      name: "Ethereum",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.MEGAETH]: {
+    poolManagerAddress: "0x58dd83c317b03e6ebd72c3e912adf60a8e97aa95",
+    stablecoinWrappedNativePoolId:
+      "0xf1fc7e1b96823086b3821db02223910112d139b28c6a132befccada2a3ecae89",
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0x4200000000000000000000000000000000000006", // WETH
+    minimumNativeLocked: new BigDecimal("1"),
+    stablecoinAddresses: [
+      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDT0
+      "0xfafddbb3fc7688494971a79cc65dca3ef82079e7", // USDm
+    ],
+    whitelistTokens: [
+      "0x4200000000000000000000000000000000000006", // WETH
+      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDT0
+      "0xfafddbb3fc7688494971a79cc65dca3ef82079e7", // USDm
+      "0x28b7e77f82b25b95953825f1e3ea0e36c1c29861", // MEGA
+      "0x0000000000000000000000000000000000000000", // Native ETH
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "ETH",
+      name: "Ethereum",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.CELO]: {
+    poolManagerAddress: "0x288dc841a52fca2707c6947b3a777c5e56cd87bc",
+    stablecoinWrappedNativePoolId:
+      "0x29aa9a73eedb0324148d5e43c5ebf2d479fbf04abea11e0d5afa7143387e30c6",
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0x471ece3750da237f93b8e339c536989b8978a438", // CELO
+    minimumNativeLocked: new BigDecimal("3600"),
+    stablecoinAddresses: [
+      "0x765de816845861e75a25fca122bb6898b8b1282a", // cUSD
+      "0xef4229c8c3250c675f21bcefa42f58efbff6002a", // Bridged USDC
+      "0xceba9300f2b948710d2653dd7b07f33a8b32118c", // Native USDC
+      "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e", // USDT
+    ],
+    whitelistTokens: [
+      "0x471ece3750da237f93b8e339c536989b8978a438", // CELO
+      "0x765de816845861e75a25fca122bb6898b8b1282a", // cUSD
+      "0xef4229c8c3250c675f21bcefa42f58efbff6002a", // Bridged USDC
+      "0xceba9300f2b948710d2653dd7b07f33a8b32118c", // Native USDC
+      "0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73", // cEUR
+      "0xe8537a3d056da446677b9e9d6c5db704eaab4787", // cREAL
+      "0x46c9757c5497c5b1f2eb73ae79b6b67d119b0b58", // PACT
+      "0x17700282592d6917f6a73d0bf8accf4d578c131e", // MOO
+      "0x66803fb87abd4aac3cbb3fad7c3aa01f6f3fb207", // Portal ETH
+      "0xbaab46e28388d2779e6e31fd00cf0e5ad95e327b", // WBTC
+      "0xd221812de1bd094f35587ee8e174b07b6167d9af", // WETH
+      "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e", // USDT
+      "0x0000000000000000000000000000000000000000", // Native CELO
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "CELO",
+      name: "Celo",
       decimals: BigInt(18),
     },
   },
