@@ -31,6 +31,10 @@ export function hexToBigInt(hex: string): bigint {
  * Implements exponentiation by squaring
  * (see https://en.wikipedia.org/wiki/Exponentiation_by_squaring )
  * to minimize the number of BigDecimal operations and their impact on performance.
+ *
+ * Uses Math.floor for correct integer division and caps intermediate precision
+ * at 40 digits to prevent BigDecimal digit explosion during squaring steps
+ * (without capping, 18 squaring levels would produce ~1M digit intermediates).
  */
 export function fastExponentiation(
   value: BigDecimal,
@@ -49,15 +53,16 @@ export function fastExponentiation(
     return value;
   }
 
-  const halfPower = power / 2;
+  const halfPower = Math.floor(power / 2);
   const halfResult = fastExponentiation(value, halfPower);
 
   // Use the fact that x ^ (2n) = (x ^ n) * (x ^ n) and we can compute (x ^ n) only once.
-  let result = halfResult.times(halfResult);
+  // Cap precision after each multiplication to prevent digit explosion.
+  let result = new BigDecimal(halfResult.times(halfResult).toFixed(40));
 
   // For odd powers, x ^ (2n + 1) = (x ^ 2n) * x
   if (power % 2 == 1) {
-    result = result.times(value);
+    result = new BigDecimal(result.times(value).toFixed(40));
   }
   return result;
 }
