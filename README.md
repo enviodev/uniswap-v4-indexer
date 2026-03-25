@@ -18,7 +18,7 @@ This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionMa
 - `Transfer` / `Approval` - ERC-6909 token transfers and approvals
 
 **Chains:**
-Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BSC, Unichain, World Chain, Soneium, Ink, Linea, Celo
+Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BNB Chain, Unichain, World Chain, Soneium, Ink, Linea, Celo
 
 ## What You Can Build
 
@@ -30,7 +30,7 @@ Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BSC, Unicha
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/en/download/current) v22 or newer
+- [Node.js](https://nodejs.org/en/download/current) v24 or newer
 - [pnpm](https://pnpm.io/installation) v8 or newer
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
@@ -38,13 +38,13 @@ Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BSC, Unicha
 
 ```bash
 # Install dependencies
-pnpm install
+pnpm i
 
 # Run locally (starts indexer + GraphQL API at http://localhost:8080)
-pnpm dev
+pnpm envio dev
 ```
 
-The GraphQL Playground is available at [http://localhost:8080](http://localhost:8080). Local password: `testing`.
+The Hasura console is available at [http://localhost:8080](http://localhost:8080) where you can explore and query indexed data using GraphQL.
 
 ## Regenerate Files
 
@@ -52,6 +52,15 @@ If you modify `config.yaml` or `schema.graphql`:
 
 ```bash
 pnpm codegen
+```
+
+## RPC Configuration
+
+RPC endpoints for each chain can be customized via environment variables prefixed with `ENVIO_`. See `.env.example` for the full list:
+
+```bash
+ENVIO_MAINNET_RPC_URL=https://your-mainnet-node
+ENVIO_ARBITRUM_RPC_URL=https://your-arbitrum-node
 ```
 
 ## Querying the Data
