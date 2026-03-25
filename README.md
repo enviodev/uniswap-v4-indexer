@@ -1,89 +1,92 @@
-# Uniswap v4 Indexer
+# Uniswap V4 Indexer
 
-A public Uniswap v4 indexer built with [Envio](https://envio.dev) that can be used by any developer to power their infrastructure.
+[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289da?logo=discord&logoColor=white)](https://discord.com/invite/envio)
 
-_Please refer to the [documentation website](https://docs.envio.dev) for a thorough guide on all [Envio](https://envio.dev) indexer features_
+A public, open-source multichain Uniswap V4 indexer built with [Envio HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview). Powers [v4.xyz](https://v4.xyz), the hub for Uniswap V4 data and hooks analytics.
 
-Please note this Indexer is being bootstrapped as a multichain indexer based off this Uniswap V4 Indexer: https://github.com/Uniswap/v4-subgraph
-Pricing (especially!!) and many other features are thanks to the team who built the above mentioned Indexer.
+Open to contributions.
 
-**Note:** This indexer currently powers [v4.xyz](https://v4.xyz), the hub for Uniswap data and hooks.
+## What This Indexes
 
-![v4.xyz Dashboard](./v4.gif)
+This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionManager` contracts across 15+ chains:
 
-## Overview
+**Events indexed:**
+- `Initialize` - pool creation with fee, tick spacing, and hooks
+- `Swap` - all swaps with amounts, price, liquidity, and transaction details
+- `ModifyLiquidity` - liquidity additions and removals
+- `Donate` - donations to pools
+- `Transfer` / `Approval` - ERC-6909 token transfers and approvals
 
-This indexer is currently a WIP that tracks key metrics and events from Uniswap v4 pools and can be used to:
+**Chains:**
+Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BSC, Unichain, World Chain, Soneium, Ink, Linea, Celo
 
-- Track pool statistics (volume, TVL, fees, etc.)
-- Monitor swaps and liquidity changes
-- Power analytics dashboards and trading interfaces
-- Build custom notifications and alerts
+## What You Can Build
 
-We are also in the process of including Hook features.
+- Pool analytics dashboards (volume, TVL, fees)
+- Swap history and transaction explorer
+- Liquidity position tracking
+- Hook activity monitoring
+- Cross-chain Uniswap V4 data aggregation
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- [Node.js](https://nodejs.org/en/download/current) v22 or newer
+- [pnpm](https://pnpm.io/installation) v8 or newer
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-Before running the indexer, ensure you have the following installed:
+## Quick Start
 
-- Node.js (v24 or newer is recommended)
-- pnpm (v8 or newer)
-- Docker Desktop
+```bash
+# Install dependencies
+pnpm install
 
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pnpm i
-   ```
-
-### Running the Indexer
-
-Start the indexer with:
-
-```
-pnpm envio dev
+# Run locally (starts indexer + GraphQL API at http://localhost:8080)
+pnpm dev
 ```
 
-This command will:
+The GraphQL Playground is available at [http://localhost:8080](http://localhost:8080). Local password: `testing`.
 
-- Start all required services using Docker
-- Initialize and run the indexer
+## Regenerate Files
 
-### Accessing Data
+If you modify `config.yaml` or `schema.graphql`:
 
-Once the indexer is running, you can view and query all indexed data at:
-
-```
-http://localhost:8080
+```bash
+pnpm codegen
 ```
 
-This will open the Hasura console where you can explore and query the indexed data using GraphQL.
+## Querying the Data
 
-### RPC Configuration
+Once running, query the GraphQL API to explore pool and swap data:
 
-RPC endpoints for each chain can be customized through environment variables prefixed with `ENVIO_`.
-For example:
-
+```graphql
+{
+  Pool(limit: 10, order_by: {volumeUSD: desc}) {
+    id
+    token0 { symbol }
+    token1 { symbol }
+    volumeUSD
+    totalValueLockedUSD
+  }
+}
 ```
-ENVIO_MAINNET_RPC_URL=https://your-mainnet-node
-ENVIO_ARBITRUM_RPC_URL=https://your-arbitrum-node
-```
 
-See `.env.example` for the complete list of variables you can set.
+## Built With
 
-## Usage
+- [Envio HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview) - multichain indexing framework
+- [HyperSync](https://docs.envio.dev/docs/HyperSync/overview) - high-performance blockchain data retrieval
+- Based on the [Uniswap V4 Subgraph](https://github.com/Uniswap/v4-subgraph) schema (pricing and core entity logic)
 
-You can use this indexer to power your own Uniswap v4 applications and infrastructure. The indexed data is accessible via GraphQL API.
+## Documentation
+
+- [HyperIndex Docs](https://docs.envio.dev/docs/HyperIndex/overview)
+- [Envio Explorer](https://envio.dev/explorer)
+- [Uniswap V4 Docs](https://docs.uniswap.org/contracts/v4/overview)
 
 ## Contributing
 
-Contributions are welcome! Feel free to:
+This indexer is open to contributions. Open an issue or pull request on [GitHub](https://github.com/enviodev/uniswap-v4-indexer).
 
-- Open issues for bugs or feature requests
-- Submit pull requests to improve the indexer
-- Add documentation or examples
-- Share your use cases and feedback
+## Support
+
+- [Discord community](https://discord.com/invite/envio)
+- [Envio Docs](https://docs.envio.dev)
