@@ -22,13 +22,9 @@ This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionMa
 **Chains:**
 Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BNB Chain, Unichain, World Chain, Soneium, Ink, Linea, Celo
 
-## What You Can Build
+## What's Indexed
 
-- Pool analytics dashboards (volume, TVL, fees)
-- Swap history and transaction explorer
-- Liquidity position tracking
-- Hook activity monitoring
-- Cross-chain Uniswap V4 data aggregation
+The GraphQL API exposes pool statistics, swap history, liquidity positions, and ERC-6909 token data across all supported chains. You can use this to power analytics dashboards, trading interfaces, liquidity trackers, hook monitors, and cross-chain Uniswap V4 data aggregations.
 
 ## Prerequisites
 
