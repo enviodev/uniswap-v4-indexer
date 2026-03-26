@@ -6,9 +6,11 @@ A public, open-source multichain Uniswap V4 indexer built with [Envio HyperIndex
 
 Open to contributions.
 
+![v4.xyz Dashboard](./v4.gif)
+
 ## What This Indexes
 
-This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionManager` contracts across 15+ chains:
+This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionManager` contracts across multiple chains:
 
 **Events indexed:**
 - `Initialize` - pool creation with fee, tick spacing, and hooks
@@ -88,7 +90,7 @@ Once running, query the GraphQL API to explore pool and swap data:
 ## Documentation
 
 - [HyperIndex Docs](https://docs.envio.dev/docs/HyperIndex/overview)
-- [Envio Explorer](https://envio.dev/explorer)
+- [Uniswap V4 Multichain Indexer Reference](https://docs.envio.dev/docs/HyperIndex/example-uniswap-v4-multi-chain-indexer)
 - [Uniswap V4 Docs](https://docs.uniswap.org/contracts/v4/overview)
 
 ## Contributing
