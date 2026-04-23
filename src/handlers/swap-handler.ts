@@ -8,7 +8,7 @@ import { getTrackedAmountUSD, getNativePriceInUSD } from "../utils/pricing";
 import { safeDiv } from "../utils/index";
 import { findNativePerToken } from "../utils/pricing";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
-import { TWO_BD, ZERO_BD } from "../utils/constants";
+import { ZERO_BD } from "../utils/constants";
 
 PoolManager.Swap.handler(async ({ event, context }) => {
   const chainConfig = getChainConfig(event.chainId);
@@ -193,9 +193,9 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     if (token0.isWhitelisted && token1.isWhitelisted) {
       trackedTVLUSD = pool.totalValueLockedUSD;
     } else if (token0.isWhitelisted) {
-      trackedTVLUSD = tvl0ETH.times(bundle.ethPriceUSD).times(TWO_BD);
+      trackedTVLUSD = tvl0ETH.times(bundle.ethPriceUSD);
     } else if (token1.isWhitelisted) {
-      trackedTVLUSD = tvl1ETH.times(bundle.ethPriceUSD).times(TWO_BD);
+      trackedTVLUSD = tvl1ETH.times(bundle.ethPriceUSD);
     }
   }
   pool = { ...pool, trackedTVLUSD };

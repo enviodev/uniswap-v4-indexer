@@ -80,13 +80,16 @@ type Pool {
   # Whether this pool's TVL is considered reliable for aggregation. Computed once
   # at Initialize from (token metadata, fee tier, hook address) and then stable.
   isTracked: Boolean!
-  # TVL that the frontend can safely rank pools by. Follows the same whitelist-tier
-  # pattern Uniswap applies to tracked swap volume:
+  # TVL that the frontend can safely rank pools by. Uses a conservative
+  # whitelist-tier rule (trust only the whitelisted side's value):
   #   isTracked=false                    -> 0
   #   both tokens whitelisted            -> totalValueLockedUSD (full sum)
-  #   only one token whitelisted         -> (whitelisted side value in USD) * 2
+  #   only one token whitelisted         -> (whitelisted side value in USD)
   #   neither token whitelisted          -> 0
-  # Prefer this over totalValueLockedUSD for top-pool rankings.
+  # Note: single-whitelisted pools are under-reported (we don't double the
+  # trusted side's value) to stay robust to imbalanced concentrated-liquidity
+  # positions. Ranking is preserved. Add missing tokens to the whitelist to
+  # promote pools into the "both" tier for exact sums.
   trackedTVLUSD: BigDecimal! @index
   liquidityProviderCount: BigInt!
   hooks: String!

@@ -9,7 +9,7 @@ import {
 import { convertTokenToDecimal } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
-import { TWO_BD, ZERO_BD } from "../utils/constants";
+import { ZERO_BD } from "../utils/constants";
 
 PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   // Get chain config for pools to skip
@@ -182,9 +182,9 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     if (token0.isWhitelisted && token1.isWhitelisted) {
       trackedTVLUSD = pool.totalValueLockedUSD;
     } else if (token0.isWhitelisted) {
-      trackedTVLUSD = tvl0ETH.times(bundle.ethPriceUSD).times(TWO_BD);
+      trackedTVLUSD = tvl0ETH.times(bundle.ethPriceUSD);
     } else if (token1.isWhitelisted) {
-      trackedTVLUSD = tvl1ETH.times(bundle.ethPriceUSD).times(TWO_BD);
+      trackedTVLUSD = tvl1ETH.times(bundle.ethPriceUSD);
     }
   }
   pool = { ...pool, trackedTVLUSD };
