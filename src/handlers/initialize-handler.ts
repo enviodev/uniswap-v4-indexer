@@ -3,8 +3,8 @@
  */
 
 import { PoolManager, BigDecimal } from "generated";
-import { getChainConfig } from "../utils/chains";
-import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
+import { getChainConfig, getTrustedDynamicFeeHooks } from "../utils/chains";
+import { computeIsTracked, sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 import { getTokenMetadata } from "../utils/tokenMetadata";
 import { findNativePerToken } from "../utils/pricing";
 
@@ -39,6 +39,7 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
       totalValueLockedETH: new BigDecimal(0),
       totalValueLockedUSDUntracked: new BigDecimal(0),
       totalValueLockedETHUntracked: new BigDecimal(0),
+      trackedTVLUSD: new BigDecimal(0),
       owner: event.srcAddress,
       numberOfSwaps: 0n,
       hookedPools: 0n,
@@ -218,6 +219,17 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
   const feeBps = Number(event.params.fee) / 10000; // Convert to percentage (fee is in bps)
   const poolName = `${token0.symbol} / ${token1.symbol} - ${feeBps}%`;
 
+  const isTracked = computeIsTracked(
+    event.params.currency0,
+    token0.symbol,
+    event.params.currency1,
+    token1.symbol,
+    BigInt(event.params.fee),
+    event.params.hooks,
+    chainConfig.whitelistTokens,
+    getTrustedDynamicFeeHooks(event.chainId)
+  );
+
   // Create new pool with prices
   context.Pool.set({
     id: `${event.chainId}_${event.params.id}`,
@@ -250,6 +262,8 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
     totalValueLockedETH: new BigDecimal(0),
     totalValueLockedUSD: new BigDecimal(0),
     totalValueLockedUSDUntracked: new BigDecimal(0),
+    isTracked,
+    trackedTVLUSD: new BigDecimal(0),
     liquidityProviderCount: 0n,
     hooks: event.params.hooks,
   });

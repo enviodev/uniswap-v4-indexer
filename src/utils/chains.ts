@@ -38,6 +38,9 @@ export interface ChainConfig {
   tokenOverrides: StaticTokenDefinition[];
   poolsToSkip: string[];
   nativeTokenDetails: NativeTokenDetails;
+  // Dynamic-fee hooks whose pools we trust for TVL tracking. Lowercase addresses.
+  // Omitted per-chain for now (defaults to [] via getTrustedDynamicFeeHooks).
+  trustedDynamicFeeHooks?: string[];
 }
 
 // Static token definition interface
@@ -512,4 +515,8 @@ export function getChainConfig(chainId: EvmChainId): ChainConfig {
     throw new Error(`Unsupported chain ID: ${chainId}`);
   }
   return config;
+}
+
+export function getTrustedDynamicFeeHooks(chainId: EvmChainId): string[] {
+  return CHAIN_CONFIGS[chainId]?.trustedDynamicFeeHooks ?? [];
 }

@@ -8,6 +8,7 @@ import { getTrackedAmountUSD, getNativePriceInUSD } from "../utils/pricing";
 import { safeDiv } from "../utils/index";
 import { findNativePerToken } from "../utils/pricing";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
+import { ZERO_BD } from "../utils/constants";
 
 PoolManager.Swap.handler(async ({ event, context }) => {
   const chainConfig = getChainConfig(event.chainId);
@@ -151,6 +152,7 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   // Store current pool TVL values for later calculations
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
+  const currentPoolTrackedTVLUSD = pool.trackedTVLUSD;
   // Update pool values (feeTier updated to actual swap fee for dynamic fee pools)
   pool = {
     ...pool,
@@ -182,6 +184,10 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   pool = {
     ...pool,
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
+  };
+  pool = {
+    ...pool,
+    trackedTVLUSD: pool.isTracked ? pool.totalValueLockedUSD : ZERO_BD,
   };
   // Update token0 data
   token0 = {
@@ -231,6 +237,9 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     totalValueLockedETH: poolManager.totalValueLockedETH
       .minus(currentPoolTvlETH)
       .plus(pool.totalValueLockedETH),
+    trackedTVLUSD: poolManager.trackedTVLUSD
+      .minus(currentPoolTrackedTVLUSD)
+      .plus(pool.trackedTVLUSD),
   };
   // Then calculate USD value based on the updated ETH value
   poolManager = {

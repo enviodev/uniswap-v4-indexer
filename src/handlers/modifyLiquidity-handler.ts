@@ -9,6 +9,7 @@ import {
 import { convertTokenToDecimal } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
+import { ZERO_BD } from "../utils/constants";
 
 PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   // Get chain config for pools to skip
@@ -162,6 +163,7 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   // Store current pool TVL for later
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
+  const currentPoolTrackedTVLUSD = pool.trackedTVLUSD;
   // After updating token TVLs, calculate ETH and USD values
   pool = {
     ...pool,
@@ -172,6 +174,10 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   pool = {
     ...pool,
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
+  };
+  pool = {
+    ...pool,
+    trackedTVLUSD: pool.isTracked ? pool.totalValueLockedUSD : ZERO_BD,
   };
   // Update token totalValueLockedUSD
   token0 = {
@@ -194,6 +200,9 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     totalValueLockedETH: existingPoolManager.totalValueLockedETH
       .minus(currentPoolTvlETH)
       .plus(pool.totalValueLockedETH),
+    trackedTVLUSD: existingPoolManager.trackedTVLUSD
+      .minus(currentPoolTrackedTVLUSD)
+      .plus(pool.trackedTVLUSD),
   };
   poolManager = {
     ...poolManager,

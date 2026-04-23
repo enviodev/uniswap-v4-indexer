@@ -36,6 +36,10 @@ type PoolManager {
   totalValueLockedETH: BigDecimal!
   totalValueLockedUSDUntracked: BigDecimal!
   totalValueLockedETHUntracked: BigDecimal!
+  # Sum of Pool.trackedTVLUSD across all pools on this chain. Excludes pools whose
+  # raw TVL is unreliable (UNKNOWN token metadata, very-high static fee wrappers,
+  # untrusted dynamic-fee hooks).
+  trackedTVLUSD: BigDecimal!
   owner: String!
   numberOfSwaps: BigInt! # total swaps on network
   hookedPools: BigInt! # number of pools with hooks
@@ -73,6 +77,12 @@ type Pool {
   totalValueLockedETH: BigDecimal!
   totalValueLockedUSD: BigDecimal! @index
   totalValueLockedUSDUntracked: BigDecimal!
+  # Whether this pool's TVL is considered reliable for aggregation. Computed once
+  # at Initialize from (token metadata, fee tier, hook address) and then stable.
+  isTracked: Boolean!
+  # totalValueLockedUSD when isTracked=true, else 0. Index this for ranking pools
+  # by reliable TVL instead of the raw totalValueLockedUSD.
+  trackedTVLUSD: BigDecimal! @index
   liquidityProviderCount: BigInt!
   hooks: String!
   # derived fields
