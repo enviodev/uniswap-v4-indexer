@@ -114,6 +114,9 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
       totalValueLockedUSDUntracked: new BigDecimal("0"),
       derivedETH: new BigDecimal("0"),
       whitelistPools: [], // Initialize empty array
+      isWhitelisted: chainConfig.whitelistTokens.includes(
+        event.params.currency0.toLowerCase()
+      ),
     };
   } else {
     token0 = {
@@ -148,6 +151,9 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
       totalValueLockedUSDUntracked: new BigDecimal("0"),
       derivedETH: new BigDecimal("0"),
       whitelistPools: [], // Initialize empty array
+      isWhitelisted: chainConfig.whitelistTokens.includes(
+        event.params.currency1.toLowerCase()
+      ),
     };
   } else {
     token1 = {

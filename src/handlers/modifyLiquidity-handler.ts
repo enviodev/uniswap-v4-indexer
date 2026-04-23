@@ -9,7 +9,7 @@ import {
 import { convertTokenToDecimal } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
-import { ZERO_BD } from "../utils/constants";
+import { TWO_BD, ZERO_BD } from "../utils/constants";
 
 PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   // Get chain config for pools to skip
@@ -164,21 +164,30 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
   const currentPoolTrackedTVLUSD = pool.trackedTVLUSD;
-  // After updating token TVLs, calculate ETH and USD values
+  // Compute per-side ETH value once; reuse for both totalValueLockedETH and the
+  // single-whitelisted branch of trackedTVLUSD below.
+  const tvl0ETH = pool.totalValueLockedToken0.times(token0.derivedETH);
+  const tvl1ETH = pool.totalValueLockedToken1.times(token1.derivedETH);
   pool = {
     ...pool,
-    totalValueLockedETH: pool.totalValueLockedToken0
-      .times(token0.derivedETH)
-      .plus(pool.totalValueLockedToken1.times(token1.derivedETH)),
+    totalValueLockedETH: tvl0ETH.plus(tvl1ETH),
   };
   pool = {
     ...pool,
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
   };
-  pool = {
-    ...pool,
-    trackedTVLUSD: pool.isTracked ? pool.totalValueLockedUSD : ZERO_BD,
-  };
+  // Tracked TVL: see schema.graphql for rule description.
+  let trackedTVLUSD = ZERO_BD;
+  if (pool.isTracked) {
+    if (token0.isWhitelisted && token1.isWhitelisted) {
+      trackedTVLUSD = pool.totalValueLockedUSD;
+    } else if (token0.isWhitelisted) {
+      trackedTVLUSD = tvl0ETH.times(bundle.ethPriceUSD).times(TWO_BD);
+    } else if (token1.isWhitelisted) {
+      trackedTVLUSD = tvl1ETH.times(bundle.ethPriceUSD).times(TWO_BD);
+    }
+  }
+  pool = { ...pool, trackedTVLUSD };
   // Update token totalValueLockedUSD
   token0 = {
     ...token0,

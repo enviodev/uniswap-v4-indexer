@@ -11,6 +11,7 @@ export const ZERO_BI = BigInt(0);
 export const ONE_BI = BigInt(1);
 export const ZERO_BD = new BigDecimal("0");
 export const ONE_BD = new BigDecimal("1");
+export const TWO_BD = new BigDecimal("2");
 export const Q96 = BigInt(2) ** BigInt(96);
 export const MaxUint256 = BigInt(
   "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
