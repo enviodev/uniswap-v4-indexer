@@ -261,6 +261,7 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     sqrtPriceX96: event.params.sqrtPriceX96,
     tick: event.params.tick,
     logIndex: BigInt(event.logIndex),
+    fee: BigInt(event.params.fee),
   };
   // Use immutability pattern
   context.Bundle.set({

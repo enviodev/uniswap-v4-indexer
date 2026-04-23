@@ -16,6 +16,10 @@ type Swap
   sqrtPriceX96: BigInt!
   tick: BigInt!
   logIndex: BigInt!
+  # Fee paid for this swap in hundredths of a bip (i.e. raw PoolManager Swap.fee).
+  # For dynamic-fee pools this captures the per-swap effective fee, which would
+  # otherwise be lost when pool.feeTier is overwritten by the next swap.
+  fee: BigInt!
 }
 
 type PoolManager {
