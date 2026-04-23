@@ -8,6 +8,7 @@ import { getTrackedAmountUSD, getNativePriceInUSD } from "../utils/pricing";
 import { safeDiv } from "../utils/index";
 import { findNativePerToken } from "../utils/pricing";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
+import { ZERO_BD } from "../utils/constants";
 
 PoolManager.Swap.handler(async ({ event, context }) => {
   const chainConfig = getChainConfig(event.chainId);
@@ -151,6 +152,7 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   // Store current pool TVL values for later calculations
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
+  const currentPoolTrackedTVLUSD = pool.trackedTVLUSD;
   // Update pool values (feeTier updated to actual swap fee for dynamic fee pools)
   pool = {
     ...pool,
@@ -173,16 +175,30 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     collectedFeesToken1: pool.collectedFeesToken1.plus(feesToken1),
     collectedFeesUSD: pool.collectedFeesUSD.plus(feesUSD),
   };
+  // Compute per-side ETH value once; reuse for both totalValueLockedETH and the
+  // single-whitelisted branch of trackedTVLUSD below.
+  const tvl0ETH = pool.totalValueLockedToken0.times(token0.derivedETH);
+  const tvl1ETH = pool.totalValueLockedToken1.times(token1.derivedETH);
   pool = {
     ...pool,
-    totalValueLockedETH: pool.totalValueLockedToken0
-      .times(token0.derivedETH)
-      .plus(pool.totalValueLockedToken1.times(token1.derivedETH)),
+    totalValueLockedETH: tvl0ETH.plus(tvl1ETH),
   };
   pool = {
     ...pool,
     totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
   };
+  // Tracked TVL: see schema.graphql for rule description.
+  let trackedTVLUSD = ZERO_BD;
+  if (pool.isTracked) {
+    if (token0.isWhitelisted && token1.isWhitelisted) {
+      trackedTVLUSD = pool.totalValueLockedUSD;
+    } else if (token0.isWhitelisted) {
+      trackedTVLUSD = tvl0ETH.times(bundle.ethPriceUSD);
+    } else if (token1.isWhitelisted) {
+      trackedTVLUSD = tvl1ETH.times(bundle.ethPriceUSD);
+    }
+  }
+  pool = { ...pool, trackedTVLUSD };
   // Update token0 data
   token0 = {
     ...token0,
@@ -231,6 +247,9 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     totalValueLockedETH: poolManager.totalValueLockedETH
       .minus(currentPoolTvlETH)
       .plus(pool.totalValueLockedETH),
+    trackedTVLUSD: poolManager.trackedTVLUSD
+      .minus(currentPoolTrackedTVLUSD)
+      .plus(pool.trackedTVLUSD),
   };
   // Then calculate USD value based on the updated ETH value
   poolManager = {

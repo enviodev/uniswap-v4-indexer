@@ -36,6 +36,10 @@ type PoolManager {
   totalValueLockedETH: BigDecimal!
   totalValueLockedUSDUntracked: BigDecimal!
   totalValueLockedETHUntracked: BigDecimal!
+  # Sum of Pool.trackedTVLUSD across all pools on this chain. Prefer this over
+  # totalValueLockedUSD for chain-level TVL display; see Pool.trackedTVLUSD for
+  # the whitelist-tier rule that computes it.
+  trackedTVLUSD: BigDecimal!
   owner: String!
   numberOfSwaps: BigInt! # total swaps on network
   hookedPools: BigInt! # number of pools with hooks
@@ -73,6 +77,20 @@ type Pool {
   totalValueLockedETH: BigDecimal!
   totalValueLockedUSD: BigDecimal! @index
   totalValueLockedUSDUntracked: BigDecimal!
+  # Whether this pool's TVL is considered reliable for aggregation. Computed once
+  # at Initialize from (token metadata, fee tier, hook address) and then stable.
+  isTracked: Boolean!
+  # TVL that the frontend can safely rank pools by. Uses a conservative
+  # whitelist-tier rule (trust only the whitelisted side's value):
+  #   isTracked=false                    -> 0
+  #   both tokens whitelisted            -> totalValueLockedUSD (full sum)
+  #   only one token whitelisted         -> (whitelisted side value in USD)
+  #   neither token whitelisted          -> 0
+  # Note: single-whitelisted pools are under-reported (we don't double the
+  # trusted side's value) to stay robust to imbalanced concentrated-liquidity
+  # positions. Ranking is preserved. Add missing tokens to the whitelist to
+  # promote pools into the "both" tier for exact sums.
+  trackedTVLUSD: BigDecimal! @index
   liquidityProviderCount: BigInt!
   hooks: String!
   # derived fields
@@ -110,6 +128,9 @@ type Token {
   totalValueLockedUSDUntracked: BigDecimal!
   derivedETH: BigDecimal!
   whitelistPools: [String!]! # Changed from Pool reference to String for simplicity
+  # True when this token is in chainConfig.whitelistTokens. Set once at token
+  # creation. Used by Pool.trackedTVLUSD to decide which side's value to trust.
+  isWhitelisted: Boolean!
 }
 
 # stores for USD calculations

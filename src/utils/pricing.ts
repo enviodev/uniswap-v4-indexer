@@ -2,7 +2,14 @@ import { BigDecimal, type handlerContext, type Pool } from "generated";
 
 import { exponentToBigDecimal, safeDiv } from "../utils/index";
 import { type Token } from "generated";
-import { ADDRESS_ZERO, ONE_BD, ZERO_BD, ZERO_BI } from "./constants";
+import {
+  ADDRESS_ZERO,
+  DYNAMIC_FEE_FLAG,
+  HIGH_STATIC_FEE_THRESHOLD,
+  ONE_BD,
+  ZERO_BD,
+  ZERO_BI,
+} from "./constants";
 import { NativeTokenDetails } from "./nativeTokenDetails";
 
 const Q192 = BigInt(2) ** BigInt(192);
@@ -184,4 +191,41 @@ export function calculateAmountUSD(
   return amount0
     .times(token0DerivedETH.times(ethPriceUSD))
     .plus(amount1.times(token1DerivedETH.times(ethPriceUSD)));
+}
+
+/**
+ * Decide whether a pool's raw TVL should count toward trackedTVLUSD. Called once
+ * at Initialize and then cached on Pool.isTracked — keep this cheap (no context,
+ * no entity loads) so it can run in the hot path if ever needed.
+ *
+ * Untracked cases:
+ *   - Either token's metadata is UNKNOWN — fallback decimals corrupt TVL math.
+ *   - Dynamic-fee pool whose hook isn't on the trusted list — the hook controls
+ *     pricing arbitrarily and the derived USD value is not meaningful.
+ *   - Static fee > 5% unless both tokens are whitelisted — high fees usually
+ *     encode fixed-rate wrapper/LST products whose swap price drifts from market.
+ */
+export function computeIsTracked(
+  token0Address: string,
+  token0Symbol: string,
+  token1Address: string,
+  token1Symbol: string,
+  feeTier: bigint,
+  hookAddress: string,
+  whitelistTokens: string[],
+  trustedDynamicFeeHooks: string[]
+): boolean {
+  if (token0Symbol === "UNKNOWN" || token1Symbol === "UNKNOWN") return false;
+
+  if (feeTier === DYNAMIC_FEE_FLAG) {
+    return trustedDynamicFeeHooks.includes(hookAddress.toLowerCase());
+  }
+
+  if (feeTier > HIGH_STATIC_FEE_THRESHOLD) {
+    const t0 = token0Address.toLowerCase();
+    const t1 = token1Address.toLowerCase();
+    return whitelistTokens.includes(t0) && whitelistTokens.includes(t1);
+  }
+
+  return true;
 }
