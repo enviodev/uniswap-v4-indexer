@@ -5,7 +5,7 @@ import { PoolManager, BigDecimal, type Swap } from "generated";
 import { getChainConfig } from "../utils/chains";
 import { convertTokenToDecimal } from "../utils";
 import { getTrackedAmountUSD, getNativePriceInUSD } from "../utils/pricing";
-import { safeDiv } from "../utils/index";
+import { safeDiv, sanitizeBD } from "../utils/index";
 import { findNativePerToken } from "../utils/pricing";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 
@@ -78,8 +78,8 @@ PoolManager.Swap.handler(async ({ event, context }) => {
       chainConfig.minimumNativeLocked
     ),
   ]);
-  token0 = { ...token0, derivedETH: token0DerivedETH };
-  token1 = { ...token1, derivedETH: token1DerivedETH };
+  token0 = { ...token0, derivedETH: sanitizeBD(token0DerivedETH) };
+  token1 = { ...token1, derivedETH: sanitizeBD(token1DerivedETH) };
 
   if (context.isPreload) {
     return;
@@ -165,7 +165,7 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     liquidity: event.params.liquidity,
     volumeToken0: pool.volumeToken0.plus(amount0Abs),
     volumeToken1: pool.volumeToken1.plus(amount1Abs),
-    volumeUSD: pool.volumeUSD.plus(amountTotalUSDTracked),
+    volumeUSD: sanitizeBD(pool.volumeUSD.plus(amountTotalUSDTracked)),
     untrackedVolumeUSD: pool.untrackedVolumeUSD.plus(amountTotalUSDUntracked),
     feesUSD: pool.feesUSD.plus(feesUSD),
     feesUSDUntracked: pool.feesUSDUntracked.plus(feesUSDUntracked),
@@ -181,7 +181,9 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   };
   pool = {
     ...pool,
-    totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
+    totalValueLockedUSD: sanitizeBD(
+      pool.totalValueLockedETH.times(bundle.ethPriceUSD)
+    ),
   };
   // Update token0 data
   token0 = {
@@ -257,7 +259,7 @@ PoolManager.Swap.handler(async ({ event, context }) => {
     origin: event.transaction.from || "NONE",
     amount0: amount0,
     amount1: amount1,
-    amountUSD: finalAmountUSD,
+    amountUSD: sanitizeBD(finalAmountUSD),
     sqrtPriceX96: event.params.sqrtPriceX96,
     tick: event.params.tick,
     logIndex: BigInt(event.logIndex),
@@ -266,7 +268,7 @@ PoolManager.Swap.handler(async ({ event, context }) => {
   // Use immutability pattern
   context.Bundle.set({
     ...bundle,
-    ethPriceUSD,
+    ethPriceUSD: sanitizeBD(ethPriceUSD),
   });
   context.Pool.set(pool);
   context.PoolManager.set(poolManager);

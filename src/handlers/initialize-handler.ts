@@ -7,6 +7,7 @@ import { getChainConfig } from "../utils/chains";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 import { getTokenMetadata } from "../utils/tokenMetadata";
 import { findNativePerToken } from "../utils/pricing";
+import { sanitizeBD } from "../utils";
 
 PoolManager.Initialize.handler(async ({ event, context }) => {
   // Get chain config for whitelist tokens and pools to skip
@@ -183,23 +184,27 @@ PoolManager.Initialize.handler(async ({ event, context }) => {
   // Now update derivedETH values
   token0 = {
     ...token0,
-    derivedETH: await findNativePerToken(
-      context,
-      token0,
-      chainConfig.wrappedNativeAddress,
-      chainConfig.stablecoinAddresses,
-      chainConfig.minimumNativeLocked
+    derivedETH: sanitizeBD(
+      await findNativePerToken(
+        context,
+        token0,
+        chainConfig.wrappedNativeAddress,
+        chainConfig.stablecoinAddresses,
+        chainConfig.minimumNativeLocked
+      )
     ),
   };
 
   token1 = {
     ...token1,
-    derivedETH: await findNativePerToken(
-      context,
-      token1,
-      chainConfig.wrappedNativeAddress,
-      chainConfig.stablecoinAddresses,
-      chainConfig.minimumNativeLocked
+    derivedETH: sanitizeBD(
+      await findNativePerToken(
+        context,
+        token1,
+        chainConfig.wrappedNativeAddress,
+        chainConfig.stablecoinAddresses,
+        chainConfig.minimumNativeLocked
+      )
     ),
   };
 

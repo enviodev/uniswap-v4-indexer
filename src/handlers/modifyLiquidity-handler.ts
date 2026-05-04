@@ -6,7 +6,7 @@ import {
   getAmount0,
   getAmount1,
 } from "../utils/liquidityMath/liquidityAmounts";
-import { convertTokenToDecimal } from "../utils";
+import { convertTokenToDecimal, sanitizeBD } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
 
@@ -171,7 +171,9 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
   };
   pool = {
     ...pool,
-    totalValueLockedUSD: pool.totalValueLockedETH.times(bundle.ethPriceUSD),
+    totalValueLockedUSD: sanitizeBD(
+      pool.totalValueLockedETH.times(bundle.ethPriceUSD)
+    ),
   };
   // Update token totalValueLockedUSD
   token0 = {
@@ -217,7 +219,7 @@ PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
     amount: event.params.liquidityDelta,
     amount0: amount0,
     amount1: amount1,
-    amountUSD: amountUSD,
+    amountUSD: sanitizeBD(amountUSD),
     tickLower: BigInt(event.params.tickLower),
     tickUpper: BigInt(event.params.tickUpper),
     logIndex: BigInt(event.logIndex),
