@@ -1,4 +1,4 @@
-import { BigDecimal } from "generated";
+import { BigDecimal } from "envio";
 import { ZERO_BD, ONE_BD, ZERO_BI } from "./constants";
 
 export function exponentToBigDecimal(decimals: bigint): BigDecimal {

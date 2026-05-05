@@ -1,4 +1,4 @@
-import { BigDecimal } from "generated";
+import { BigDecimal } from "envio";
 
 // Note: BigInt is a native type in TypeScript/JavaScript
 // so we don't need to import it specifically for Envio

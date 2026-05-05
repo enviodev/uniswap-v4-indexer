@@ -1,7 +1,8 @@
-import { BigDecimal, type handlerContext, type Pool } from "generated";
+import { BigDecimal, type EvmOnEventContext, type Pool, type Token } from "envio";
 
 import { exponentToBigDecimal, safeDiv } from "../utils/index";
-import { type Token } from "generated";
+
+type handlerContext = EvmOnEventContext;
 import { ADDRESS_ZERO, ONE_BD, ZERO_BD, ZERO_BI } from "./constants";
 import { NativeTokenDetails } from "./nativeTokenDetails";
 

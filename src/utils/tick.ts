@@ -1,4 +1,4 @@
-import { BigDecimal } from "generated";
+import { BigDecimal } from "envio";
 import { ONE_BD, ZERO_BI } from "./constants";
 import { fastExponentiation, safeDiv } from "./index";
 
