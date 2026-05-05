@@ -18,7 +18,7 @@
  * calls that compound precision — giving wrong results but fast execution.
  */
 import { describe, it, expect } from "vitest";
-import { BigDecimal } from "generated";
+import { BigDecimal } from "envio";
 
 function safeDiv(a: BigDecimal, b: BigDecimal): BigDecimal {
   if (b.eq(new BigDecimal("0"))) return new BigDecimal("0");

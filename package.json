@@ -2,6 +2,9 @@
   "name": "uniswap-v4-indexer",
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "clean": "tsc --clean",
     "build": "tsc",
@@ -12,15 +15,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "20.8.8",
-    "typescript": "5.9.3",
+    "@types/node": "24.12.2",
+    "typescript": "6.0.3",
     "viem": "2.21.0",
-    "vitest": "4.0.16"
+    "vitest": "4.1.0"
   },
   "dependencies": {
-    "envio": "3.0.0-alpha.19"
-  },
-  "optionalDependencies": {
-    "generated": "./generated"
+    "envio": "3.0.0-rc.0"
   }
 }

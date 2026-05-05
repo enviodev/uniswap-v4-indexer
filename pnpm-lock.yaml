@@ -9,25 +9,21 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 3.0.0-alpha.19
-        version: 3.0.0-alpha.19(react-dom@19.1.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
-    optionalDependencies:
-      generated:
-        specifier: ./generated
-        version: link:generated
+        specifier: 3.0.0-rc.0
+        version: 3.0.0-rc.0(react-dom@19.1.0(react@19.2.5))(typescript@6.0.3)
     devDependencies:
       '@types/node':
-        specifier: 20.8.8
-        version: 20.8.8
+        specifier: 24.12.2
+        version: 24.12.2
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 6.0.3
+        version: 6.0.3
       viem:
         specifier: 2.21.0
-        version: 2.21.0(typescript@5.9.3)
+        version: 2.21.0(typescript@6.0.3)
       vitest:
-        specifier: 4.0.16
-        version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@20.8.8)(tsx@4.21.0)
+        specifier: 4.1.0
+        version: 4.1.0(@opentelemetry/api@1.9.0)(@types/node@24.12.2)(vite@7.3.1(@types/node@24.12.2)(tsx@4.21.0))
 
   generated:
     dependencies:
@@ -178,8 +174,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@envio-dev/hypersync-client-darwin-arm64@1.1.0':
-    resolution: {integrity: sha512-WO/yxYiN9nz7pHw7xLs/4hnEHQM5OVcTwvtxZTZHox7It3n7aeBzsJfrGYYqYW1bPxDwSYwb6x9l0/fQc59xeA==}
+  '@envio-dev/hypersync-client-darwin-arm64@1.3.0':
+    resolution: {integrity: sha512-JZwiVRbMSuJnKsVUpfjTHc3YgAMvGlyuqWQxVc7Eok4Xp/sZLUCXRQUykbCh6fOUWRmoa2JG/ykP/NotoTRCBg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
@@ -190,8 +186,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@envio-dev/hypersync-client-darwin-x64@1.1.0':
-    resolution: {integrity: sha512-BOD4gaZ6NAyLDDVgfIhpD25ikjEQpTXNBqbIYuTjWS1D0NiQD5mmyZCFcSMmaJJ0j4iobBQV1LMiNX8nDLahPA==}
+  '@envio-dev/hypersync-client-darwin-x64@1.3.0':
+    resolution: {integrity: sha512-2eSzQqqqFBMK2enVucYGcny5Ep4DEKYxf3Xme7z9qp2d3c6fMcbVvM4Gt8KOzb7ySjwJ2gU+qY2h545T2NiJXQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
@@ -202,8 +198,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@envio-dev/hypersync-client-linux-arm64-gnu@1.1.0':
-    resolution: {integrity: sha512-TDRpAGbfuI4u83Swy50IkGZSMaWXZw/SNC8BiMqLBmYVt1GqFDB1VGrkecf4AhQBPlQk8iDTOxxIKNuOCsY//A==}
+  '@envio-dev/hypersync-client-linux-arm64-gnu@1.3.0':
+    resolution: {integrity: sha512-gsjMp3WKekwnA89HvJXvcTM3BE5wVFG/qTF4rmk3rGiXhZ+MGaZQKrYRAhnzQZblueFtF/xnnBYpO35Z3ZFThg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -214,8 +210,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@envio-dev/hypersync-client-linux-x64-gnu@1.1.0':
-    resolution: {integrity: sha512-ooOdLfrhq8W3J76pcJDWuXIpu9cTBjZR86XkkHaheDNkYQlBZ7h5oG3IhNTLnooFkih+6+9dfcfOdG4NMmylGA==}
+  '@envio-dev/hypersync-client-linux-x64-gnu@1.3.0':
+    resolution: {integrity: sha512-Lkvi4lRVwCyFOXf9LYH2X91zmW2l1vbfojKhTwKgqFWv6PMN5atlYjt+/NcUCAAhk5EUavWGjoikwnvLp870cg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -226,8 +222,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@envio-dev/hypersync-client-linux-x64-musl@1.1.0':
-    resolution: {integrity: sha512-WS717WyRyTZPRMfYmscRslRIhxWNKzdQR3SLugqQs0z1W7wo58WMufhr5EpzID5/GR10zexz+Y3a4HWMAGiu+Q==}
+  '@envio-dev/hypersync-client-linux-x64-musl@1.3.0':
+    resolution: {integrity: sha512-UIjB/gUX2sl23EMXLBxqtkgMnOjNSiaHK+CSU5vXMXkzL3fOGbz24bvyaPsSv82cxCFEE0yTwlSKkCX6/L8o6Q==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -242,8 +238,8 @@ packages:
     resolution: {integrity: sha512-mii+ponVo5ZmVOlEtJxyugGHuIuzYp5bVfr88mCuRwcWZIkNrWfad/aAW6H7YNe63E0gq0ePtRDrkLzlpAUuGQ==}
     engines: {node: '>= 10'}
 
-  '@envio-dev/hypersync-client@1.1.0':
-    resolution: {integrity: sha512-tTCW/fvYPFYIcL6SLcWd5Fe6uPCcXQbLgZaYL3NSvkhvrpw5VSx3M2QbHdpIrhmzoDkZdpIYyFD+pdZhC6Y75g==}
+  '@envio-dev/hypersync-client@1.3.0':
+    resolution: {integrity: sha512-wUdfZzbsFPbGq6n/1mmUMsWuiAil+m+fL/GBX5LGUyMJV86TXy2SBtAqYYNyDxWLO6gvGr6PYKrP8pLVAUZDZg==}
     engines: {node: '>= 10'}
 
   '@esbuild/aix-ppc64@0.27.2':
@@ -402,6 +398,36 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@fuel-ts/crypto@0.96.1':
+    resolution: {integrity: sha512-OrAZPZtm8HQouzip621/ci47PeTS06QegGdz7MeN6wK4yeCbJmlRQ1WE9S3iclb3p+VLF0RtbecEbHQfsNgsnA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/errors@0.96.1':
+    resolution: {integrity: sha512-Xtso5v4a3UUvnMaOSDhMRlkb9LxLyCyC/1/RY7fZZ035ttscy6dNMuiD/iSptJ5pHklJ5R4rCPdOL5EKpgOaMA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/hasher@0.96.1':
+    resolution: {integrity: sha512-7z4cah+5TOcCBA2Wgvje1L7wVTahiFLb9IUpRXRMVGXwaqsbV/wUNcyuc1mhPh/JKLgcOe+OqsrpcYD2dg2rpg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/interfaces@0.96.1':
+    resolution: {integrity: sha512-mZ3sDHJml5AtLRSmGWo5rbU9//3oKDhAeiFealajcPaVztAAnaKnA5a19dd4ITbjZb2q3e2lQ7zX8iAXgHUwYA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+  '@fuel-ts/math@0.96.1':
+    resolution: {integrity: sha512-AZUChguQmE1ILYbcc6SOTjFJIUkGzD3Z6yHgvO4tszn2QS/jVTSAZKVx653J5u9m/Xn/WthwR35l1GbwXMwB4g==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/utils@0.96.1':
+    resolution: {integrity: sha512-XXZNEUPf7qtKpVO3ak2CSroBYEKh1Gne1zlmVSNUoVPqQvglcu0I2pu/QmVnZBN4m3yVSyHUoWR2Kbo8/Dh7sA==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+
+  '@fuel-ts/versions@0.96.1':
+    resolution: {integrity: sha512-C//ZT7U68Gksz9PzUJVzdzUARK7mfXf3MsF5ZqZaMegkE2tCy+twjy8PBdeVserY0uX6mEHRJyZJwcspk34ixg==}
+    engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
+    hasBin: true
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -459,6 +485,9 @@ packages:
     peerDependencies:
       react: '>=19.1.0'
       react-dom: '>=19.1.0'
+
+  '@rescript/runtime@12.2.0':
+    resolution: {integrity: sha512-NwfljDRq1rjFPHUaca1nzFz13xsa9ZGkBkLvMhvVgavJT5+A4rMcLu8XAaVTi/oAhO/tlHf9ZDoOTF1AfyAk9Q==}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     resolution: {integrity: sha512-9R0DM/ykwfGIlNu6+2U09ga0WXeZ9MRC2Ter8jnz8415VbuIykVuc6bhdrbORFZANDmTDvq26mJrEVTl8TdnDg==}
@@ -618,6 +647,9 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
+  '@types/bn.js@5.2.0':
+    resolution: {integrity: sha512-DLbJ1BPqxvQhIGbeu8VbUC1DiAiahHtAYvA0ZEAa4P31F7IaArc8z3C3BRQdWX4mtLQuABG4yzp76ZrS02Ui1Q==}
+
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
@@ -633,37 +665,40 @@ packages:
   '@types/node@20.8.8':
     resolution: {integrity: sha512-YRsdVxq6OaLfmR9Hy816IMp33xOBjfyOgUd77ehqg96CFywxAPbDbXvAsuN2KVg2HOT8Eh6uAfU+l4WffwPVrQ==}
 
+  '@types/node@24.12.2':
+    resolution: {integrity: sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g==}
+
   '@types/yoga-layout@1.9.2':
     resolution: {integrity: sha512-S9q47ByT2pPvD65IvrWp7qppVMpk9WGMbVq9wbWZOHg6tnXSD4vyhao6nOSBwwfDdV2p3Kx9evA9vI+XWTfDvw==}
 
-  '@vitest/expect@4.0.16':
-    resolution: {integrity: sha512-eshqULT2It7McaJkQGLkPjPjNph+uevROGuIMJdG3V+0BSR2w9u6J9Lwu+E8cK5TETlfou8GRijhafIMhXsimA==}
+  '@vitest/expect@4.1.0':
+    resolution: {integrity: sha512-EIxG7k4wlWweuCLG9Y5InKFwpMEOyrMb6ZJ1ihYu02LVj/bzUwn2VMU+13PinsjRW75XnITeFrQBMH5+dLvCDA==}
 
-  '@vitest/mocker@4.0.16':
-    resolution: {integrity: sha512-yb6k4AZxJTB+q9ycAvsoxGn+j/po0UaPgajllBgt1PzoMAAmJGYFdDk0uCcRcxb3BrME34I6u8gHZTQlkqSZpg==}
+  '@vitest/mocker@4.1.0':
+    resolution: {integrity: sha512-evxREh+Hork43+Y4IOhTo+h5lGmVRyjqI739Rz4RlUPqwrkFFDF6EMvOOYjTx4E8Tl6gyCLRL8Mu7Ry12a13Tw==}
     peerDependencies:
       msw: ^2.4.9
-      vite: ^6.0.0 || ^7.0.0-0
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0-0
     peerDependenciesMeta:
       msw:
         optional: true
       vite:
         optional: true
 
-  '@vitest/pretty-format@4.0.16':
-    resolution: {integrity: sha512-eNCYNsSty9xJKi/UdVD8Ou16alu7AYiS2fCPRs0b1OdhJiV89buAXQLpTbe+X8V9L6qrs9CqyvU7OaAopJYPsA==}
+  '@vitest/pretty-format@4.1.0':
+    resolution: {integrity: sha512-3RZLZlh88Ib0J7NQTRATfc/3ZPOnSUn2uDBUoGNn5T36+bALixmzphN26OUD3LRXWkJu4H0s5vvUeqBiw+kS0A==}
 
-  '@vitest/runner@4.0.16':
-    resolution: {integrity: sha512-VWEDm5Wv9xEo80ctjORcTQRJ539EGPB3Pb9ApvVRAY1U/WkHXmmYISqU5E79uCwcW7xYUV38gwZD+RV755fu3Q==}
+  '@vitest/runner@4.1.0':
+    resolution: {integrity: sha512-Duvx2OzQ7d6OjchL+trw+aSrb9idh7pnNfxrklo14p3zmNL4qPCDeIJAK+eBKYjkIwG96Bc6vYuxhqDXQOWpoQ==}
 
-  '@vitest/snapshot@4.0.16':
-    resolution: {integrity: sha512-sf6NcrYhYBsSYefxnry+DR8n3UV4xWZwWxYbCJUt2YdvtqzSPR7VfGrY0zsv090DAbjFZsi7ZaMi1KnSRyK1XA==}
+  '@vitest/snapshot@4.1.0':
+    resolution: {integrity: sha512-0Vy9euT1kgsnj1CHttwi9i9o+4rRLEaPRSOJ5gyv579GJkNpgJK+B4HSv/rAWixx2wdAFci1X4CEPjiu2bXIMg==}
 
-  '@vitest/spy@4.0.16':
-    resolution: {integrity: sha512-4jIOWjKP0ZUaEmJm00E0cOBLU+5WE0BpeNr3XN6TEF05ltro6NJqHWxXD0kA8/Zc8Nh23AT8WQxwNG+WeROupw==}
+  '@vitest/spy@4.1.0':
+    resolution: {integrity: sha512-pz77k+PgNpyMDv2FV6qmk5ZVau6c3R8HC8v342T2xlFxQKTrSeYw9waIJG8KgV9fFwAtTu4ceRzMivPTH6wSxw==}
 
-  '@vitest/utils@4.0.16':
-    resolution: {integrity: sha512-h8z9yYhV3e1LEfaQ3zdypIrnAg/9hguReGZoS7Gl0aBG5xgA410zBqECqmaF/+RkTggRsfnzc1XaAHA6bmUufA==}
+  '@vitest/utils@4.1.0':
+    resolution: {integrity: sha512-XfPXT6a8TZY3dcGY8EdwsBulFCIw+BeeX0RZn2x/BtiY/75YGh8FeWGG8QISN/WhaqSrE2OrlDgtF8q5uhOTmw==}
 
   abitype@1.0.5:
     resolution: {integrity: sha512-YzDhti7cjlfaBhHutMaboYB21Ha3rXR9QTkNJFzYC4kC8YclaiwPBBBJY8ejFdu2wnJeZCVZSMlQJ7fi8S6hsw==}
@@ -775,6 +810,9 @@ packages:
   bintrees@1.0.2:
     resolution: {integrity: sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==}
 
+  bn.js@5.2.3:
+    resolution: {integrity: sha512-EAcmnPkxpntVL+DS7bO1zhcZNvCkxqtkd0ZY53h06GNQ3DEkkGZ/gKgmDv6DdZQGj9BgfSPKtJJ7Dp1GPP8f7w==}
+
   body-parser@1.20.2:
     resolution: {integrity: sha512-ml9pReCu3M61kGlqoTm2umSXTlRTuGTx0bfYj+uIUKKYycG5NtSbeetV3faSU6R7ajOPw0g/J1PvK4qNy7s5bA==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
@@ -842,6 +880,10 @@ packages:
     resolution: {integrity: sha512-ywqV+5MmyL4E7ybXgKys4DugZbX0FC6LnwrhjuykIjnK9k8OQacQ7axGKnjDXWNhns0xot3bZI5h55H8yo9cJg==}
     engines: {node: '>=6'}
 
+  cli-table@0.3.11:
+    resolution: {integrity: sha512-IqLQi4lO0nIB4tcdTpN4LCB9FI3uqrJZK7RC515EnhZ6qBaglkIgICb1wjeAqpdoOabm1+SuQtkXIPdYC93jhQ==}
+    engines: {node: '>= 0.2.0'}
+
   cli-truncate@2.1.0:
     resolution: {integrity: sha512-n8fOixwDD6b/ObinzTrp1ZKFzbgvKZvuz/TvejnLn1aQfC6r52XEx85FmuC+3HI+JM7coBRXUvNqEU2PHVrHpg==}
     engines: {node: '>=8'}
@@ -872,6 +914,10 @@ packages:
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
 
+  colors@1.0.3:
+    resolution: {integrity: sha512-pFGrxThWcWQ2MsAz6RtgeWe4NK2kUE1WfsrvvlctdII745EW9I0yflqhe7++M5LEc7bV2c/9/5zc8sFcpL0Drw==}
+    engines: {node: '>=0.1.90'}
+
   content-disposition@0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
     engines: {node: '>= 0.6'}
@@ -879,6 +925,9 @@ packages:
   content-type@1.0.5:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
     engines: {node: '>= 0.6'}
+
+  convert-source-map@2.0.0:
+    resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
   convert-to-spaces@1.0.2:
     resolution: {integrity: sha512-cj09EBuObp9gZNQCzc7hByQyrs6jVGE+o9kSJmeUoj+GiPiJvi5LYqEH/Hmme4+MTLHM+Ejtq+FChpjjEnsPdQ==}
@@ -961,8 +1010,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@3.0.0-alpha.19:
-    resolution: {integrity: sha512-PExo4Ioq01VrAvAVZ/JokLJoMUsCTJjTLZ751xUSD1dQIcB90pNgKrL2GOYG5o2b/AWn4ifu4sl0D9kk4nEAfw==}
+  envio-darwin-arm64@3.0.0-rc.0:
+    resolution: {integrity: sha512-8ViVNaHj85VFQM8D3gSzES1i0lAtzHnp5pYMEIlI079hrQfK0nrZ9W2uOWoN90DU1GrfXcEek6zIfGMuAUmuKQ==}
     cpu: [arm64]
     os: [darwin]
 
@@ -971,8 +1020,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@3.0.0-alpha.19:
-    resolution: {integrity: sha512-/ZmSTe/av+4Ulu02dkki8oKYqKIGjPO472PdGoeP8DOoBTRXCY4r7tPYBFdjk7NY2lEcM2ysalbeca0p0UnEtw==}
+  envio-darwin-x64@3.0.0-rc.0:
+    resolution: {integrity: sha512-ysIJjbw8CXNZEaK3DrenukY+WkDYTwpENN+WtgEj5t883Gr5F31Rz5qNUIJUy60HEIjP6jxJl4NSMEN8Pyfn0A==}
     cpu: [x64]
     os: [darwin]
 
@@ -981,9 +1030,14 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@3.0.0-alpha.19:
-    resolution: {integrity: sha512-uNairDh9enf9tWGFfY6JPNiuJKoD7zjPeyoZFLKsZiMropXHvEHI5r8Z6KTYfkrUIYj0q1s6Y5cjVfugsrYYmQ==}
+  envio-linux-arm64@3.0.0-rc.0:
+    resolution: {integrity: sha512-RP+fSGoymf/i9P+PgsMpaJPRsOOC8l+psVtOTWsE+KZU0EabboU6GYDfcKPH3pX1tk3nZoR/x5/7kgTXkaJs7g==}
     cpu: [arm64]
+    os: [linux]
+
+  envio-linux-x64-musl@3.0.0-rc.0:
+    resolution: {integrity: sha512-os71e0jv5AXQeVkWRSqQpqa95rMPuZkO0WyGkFA8RLqA/+ACtji/Wpj4DZhW5OglL8OSW+3q92CVE8EqQnsQGA==}
+    cpu: [x64]
     os: [linux]
 
   envio-linux-x64@2.24.0:
@@ -991,8 +1045,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@3.0.0-alpha.19:
-    resolution: {integrity: sha512-egC/u8rUNfVD8pmi0p0CvO6bMIRIH3BDTZ4vYYmTJxbUc+NLS9BFxYiiMYFHeXehKJVSOKlIgj7PsvgB+G4WrQ==}
+  envio-linux-x64@3.0.0-rc.0:
+    resolution: {integrity: sha512-rLrRrU2hE/H1GHnJFavZ3uymulT6lqsOw7sHIeUzw7boEiHNAHbaxXZ78EHiztlNmy/ozQIDdP9Vu72ez/wuNw==}
     cpu: [x64]
     os: [linux]
 
@@ -1000,8 +1054,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@3.0.0-alpha.19:
-    resolution: {integrity: sha512-56GwwghlqvQBEIPWegnSHb0lyv/pS6t/GWqE7eom0DK0qGLM/AdUv9epDlhFDI+mN132gYVOOpqxbwsa5Qu7cQ==}
+  envio@3.0.0-rc.0:
+    resolution: {integrity: sha512-oVoP8Tw+AyzUgWgyFSnWpElldmkqD88m73vh7tz7iE3MxUNXbG4UFmBNXol+sned/F3S3MTptwNsHevq1wRtHg==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -1017,8 +1071,8 @@ packages:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
     engines: {node: '>= 0.4'}
 
-  es-module-lexer@1.7.0:
-    resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
+  es-module-lexer@2.1.0:
+    resolution: {integrity: sha512-n27zTYMjYu1aj4MjCWzSP7G9r75utsaoc8m61weK+W8JMBGGQybd43GstCXZ3WNmSFtGT9wi59qQTW6mhTR5LQ==}
 
   es-object-atoms@1.1.1:
     resolution: {integrity: sha512-FGgH2h8zKNim9ljj7dankFPcICIK9Cp5bm+c2gQSYePhpaG5+esrLODihIorn+Pe6FGJzWhXQotPv73jTaldXA==}
@@ -1112,6 +1166,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
   finalhandler@1.2.0:
     resolution: {integrity: sha512-5uXcUVftlQMFnWC9qu/svkWv3GTd2PfUhK/3PLkYNAe7FbqJMt3515HaxE6eRL74GdsriiwujiawdaB1BpEISg==}
@@ -1569,6 +1626,10 @@ packages:
     resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
     engines: {node: '>=0.10.0'}
 
+  react@19.2.5:
+    resolution: {integrity: sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA==}
+    engines: {node: '>=0.10.0'}
+
   readable-stream@3.6.2:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
     engines: {node: '>= 6'}
@@ -1599,10 +1660,10 @@ packages:
       rescript:
         optional: true
 
-  rescript-schema@9.3.4:
-    resolution: {integrity: sha512-VPhkkHCSQSo2KienoMD4Adu/yS8WhckmsUFFrNhKrt5yqeiJt+pY6/V+puuRIFLlWSIqGyu5/pxqSNUg3VLyxA==}
+  rescript-schema@9.5.1:
+    resolution: {integrity: sha512-g2UEMqZ0IVkW8Os7vDs3JrcSS9pyQNubksY+doa3wgt86Y+c9ruvynikDrZLvZYQyQyF1vLJc05r0r2/jLdeZQ==}
     peerDependencies:
-      rescript: 11.x
+      rescript: ^12.0.0-alpha.8
     peerDependenciesMeta:
       rescript:
         optional: true
@@ -1730,8 +1791,8 @@ packages:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
 
-  std-env@3.10.0:
-    resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
+  std-env@4.1.0:
+    resolution: {integrity: sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==}
 
   string-similarity@4.0.4:
     resolution: {integrity: sha512-/q/8Q4Bl4ZKAPjj8WerIBJWALKkaPRfrvhfF8k/B23i4nzrlRj2/go1m90In7nG/3XDSbOo0+pu6RvCTM9RGMQ==}
@@ -1856,13 +1917,16 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
   undici-types@5.25.3:
     resolution: {integrity: sha512-Ga1jfYwRn7+cP9v8auvEXN1rX3sWqlayd4HP7OKk4mZWylEmu3KzXDUGrQUN6Ol7qo1gPvB2e5gX6udnyEPgdA==}
+
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
   unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
@@ -1941,20 +2005,21 @@ packages:
       yaml:
         optional: true
 
-  vitest@4.0.16:
-    resolution: {integrity: sha512-E4t7DJ9pESL6E3I8nFjPa4xGUd3PmiWDLsDztS2qXSJWfHtbQnwAWylaBvSNY48I3vr8PTqIZlyK8TE3V3CA4Q==}
+  vitest@4.1.0:
+    resolution: {integrity: sha512-YbDrMF9jM2Lqc++2530UourxZHmkKLxrs4+mYhEwqWS97WJ7wOYEkcr+QfRgJ3PW9wz3odRijLZjHEaRLTNbqw==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@opentelemetry/api': ^1.9.0
       '@types/node': ^20.0.0 || ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': 4.0.16
-      '@vitest/browser-preview': 4.0.16
-      '@vitest/browser-webdriverio': 4.0.16
-      '@vitest/ui': 4.0.16
+      '@vitest/browser-playwright': 4.1.0
+      '@vitest/browser-preview': 4.1.0
+      '@vitest/browser-webdriverio': 4.1.0
+      '@vitest/ui': 4.1.0
       happy-dom: '*'
       jsdom: '*'
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0-0
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
@@ -2141,31 +2206,31 @@ snapshots:
   '@envio-dev/hypersync-client-darwin-arm64@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-darwin-arm64@1.1.0':
+  '@envio-dev/hypersync-client-darwin-arm64@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-darwin-x64@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-darwin-x64@1.1.0':
+  '@envio-dev/hypersync-client-darwin-x64@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-linux-arm64-gnu@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-linux-arm64-gnu@1.1.0':
+  '@envio-dev/hypersync-client-linux-arm64-gnu@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-linux-x64-gnu@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-linux-x64-gnu@1.1.0':
+  '@envio-dev/hypersync-client-linux-x64-gnu@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-linux-x64-musl@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-linux-x64-musl@1.1.0':
+  '@envio-dev/hypersync-client-linux-x64-musl@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-win32-x64-msvc@0.6.5':
@@ -2180,13 +2245,13 @@ snapshots:
       '@envio-dev/hypersync-client-linux-x64-musl': 0.6.5
       '@envio-dev/hypersync-client-win32-x64-msvc': 0.6.5
 
-  '@envio-dev/hypersync-client@1.1.0':
+  '@envio-dev/hypersync-client@1.3.0':
     optionalDependencies:
-      '@envio-dev/hypersync-client-darwin-arm64': 1.1.0
-      '@envio-dev/hypersync-client-darwin-x64': 1.1.0
-      '@envio-dev/hypersync-client-linux-arm64-gnu': 1.1.0
-      '@envio-dev/hypersync-client-linux-x64-gnu': 1.1.0
-      '@envio-dev/hypersync-client-linux-x64-musl': 1.1.0
+      '@envio-dev/hypersync-client-darwin-arm64': 1.3.0
+      '@envio-dev/hypersync-client-darwin-x64': 1.3.0
+      '@envio-dev/hypersync-client-linux-arm64-gnu': 1.3.0
+      '@envio-dev/hypersync-client-linux-x64-gnu': 1.3.0
+      '@envio-dev/hypersync-client-linux-x64-musl': 1.3.0
 
   '@esbuild/aix-ppc64@0.27.2':
     optional: true
@@ -2266,6 +2331,46 @@ snapshots:
   '@esbuild/win32-x64@0.27.2':
     optional: true
 
+  '@fuel-ts/crypto@0.96.1':
+    dependencies:
+      '@fuel-ts/errors': 0.96.1
+      '@fuel-ts/interfaces': 0.96.1
+      '@fuel-ts/math': 0.96.1
+      '@fuel-ts/utils': 0.96.1
+      '@noble/hashes': 1.8.0
+
+  '@fuel-ts/errors@0.96.1':
+    dependencies:
+      '@fuel-ts/versions': 0.96.1
+
+  '@fuel-ts/hasher@0.96.1':
+    dependencies:
+      '@fuel-ts/crypto': 0.96.1
+      '@fuel-ts/interfaces': 0.96.1
+      '@fuel-ts/utils': 0.96.1
+      '@noble/hashes': 1.8.0
+
+  '@fuel-ts/interfaces@0.96.1': {}
+
+  '@fuel-ts/math@0.96.1':
+    dependencies:
+      '@fuel-ts/errors': 0.96.1
+      '@types/bn.js': 5.2.0
+      bn.js: 5.2.3
+
+  '@fuel-ts/utils@0.96.1':
+    dependencies:
+      '@fuel-ts/errors': 0.96.1
+      '@fuel-ts/interfaces': 0.96.1
+      '@fuel-ts/math': 0.96.1
+      '@fuel-ts/versions': 0.96.1
+      fflate: 0.8.2
+
+  '@fuel-ts/versions@0.96.1':
+    dependencies:
+      chalk: 4.1.2
+      cli-table: 0.3.11
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
@@ -2306,10 +2411,12 @@ snapshots:
       react: 18.2.0
       react-dom: 19.1.0(react@18.2.0)
 
-  '@rescript/react@0.14.1(react-dom@19.1.0(react@18.2.0))(react@18.2.0)':
+  '@rescript/react@0.14.1(react-dom@19.1.0(react@19.2.5))(react@19.2.5)':
     dependencies:
-      react: 18.2.0
-      react-dom: 19.1.0(react@18.2.0)
+      react: 19.2.5
+      react-dom: 19.1.0(react@19.2.5)
+
+  '@rescript/runtime@12.2.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     optional: true
@@ -2422,6 +2529,10 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
+  '@types/bn.js@5.2.0':
+    dependencies:
+      '@types/node': 24.12.2
+
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -2437,58 +2548,64 @@ snapshots:
     dependencies:
       undici-types: 5.25.3
 
+  '@types/node@24.12.2':
+    dependencies:
+      undici-types: 7.16.0
+
   '@types/yoga-layout@1.9.2': {}
 
-  '@vitest/expect@4.0.16':
+  '@vitest/expect@4.1.0':
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@types/chai': 5.2.3
-      '@vitest/spy': 4.0.16
-      '@vitest/utils': 4.0.16
+      '@vitest/spy': 4.1.0
+      '@vitest/utils': 4.1.0
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.16(vite@7.3.1(@types/node@20.8.8)(tsx@4.21.0))':
+  '@vitest/mocker@4.1.0(vite@7.3.1(@types/node@24.12.2)(tsx@4.21.0))':
     dependencies:
-      '@vitest/spy': 4.0.16
+      '@vitest/spy': 4.1.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.1(@types/node@20.8.8)(tsx@4.21.0)
+      vite: 7.3.1(@types/node@24.12.2)(tsx@4.21.0)
 
-  '@vitest/pretty-format@4.0.16':
+  '@vitest/pretty-format@4.1.0':
     dependencies:
       tinyrainbow: 3.0.3
 
-  '@vitest/runner@4.0.16':
+  '@vitest/runner@4.1.0':
     dependencies:
-      '@vitest/utils': 4.0.16
+      '@vitest/utils': 4.1.0
       pathe: 2.0.3
 
-  '@vitest/snapshot@4.0.16':
+  '@vitest/snapshot@4.1.0':
     dependencies:
-      '@vitest/pretty-format': 4.0.16
+      '@vitest/pretty-format': 4.1.0
+      '@vitest/utils': 4.1.0
       magic-string: 0.30.21
       pathe: 2.0.3
 
-  '@vitest/spy@4.0.16': {}
+  '@vitest/spy@4.1.0': {}
 
-  '@vitest/utils@4.0.16':
+  '@vitest/utils@4.1.0':
     dependencies:
-      '@vitest/pretty-format': 4.0.16
+      '@vitest/pretty-format': 4.1.0
+      convert-source-map: 2.0.0
       tinyrainbow: 3.0.3
 
   abitype@1.0.5(typescript@5.2.2):
     optionalDependencies:
       typescript: 5.2.2
 
-  abitype@1.0.5(typescript@5.9.3):
+  abitype@1.0.5(typescript@6.0.3):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
-  abitype@1.2.3(typescript@5.9.3):
+  abitype@1.2.3(typescript@6.0.3):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   abort-controller@3.0.0:
     dependencies:
@@ -2555,6 +2672,8 @@ snapshots:
   bignumber.js@9.3.1: {}
 
   bintrees@1.0.2: {}
+
+  bn.js@5.2.3: {}
 
   body-parser@1.20.2:
     dependencies:
@@ -2629,6 +2748,10 @@ snapshots:
 
   cli-spinners@2.9.2: {}
 
+  cli-table@0.3.11:
+    dependencies:
+      colors: 1.0.3
+
   cli-truncate@2.1.0:
     dependencies:
       slice-ansi: 3.0.0
@@ -2661,11 +2784,15 @@ snapshots:
 
   colorette@2.0.20: {}
 
+  colors@1.0.3: {}
+
   content-disposition@0.5.4:
     dependencies:
       safe-buffer: 5.2.1
 
   content-type@1.0.5: {}
+
+  convert-source-map@2.0.0: {}
 
   convert-to-spaces@1.0.2: {}
 
@@ -2720,25 +2847,28 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@3.0.0-alpha.19:
+  envio-darwin-arm64@3.0.0-rc.0:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@3.0.0-alpha.19:
+  envio-darwin-x64@3.0.0-rc.0:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@3.0.0-alpha.19:
+  envio-linux-arm64@3.0.0-rc.0:
+    optional: true
+
+  envio-linux-x64-musl@3.0.0-rc.0:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@3.0.0-alpha.19:
+  envio-linux-x64@3.0.0-rc.0:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -2762,42 +2892,49 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@3.0.0-alpha.19(react-dom@19.1.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3):
+  envio@3.0.0-rc.0(react-dom@19.1.0(react@19.2.5))(typescript@6.0.3):
     dependencies:
       '@clickhouse/client': 1.17.0
       '@elastic/ecs-pino-format': 1.4.0
       '@envio-dev/hyperfuel-client': 1.2.2
-      '@envio-dev/hypersync-client': 1.1.0
-      '@rescript/react': 0.14.1(react-dom@19.1.0(react@18.2.0))(react@18.2.0)
+      '@envio-dev/hypersync-client': 1.3.0
+      '@fuel-ts/crypto': 0.96.1
+      '@fuel-ts/errors': 0.96.1
+      '@fuel-ts/hasher': 0.96.1
+      '@fuel-ts/math': 0.96.1
+      '@fuel-ts/utils': 0.96.1
+      '@rescript/react': 0.14.1(react-dom@19.1.0(react@19.2.5))(react@19.2.5)
+      '@rescript/runtime': 12.2.0
       bignumber.js: 9.3.1
       date-fns: 3.3.1
       dotenv: 16.4.5
       eventsource: 4.1.0
       express: 4.19.2
-      ink: 6.8.0(react@18.2.0)
-      ink-big-text: 2.0.0(ink@6.8.0(react@18.2.0))(react@18.2.0)
-      ink-spinner: 5.0.0(ink@6.8.0(react@18.2.0))(react@18.2.0)
+      ink: 6.8.0(react@19.2.5)
+      ink-big-text: 2.0.0(ink@6.8.0(react@19.2.5))(react@19.2.5)
+      ink-spinner: 5.0.0(ink@6.8.0(react@19.2.5))(react@19.2.5)
+      js-sdsl: 4.4.2
       pino: 10.3.1
       pino-pretty: 13.1.3
       postgres: 3.4.8
       prom-client: 15.1.3
-      rescript: 11.1.3
-      rescript-envsafe: 5.0.0(rescript-schema@9.3.4(rescript@11.1.3))(rescript@11.1.3)
-      rescript-schema: 9.3.4(rescript@11.1.3)
+      react: 19.2.5
+      rescript-schema: 9.5.1
       tsx: 4.21.0
-      viem: 2.46.2(typescript@5.9.3)
+      viem: 2.46.2(typescript@6.0.3)
       yargs: 17.7.2
     optionalDependencies:
-      envio-darwin-arm64: 3.0.0-alpha.19
-      envio-darwin-x64: 3.0.0-alpha.19
-      envio-linux-arm64: 3.0.0-alpha.19
-      envio-linux-x64: 3.0.0-alpha.19
+      envio-darwin-arm64: 3.0.0-rc.0
+      envio-darwin-x64: 3.0.0-rc.0
+      envio-linux-arm64: 3.0.0-rc.0
+      envio-linux-x64: 3.0.0-rc.0
+      envio-linux-x64-musl: 3.0.0-rc.0
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
-      - react
       - react-devtools-core
       - react-dom
+      - rescript
       - supports-color
       - typescript
       - utf-8-validate
@@ -2809,7 +2946,7 @@ snapshots:
 
   es-errors@1.3.0: {}
 
-  es-module-lexer@1.7.0: {}
+  es-module-lexer@2.1.0: {}
 
   es-object-atoms@1.1.1:
     dependencies:
@@ -2944,6 +3081,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.3
 
+  fflate@0.8.2: {}
+
   finalhandler@1.2.0:
     dependencies:
       debug: 2.6.9
@@ -3050,12 +3189,12 @@ snapshots:
       prop-types: 15.8.1
       react: 18.2.0
 
-  ink-big-text@2.0.0(ink@6.8.0(react@18.2.0))(react@18.2.0):
+  ink-big-text@2.0.0(ink@6.8.0(react@19.2.5))(react@19.2.5):
     dependencies:
       cfonts: 3.3.1
-      ink: 6.8.0(react@18.2.0)
+      ink: 6.8.0(react@19.2.5)
       prop-types: 15.8.1
-      react: 18.2.0
+      react: 19.2.5
 
   ink-spinner@4.0.3(ink@3.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
@@ -3063,11 +3202,11 @@ snapshots:
       ink: 3.2.0(react@18.2.0)
       react: 18.2.0
 
-  ink-spinner@5.0.0(ink@6.8.0(react@18.2.0))(react@18.2.0):
+  ink-spinner@5.0.0(ink@6.8.0(react@19.2.5))(react@19.2.5):
     dependencies:
       cli-spinners: 2.9.2
-      ink: 6.8.0(react@18.2.0)
-      react: 18.2.0
+      ink: 6.8.0(react@19.2.5)
+      react: 19.2.5
 
   ink@3.2.0(react@18.2.0):
     dependencies:
@@ -3099,7 +3238,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  ink@6.8.0(react@18.2.0):
+  ink@6.8.0(react@19.2.5):
     dependencies:
       '@alcalzone/ansi-tokenize': 0.2.5
       ansi-escapes: 7.3.0
@@ -3114,8 +3253,8 @@ snapshots:
       indent-string: 5.0.0
       is-in-ci: 2.0.0
       patch-console: 2.0.0
-      react: 18.2.0
-      react-reconciler: 0.33.0(react@18.2.0)
+      react: 19.2.5
+      react-reconciler: 0.33.0(react@19.2.5)
       scheduler: 0.27.0
       signal-exit: 3.0.7
       slice-ansi: 8.0.0
@@ -3248,7 +3387,7 @@ snapshots:
     dependencies:
       mimic-fn: 2.1.0
 
-  ox@0.12.4(typescript@5.9.3):
+  ox@0.12.4(typescript@6.0.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -3256,10 +3395,10 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(typescript@5.9.3)
+      abitype: 1.2.3(typescript@6.0.3)
       eventemitter3: 5.0.1
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
     transitivePeerDependencies:
       - zod
 
@@ -3428,6 +3567,11 @@ snapshots:
       react: 18.2.0
       scheduler: 0.26.0
 
+  react-dom@19.1.0(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+      scheduler: 0.26.0
+
   react-is@16.13.1: {}
 
   react-reconciler@0.26.2(react@18.2.0):
@@ -3437,14 +3581,16 @@ snapshots:
       react: 18.2.0
       scheduler: 0.20.2
 
-  react-reconciler@0.33.0(react@18.2.0):
+  react-reconciler@0.33.0(react@19.2.5):
     dependencies:
-      react: 18.2.0
+      react: 19.2.5
       scheduler: 0.27.0
 
   react@18.2.0:
     dependencies:
       loose-envify: 1.4.0
+
+  react@19.2.5: {}
 
   readable-stream@3.6.2:
     dependencies:
@@ -3469,18 +3615,11 @@ snapshots:
       rescript: 11.1.3
       rescript-schema: 9.3.0(rescript@11.1.3)
 
-  rescript-envsafe@5.0.0(rescript-schema@9.3.4(rescript@11.1.3))(rescript@11.1.3):
-    dependencies:
-      rescript: 11.1.3
-      rescript-schema: 9.3.4(rescript@11.1.3)
-
   rescript-schema@9.3.0(rescript@11.1.3):
     optionalDependencies:
       rescript: 11.1.3
 
-  rescript-schema@9.3.4(rescript@11.1.3):
-    optionalDependencies:
-      rescript: 11.1.3
+  rescript-schema@9.5.1: {}
 
   rescript@11.1.3: {}
 
@@ -3647,7 +3786,7 @@ snapshots:
 
   statuses@2.0.1: {}
 
-  std-env@3.10.0: {}
+  std-env@4.1.0: {}
 
   string-similarity@4.0.4: {}
 
@@ -3763,9 +3902,11 @@ snapshots:
 
   typescript@5.2.2: {}
 
-  typescript@5.9.3: {}
+  typescript@6.0.3: {}
 
   undici-types@5.25.3: {}
+
+  undici-types@7.16.0: {}
 
   unpipe@1.0.0: {}
 
@@ -3799,42 +3940,42 @@ snapshots:
       - utf-8-validate
       - zod
 
-  viem@2.21.0(typescript@5.9.3):
+  viem@2.21.0(typescript@6.0.3):
     dependencies:
       '@adraffy/ens-normalize': 1.10.0
       '@noble/curves': 1.4.0
       '@noble/hashes': 1.4.0
       '@scure/bip32': 1.4.0
       '@scure/bip39': 1.3.0
-      abitype: 1.0.5(typescript@5.9.3)
+      abitype: 1.0.5(typescript@6.0.3)
       isows: 1.0.4(ws@8.17.1)
       webauthn-p256: 0.0.5
       ws: 8.17.1
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - zod
 
-  viem@2.46.2(typescript@5.9.3):
+  viem@2.46.2(typescript@6.0.3):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(typescript@5.9.3)
+      abitype: 1.2.3(typescript@6.0.3)
       isows: 1.0.7(ws@8.18.3)
-      ox: 0.12.4(typescript@5.9.3)
+      ox: 0.12.4(typescript@6.0.3)
       ws: 8.18.3
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - zod
 
-  vite@7.3.1(@types/node@20.8.8)(tsx@4.21.0):
+  vite@7.3.1(@types/node@24.12.2)(tsx@4.21.0):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.3)
@@ -3843,47 +3984,37 @@ snapshots:
       rollup: 4.55.1
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 20.8.8
+      '@types/node': 24.12.2
       fsevents: 2.3.3
       tsx: 4.21.0
 
-  vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@20.8.8)(tsx@4.21.0):
+  vitest@4.1.0(@opentelemetry/api@1.9.0)(@types/node@24.12.2)(vite@7.3.1(@types/node@24.12.2)(tsx@4.21.0)):
     dependencies:
-      '@vitest/expect': 4.0.16
-      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.8.8)(tsx@4.21.0))
-      '@vitest/pretty-format': 4.0.16
-      '@vitest/runner': 4.0.16
-      '@vitest/snapshot': 4.0.16
-      '@vitest/spy': 4.0.16
-      '@vitest/utils': 4.0.16
-      es-module-lexer: 1.7.0
+      '@vitest/expect': 4.1.0
+      '@vitest/mocker': 4.1.0(vite@7.3.1(@types/node@24.12.2)(tsx@4.21.0))
+      '@vitest/pretty-format': 4.1.0
+      '@vitest/runner': 4.1.0
+      '@vitest/snapshot': 4.1.0
+      '@vitest/spy': 4.1.0
+      '@vitest/utils': 4.1.0
+      es-module-lexer: 2.1.0
       expect-type: 1.3.0
       magic-string: 0.30.21
       obug: 2.1.1
       pathe: 2.0.3
       picomatch: 4.0.3
-      std-env: 3.10.0
+      std-env: 4.1.0
       tinybench: 2.9.0
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.3.1(@types/node@20.8.8)(tsx@4.21.0)
+      vite: 7.3.1(@types/node@24.12.2)(tsx@4.21.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
-      '@types/node': 20.8.8
+      '@types/node': 24.12.2
     transitivePeerDependencies:
-      - jiti
-      - less
-      - lightningcss
       - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
 
   webauthn-p256@0.0.5:
     dependencies:

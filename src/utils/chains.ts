@@ -1,4 +1,4 @@
-import { BigDecimal, type EvmChainId } from "generated";
+import { BigDecimal, type EvmChainId } from "envio";
 
 // Chain IDs
 export enum ChainId {

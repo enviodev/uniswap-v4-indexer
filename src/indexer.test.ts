@@ -7,7 +7,7 @@
  */
 
 import { describe, it } from "vitest";
-import { createTestIndexer } from "generated";
+import { createTestIndexer } from "envio";
 
 describe("Uniswap V4 Indexer", () => {
   it("Does not create Ticks for ModifyLiquidity on unknown pools", async (t) => {
@@ -25,7 +25,6 @@ describe("Uniswap V4 Indexer", () => {
         "changes": [
           {
             "block": 24240005,
-            "blockHash": "0xb4509edf1b6cc82e986fc20a352538ad363908f9a9e861f357862508407bbed1",
             "chainId": 1,
             "eventsProcessed": 10,
           },

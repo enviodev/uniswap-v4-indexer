@@ -1,7 +1,7 @@
 /*
  * Liquidity event handlers for Uniswap v4 pools
  */
-import { PoolManager } from "generated";
+import { indexer } from "envio";
 import {
   getAmount0,
   getAmount1,
@@ -10,7 +10,7 @@ import { convertTokenToDecimal, sanitizeBD } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
 
-PoolManager.ModifyLiquidity.handler(async ({ event, context }) => {
+indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ event, context }) => {
   // Get chain config for pools to skip
   const chainConfig = getChainConfig(event.chainId);
 
