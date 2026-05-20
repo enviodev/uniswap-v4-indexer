@@ -1,4 +1,5 @@
 type Swap
+  @storage(postgres: true, clickhouse: true)
   @index(fields: ["timestamp", "pool"])
   @index(fields: ["amountUSD", "pool"]) {
   id: ID!
@@ -22,7 +23,7 @@ type Swap
   fee: BigInt!
 }
 
-type PoolManager {
+type PoolManager @storage(postgres: true, clickhouse: true) {
   id: ID!
   chainId: BigInt!
   poolCount: BigInt!
@@ -42,7 +43,7 @@ type PoolManager {
   hookedSwaps: BigInt! # number of swaps through hooked pools
 }
 
-type Pool {
+type Pool @storage(postgres: true, clickhouse: true) {
   id: ID!
   chainId: BigInt!
   name: String!
@@ -79,7 +80,7 @@ type Pool {
   ticks: [Tick!]! @derivedFrom(field: "pool")
 }
 
-type Tick {
+type Tick @storage(postgres: true, clickhouse: true) {
   id: ID! # <pool address>#<tickIdx>
   chainId: BigInt!
   pool: Pool! # Pointer back to Pool
@@ -92,7 +93,7 @@ type Tick {
   createdAtBlockNumber: BigInt!
 }
 
-type Token {
+type Token @storage(postgres: true, clickhouse: true) {
   id: ID!
   chainId: BigInt!
   symbol: String!
@@ -113,13 +114,13 @@ type Token {
 }
 
 # stores for USD calculations
-type Bundle {
+type Bundle @storage(postgres: true, clickhouse: true) {
   id: ID!
   # price of ETH in usd
   ethPriceUSD: BigDecimal!
 }
 
-type HookStats {
+type HookStats @storage(postgres: true, clickhouse: true) {
   id: ID! # hook address
   chainId: BigInt!
   numberOfPools: BigInt!
@@ -132,6 +133,7 @@ type HookStats {
 }
 
 type ModifyLiquidity
+  @storage(postgres: true, clickhouse: true)
   @index(fields: ["timestamp", "pool"])
   @index(fields: ["amountUSD", "pool"]) {
   id: ID!

@@ -1,5 +1,8 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 name: uniswap-v4-indexer
+storage:
+  postgres: true
+  clickhouse: true
 contracts:
   - name: PoolManager
     events:
