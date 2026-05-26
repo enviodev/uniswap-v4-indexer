@@ -163,21 +163,23 @@ export const getTokenMetadata = createEffect(
 
     try {
       // Use the multicall implementation for efficiency
-      return await fetchTokenMetadataMulticall(address, chainId);
+      return await fetchTokenMetadataMulticall(address, chainId, context);
     } catch (e) {
       context.log.error(
         `Error fetching metadata for ${address} on chain ${chainId}:`,
         e as Error
       );
+      // Don't persist failed lookups so a future sync can retry.
+      context.cache = false;
       throw e;
     }
   }
 );
 
-// Update the fetchTokenMetadataMulticall function to sanitize name and symbol
 async function fetchTokenMetadataMulticall(
   address: Address,
-  chainId: number
+  chainId: number,
+  context: { cache: boolean; log: { warn: (msg: string) => void } }
 ): Promise<TokenMetadata> {
   const client = getClient(chainId);
   const contract = getContract({
@@ -186,14 +188,14 @@ async function fetchTokenMetadataMulticall(
     client,
   });
 
-  // Prepare promises but don't await them yet
+  // Use `null` for failed reads so we can distinguish "read failed" from
+  // "read succeeded with a valid empty/zero value".
   const namePromise = contract.read.name().catch(() => null);
   const nameBytes32Promise = contract.read.NAME().catch(() => null);
   const symbolPromise = contract.read.symbol().catch(() => null);
   const symbolBytes32Promise = contract.read.SYMBOL().catch(() => null);
-  const decimalsPromise = contract.read.decimals().catch(() => 18); // Default to 18
+  const decimalsPromise = contract.read.decimals().catch(() => null);
 
-  // Execute all promises in a single multicall batch
   const [
     nameResult,
     nameBytes32Result,
@@ -208,7 +210,10 @@ async function fetchTokenMetadataMulticall(
     decimalsPromise,
   ]);
 
-  // Process name with fallbacks
+  const nameFailed = nameResult === null && nameBytes32Result === null;
+  const symbolFailed = symbolResult === null && symbolBytes32Result === null;
+  const decimalsFailed = decimalsResult === null;
+
   let name = "unknown";
   if (nameResult !== null) {
     name = sanitizeString(nameResult);
@@ -222,7 +227,6 @@ async function fetchTokenMetadataMulticall(
     );
   }
 
-  // Process symbol with fallbacks
   let symbol = "UNKNOWN";
   if (symbolResult !== null) {
     symbol = sanitizeString(symbolResult);
@@ -235,6 +239,16 @@ async function fetchTokenMetadataMulticall(
           )
         )
       )
+    );
+  }
+
+  // If every ERC-20 read failed, the most likely cause is a transient RPC
+  // error rather than a token that genuinely implements none of the methods.
+  // Don't persist this result so the next sync can retry.
+  if (nameFailed && symbolFailed && decimalsFailed) {
+    context.cache = false;
+    context.log.warn(
+      `All ERC-20 reads failed for ${address} on chain ${chainId}; not caching fallback metadata`
     );
   }
 
