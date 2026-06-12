@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 3.0.1
-        version: 3.0.1(react-dom@19.1.0(react@19.2.5))(typescript@6.0.3)
+        specifier: 3.2.0
+        version: 3.2.0(react-dom@19.1.0(react@19.2.5))(typescript@6.0.3)
     devDependencies:
       '@types/node':
         specifier: 24.12.2
@@ -177,20 +177,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@envio-dev/hypersync-client-darwin-arm64@1.3.0':
-    resolution: {integrity: sha512-JZwiVRbMSuJnKsVUpfjTHc3YgAMvGlyuqWQxVc7Eok4Xp/sZLUCXRQUykbCh6fOUWRmoa2JG/ykP/NotoTRCBg==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [darwin]
-
   '@envio-dev/hypersync-client-darwin-x64@0.6.5':
     resolution: {integrity: sha512-XT1l6bfsXgZqxh8BZbPoP/3Zk0Xvwzr/ZKVmzXR5ZhPxDgEVUJMg4Rd1oy8trd1K+uevqOr2DbuIGvM7k2hb8A==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@envio-dev/hypersync-client-darwin-x64@1.3.0':
-    resolution: {integrity: sha512-2eSzQqqqFBMK2enVucYGcny5Ep4DEKYxf3Xme7z9qp2d3c6fMcbVvM4Gt8KOzb7ySjwJ2gU+qY2h545T2NiJXQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
@@ -201,38 +189,17 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@envio-dev/hypersync-client-linux-arm64-gnu@1.3.0':
-    resolution: {integrity: sha512-gsjMp3WKekwnA89HvJXvcTM3BE5wVFG/qTF4rmk3rGiXhZ+MGaZQKrYRAhnzQZblueFtF/xnnBYpO35Z3ZFThg==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
   '@envio-dev/hypersync-client-linux-x64-gnu@0.6.5':
     resolution: {integrity: sha512-DUDY19T2O+ciniP8RHWEv6ziaCdVkkVVLhfXiovpLy+oR1K/+h7osUHD1HCPolibaU3V2EDpqTDhKBtvPXUGaQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@envio-dev/hypersync-client-linux-x64-gnu@1.3.0':
-    resolution: {integrity: sha512-Lkvi4lRVwCyFOXf9LYH2X91zmW2l1vbfojKhTwKgqFWv6PMN5atlYjt+/NcUCAAhk5EUavWGjoikwnvLp870cg==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
   '@envio-dev/hypersync-client-linux-x64-musl@0.6.5':
     resolution: {integrity: sha512-VolsHvPrk5PAdHN0ht1iowwXz7bwJO0L5qDuw3eSKF4qHuAzlwImB1CRhJrMIaE8McsDnN6fSlqDeTPRmzS/Ug==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-
-  '@envio-dev/hypersync-client-linux-x64-musl@1.3.0':
-    resolution: {integrity: sha512-UIjB/gUX2sl23EMXLBxqtkgMnOjNSiaHK+CSU5vXMXkzL3fOGbz24bvyaPsSv82cxCFEE0yTwlSKkCX6/L8o6Q==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
 
   '@envio-dev/hypersync-client-win32-x64-msvc@0.6.5':
     resolution: {integrity: sha512-D+bkkWbCsbgaTrhyVdXHysKUCVzFpkWoxmaHnm2anad7+yKKfx15afYirtZMTKc7CLkYqganghN4QsBsEHl3Iw==}
@@ -242,10 +209,6 @@ packages:
 
   '@envio-dev/hypersync-client@0.6.5':
     resolution: {integrity: sha512-mii+ponVo5ZmVOlEtJxyugGHuIuzYp5bVfr88mCuRwcWZIkNrWfad/aAW6H7YNe63E0gq0ePtRDrkLzlpAUuGQ==}
-    engines: {node: '>= 10'}
-
-  '@envio-dev/hypersync-client@1.3.0':
-    resolution: {integrity: sha512-wUdfZzbsFPbGq6n/1mmUMsWuiAil+m+fL/GBX5LGUyMJV86TXy2SBtAqYYNyDxWLO6gvGr6PYKrP8pLVAUZDZg==}
     engines: {node: '>= 10'}
 
   '@esbuild/aix-ppc64@0.27.2':
@@ -1185,8 +1148,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@3.0.1:
-    resolution: {integrity: sha512-BUeuyxP93WBm2kArF5Yxbr34KRyri2fH/HSrYecBEMBfgwR6Xccz72ZkpFMxcowQtt6yRwDcA+UpXrpjIhjI8A==}
+  envio-darwin-arm64@3.2.0:
+    resolution: {integrity: sha512-UkdZ7MqPh84qcJEygWHEDwWuie3sTpCXGJmQUw3duo2W0NNoq+yFQcoSCe8feDxBJ1Y+TN2UZb7EydIJ2c3a/A==}
     cpu: [arm64]
     os: [darwin]
 
@@ -1195,8 +1158,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@3.0.1:
-    resolution: {integrity: sha512-eWN9K6JHvXlI32U0g1VKzsi+o4T+Dk87odJemHvtR27GkY/IZsHBP2ASD0BfFe5OVNwqvTtmPAsn/jakThx2TQ==}
+  envio-darwin-x64@3.2.0:
+    resolution: {integrity: sha512-htC7TvdNaLibIEqUfUcwvByQmL3d8cqpCpVlny/EKycef+No8/Kd5wSxH3IRzLXCdQ2w4VhJ6/x/+Mepu59Npw==}
     cpu: [x64]
     os: [darwin]
 
@@ -1205,14 +1168,14 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@3.0.1:
-    resolution: {integrity: sha512-ZxxwZvgjyCE8+bQzordzOga8GJAVp87KbDfWBBFduSmyAiQf7Lsa8jMhAHj4A+AS4Hbmf7UmA/X44B/Q8f7waw==}
+  envio-linux-arm64@3.2.0:
+    resolution: {integrity: sha512-xpEGYefS17B3NgbrHzOcv435kBpsEG2Uy+5lYL5diwpUYqxVJ3bgvoJ4CcABcKBjP/kiuPzrLxtzzf4k0pZGPA==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  envio-linux-x64-musl@3.0.1:
-    resolution: {integrity: sha512-yyyRPouYms28Tvv9Yc1W/amjRdJMjRcMJb6cLPNRNKCSW5/V3AjewYWeTi+g3otZ6eVXEnFBeIjH2xf1rUxXiQ==}
+  envio-linux-x64-musl@3.2.0:
+    resolution: {integrity: sha512-QkUGcgHl1w6ry7LId1dlGXsfr5ZzXm8U4Y2rXZgws8S04v1F7gVHR1lzquqt0Bw6a6Bi7dW83LLlTAZswr+glA==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
@@ -1222,8 +1185,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@3.0.1:
-    resolution: {integrity: sha512-wvyWnvy8bMw7kCdvtJqeM3a4jEA2kiIxDa2kCHOsJq2Aw5Z7kaW26OZ9BbWpRGvgtNVG0eiA8e0YvK1aDk+xIQ==}
+  envio-linux-x64@3.2.0:
+    resolution: {integrity: sha512-QDJyZNwo/pdy2Z4Hdmv+OWV9zEVQ/k+4QzZerogV7ic+rNXs1Z8IWNYwAk1BcD3XaS+0LPedsEhd4NaJeaOV4A==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
@@ -1232,8 +1195,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@3.0.1:
-    resolution: {integrity: sha512-gEtvYCHM5i3XCRI+4g766SvSsExB4cY2qzSjbl2TSRWUEik5n7yHtcYCU52/LqPK4Inc9z2Dc0tHbuBCqZOYuQ==}
+  envio@3.2.0:
+    resolution: {integrity: sha512-NhPK2fGHTjwzN9fpPurQyWf++iGz6GQGXqmR4IF7ALrP38lej1OT65j20yq8QlbwWYcVOQ/JDKWOktPuEr0R0g==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -2394,31 +2357,16 @@ snapshots:
   '@envio-dev/hypersync-client-darwin-arm64@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-darwin-arm64@1.3.0':
-    optional: true
-
   '@envio-dev/hypersync-client-darwin-x64@0.6.5':
-    optional: true
-
-  '@envio-dev/hypersync-client-darwin-x64@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-linux-arm64-gnu@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-linux-arm64-gnu@1.3.0':
-    optional: true
-
   '@envio-dev/hypersync-client-linux-x64-gnu@0.6.5':
     optional: true
 
-  '@envio-dev/hypersync-client-linux-x64-gnu@1.3.0':
-    optional: true
-
   '@envio-dev/hypersync-client-linux-x64-musl@0.6.5':
-    optional: true
-
-  '@envio-dev/hypersync-client-linux-x64-musl@1.3.0':
     optional: true
 
   '@envio-dev/hypersync-client-win32-x64-msvc@0.6.5':
@@ -2432,14 +2380,6 @@ snapshots:
       '@envio-dev/hypersync-client-linux-x64-gnu': 0.6.5
       '@envio-dev/hypersync-client-linux-x64-musl': 0.6.5
       '@envio-dev/hypersync-client-win32-x64-msvc': 0.6.5
-
-  '@envio-dev/hypersync-client@1.3.0':
-    optionalDependencies:
-      '@envio-dev/hypersync-client-darwin-arm64': 1.3.0
-      '@envio-dev/hypersync-client-darwin-x64': 1.3.0
-      '@envio-dev/hypersync-client-linux-arm64-gnu': 1.3.0
-      '@envio-dev/hypersync-client-linux-x64-gnu': 1.3.0
-      '@envio-dev/hypersync-client-linux-x64-musl': 1.3.0
 
   '@esbuild/aix-ppc64@0.27.2':
     optional: true
@@ -3113,28 +3053,28 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@3.0.1:
+  envio-darwin-arm64@3.2.0:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@3.0.1:
+  envio-darwin-x64@3.2.0:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@3.0.1:
+  envio-linux-arm64@3.2.0:
     optional: true
 
-  envio-linux-x64-musl@3.0.1:
+  envio-linux-x64-musl@3.2.0:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@3.0.1:
+  envio-linux-x64@3.2.0:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -3158,12 +3098,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@3.0.1(react-dom@19.1.0(react@19.2.5))(typescript@6.0.3):
+  envio@3.2.0(react-dom@19.1.0(react@19.2.5))(typescript@6.0.3):
     dependencies:
       '@clickhouse/client': 1.17.0
       '@elastic/ecs-pino-format': 1.4.0
       '@envio-dev/hyperfuel-client': 1.2.2
-      '@envio-dev/hypersync-client': 1.3.0
       '@fuel-ts/crypto': 0.96.1
       '@fuel-ts/errors': 0.96.1
       '@fuel-ts/hasher': 0.96.1
@@ -3190,11 +3129,11 @@ snapshots:
       viem: 2.46.2(typescript@6.0.3)
       yargs: 17.7.2
     optionalDependencies:
-      envio-darwin-arm64: 3.0.1
-      envio-darwin-x64: 3.0.1
-      envio-linux-arm64: 3.0.1
-      envio-linux-x64: 3.0.1
-      envio-linux-x64-musl: 3.0.1
+      envio-darwin-arm64: 3.2.0
+      envio-darwin-x64: 3.2.0
+      envio-linux-arm64: 3.2.0
+      envio-linux-x64: 3.2.0
+      envio-linux-x64-musl: 3.2.0
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
