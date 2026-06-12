@@ -21,6 +21,6 @@
     "vitest": "4.1.0"
   },
   "dependencies": {
-    "envio": "3.0.1"
+    "envio": "3.2.0"
   }
 }
