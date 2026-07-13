@@ -9,6 +9,7 @@ import {
 import { convertTokenToDecimal, sanitizeBD } from "../utils";
 import { createInitialTick } from "../utils/tick";
 import { getChainConfig } from "../utils/chains";
+import { getTrackedTVLUSD } from "../utils/pricing";
 
 indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ event, context }) => {
   // Get chain config for pools to skip
@@ -162,6 +163,7 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
   // Store current pool TVL for later
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
+  const currentPoolTvlUSDTracked = pool.totalValueLockedUSDTracked;
   // After updating token TVLs, calculate ETH and USD values
   pool = {
     ...pool,
@@ -173,6 +175,16 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
     ...pool,
     totalValueLockedUSD: sanitizeBD(
       pool.totalValueLockedETH.times(bundle.ethPriceUSD)
+    ),
+    totalValueLockedUSDTracked: sanitizeBD(
+      getTrackedTVLUSD(
+        pool.totalValueLockedToken0,
+        token0,
+        pool.totalValueLockedToken1,
+        token1,
+        chainConfig.whitelistTokens,
+        bundle.ethPriceUSD
+      )
     ),
   };
   // Update token totalValueLockedUSD
@@ -202,6 +214,9 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
     totalValueLockedUSD: poolManager.totalValueLockedETH.times(
       bundle.ethPriceUSD
     ),
+    totalValueLockedUSDTracked: poolManager.totalValueLockedUSDTracked
+      .minus(currentPoolTvlUSDTracked)
+      .plus(pool.totalValueLockedUSDTracked),
   };
 
   // Create ModifyLiquidity entity

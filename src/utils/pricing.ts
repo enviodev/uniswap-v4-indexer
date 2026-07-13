@@ -48,6 +48,18 @@ export async function getNativePriceInUSD(
 }
 
 /**
+ * A pool may only set a token's price when the value it implies for the token
+ * side is consistent with the pool's verifiable (whitelisted) side. In any pool
+ * with real price discovery, arbitrage keeps the two sides' values within ~2
+ * orders of magnitude; observed poison pools are 5-24 orders apart. Without
+ * this guard an attacker passes minimumNativeLocked with ~1 ETH, sets an
+ * absurd price with one swap, and (optionally) withdraws — freezing a junk
+ * derivedETH that inflates TVL/volume USD everywhere the token appears.
+ * With it, faking $X of value requires depositing ~$X/100 of real capital.
+ */
+export const MAX_PRICING_POOL_VALUE_IMBALANCE = new BigDecimal("100");
+
+/**
  * Search through graph to find derived Eth per token.
  * @todo update to be derived ETH (add stablecoin estimates)
  **/
@@ -107,14 +119,26 @@ export async function findNativePerToken(
         const ethLocked = isToken0
           ? pool.totalValueLockedToken0.times(token.derivedETH)
           : pool.totalValueLockedToken1.times(token.derivedETH);
+        const candidatePrice = isToken0
+          ? pool.token0Price.times(token.derivedETH)
+          : pool.token1Price.times(token.derivedETH);
+        // Value the candidate price implies for OUR token's side of the pool.
+        // Reject prices that value it far beyond the pool's verifiable side —
+        // see MAX_PRICING_POOL_VALUE_IMBALANCE.
+        const ourSideBalance = isToken0
+          ? pool.totalValueLockedToken1
+          : pool.totalValueLockedToken0;
+        const impliedOurSideETH = ourSideBalance.times(candidatePrice);
+        const withinImbalanceBound = impliedOurSideETH.lte(
+          ethLocked.times(MAX_PRICING_POOL_VALUE_IMBALANCE)
+        );
         if (
           ethLocked.gt(largestLiquidityETH) &&
-          ethLocked.gt(minimumNativeLocked)
+          ethLocked.gt(minimumNativeLocked) &&
+          withinImbalanceBound
         ) {
           largestLiquidityETH = ethLocked;
-          priceSoFar = isToken0
-            ? pool.token0Price.times(token.derivedETH)
-            : pool.token1Price.times(token.derivedETH);
+          priceSoFar = candidatePrice;
         }
       }
     }
@@ -172,6 +196,45 @@ export async function getTrackedAmountUSD(
   }
 
   // neither token is on white list, tracked amount is 0
+  return ZERO_BD;
+}
+
+/**
+ * Pool TVL in USD, bounded by verifiable capital (mirrors the v2-subgraph
+ * tracked-liquidity rule):
+ * - both tokens whitelisted → sum of both sides
+ * - one token whitelisted   → 2× the whitelisted side
+ * - neither                 → 0
+ *
+ * Unlike totalValueLockedUSD this cannot be inflated by a poisoned derivedETH
+ * or by a fake-balance pool (an honest-looking price on billions of free-minted
+ * tokens): the result never exceeds ~2× the pool's real, whitelisted capital.
+ */
+export function getTrackedTVLUSD(
+  tvlToken0: BigDecimal,
+  token0: Token,
+  tvlToken1: BigDecimal,
+  token1: Token,
+  whitelistTokens: string[],
+  ethPriceUSD: BigDecimal
+): BigDecimal {
+  const value0USD = tvlToken0.times(token0.derivedETH).times(ethPriceUSD);
+  const value1USD = tvlToken1.times(token1.derivedETH).times(ethPriceUSD);
+
+  const token0Address = token0.id.split("_")[1]!;
+  const token1Address = token1.id.split("_")[1]!;
+  const isWhitelisted0 = whitelistTokens.includes(token0Address);
+  const isWhitelisted1 = whitelistTokens.includes(token1Address);
+
+  if (isWhitelisted0 && isWhitelisted1) {
+    return value0USD.plus(value1USD);
+  }
+  if (isWhitelisted0) {
+    return value0USD.times(new BigDecimal("2"));
+  }
+  if (isWhitelisted1) {
+    return value1USD.times(new BigDecimal("2"));
+  }
   return ZERO_BD;
 }
 

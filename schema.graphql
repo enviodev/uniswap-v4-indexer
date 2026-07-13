@@ -35,6 +35,9 @@ type PoolManager @storage(postgres: true, clickhouse: true) {
   untrackedVolumeUSD: BigDecimal!
   totalValueLockedUSD: BigDecimal!
   totalValueLockedETH: BigDecimal!
+  # TVL USD bounded by verifiable capital (sum of Pool.totalValueLockedUSDTracked).
+  # Immune to derivedETH price poisoning — serve this on aggregate displays.
+  totalValueLockedUSDTracked: BigDecimal!
   totalValueLockedUSDUntracked: BigDecimal!
   totalValueLockedETHUntracked: BigDecimal!
   owner: String!
@@ -73,6 +76,11 @@ type Pool @storage(postgres: true, clickhouse: true) {
   totalValueLockedToken1: BigDecimal!
   totalValueLockedETH: BigDecimal!
   totalValueLockedUSD: BigDecimal! @index
+  # TVL USD bounded by verifiable capital: both sides whitelisted → sum of both;
+  # one side whitelisted → 2× that side; neither → 0. Immune to derivedETH
+  # price poisoning (fake-balance pools cannot exceed 2× their real capital) —
+  # serve this on TVL displays and leaderboards.
+  totalValueLockedUSDTracked: BigDecimal! @index
   totalValueLockedUSDUntracked: BigDecimal!
   liquidityProviderCount: BigInt!
   hooks: String!

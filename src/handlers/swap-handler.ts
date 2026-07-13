@@ -4,7 +4,11 @@
 import { indexer, BigDecimal, type Swap } from "envio";
 import { getChainConfig } from "../utils/chains";
 import { convertTokenToDecimal } from "../utils";
-import { getTrackedAmountUSD, getNativePriceInUSD } from "../utils/pricing";
+import {
+  getTrackedAmountUSD,
+  getTrackedTVLUSD,
+  getNativePriceInUSD,
+} from "../utils/pricing";
 import { safeDiv, sanitizeBD } from "../utils/index";
 import { findNativePerToken } from "../utils/pricing";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
@@ -151,6 +155,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
   // Store current pool TVL values for later calculations
   const currentPoolTvlETH = pool.totalValueLockedETH;
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
+  const currentPoolTvlUSDTracked = pool.totalValueLockedUSDTracked;
   // Update pool values (feeTier updated to actual swap fee for dynamic fee pools)
   pool = {
     ...pool,
@@ -183,6 +188,16 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
     ...pool,
     totalValueLockedUSD: sanitizeBD(
       pool.totalValueLockedETH.times(bundle.ethPriceUSD)
+    ),
+    totalValueLockedUSDTracked: sanitizeBD(
+      getTrackedTVLUSD(
+        pool.totalValueLockedToken0,
+        token0,
+        pool.totalValueLockedToken1,
+        token1,
+        chainConfig.whitelistTokens,
+        bundle.ethPriceUSD
+      )
     ),
   };
   // Update token0 data
@@ -240,6 +255,9 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
     totalValueLockedUSD: poolManager.totalValueLockedETH.times(
       bundle.ethPriceUSD
     ),
+    totalValueLockedUSDTracked: poolManager.totalValueLockedUSDTracked
+      .minus(currentPoolTvlUSDTracked)
+      .plus(pool.totalValueLockedUSDTracked),
   };
 
   // Use for USD swap amount
