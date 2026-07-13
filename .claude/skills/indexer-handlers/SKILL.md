@@ -23,19 +23,24 @@ This is an ESM project (`"type": "module"` in package.json). Top-level `await` i
 ## Handler Registration
 
 ```ts
-import { Contract } from "envio";
+import { indexer } from "envio";
 
-Contract.Event.handler(async ({ event, context }) => {
-  // event.params.<name>  — decoded event parameters
-  // event.chainId        — chain ID
-  // event.srcAddress     — emitting contract address (checksummed)
-  // event.logIndex       — log index within block
-  // event.block          — { number, timestamp, hash }
-  // event.transaction    — transaction fields (configure via field_selection)
-});
+indexer.onEvent(
+  { contract: "MyContract", event: "Transfer" },
+  async ({ event, context }) => {
+    // event.params.<name>  — decoded event parameters
+    // event.chainId        — chain ID
+    // event.srcAddress     — emitting contract address (checksummed)
+    // event.logIndex       — log index within block
+    // event.block          — { number, timestamp, hash }
+    // event.transaction    — transaction fields (configure via field_selection)
+  },
+);
 ```
 
-Handlers accept an optional 2nd argument — see `indexer-wildcard` and `indexer-filters` skills.
+The first argument is the options object — `contract` and `event` names plus
+optional `wildcard` / `where` (see `indexer-wildcard` and `indexer-filters`
+skills). The second argument is the handler.
 
 ## Context API
 
@@ -54,13 +59,15 @@ const list = await context.Entity.getWhere({ fieldName: { _lt: value } });
 const list = await context.Entity.getWhere({ fieldName: { _gte: value } });
 const list = await context.Entity.getWhere({ fieldName: { _lte: value } });
 const list = await context.Entity.getWhere({ fieldName: { _in: [value1, value2] } });
+const list = await context.Entity.getWhere({ fieldName: { _gte: min, _lte: max } });
+const list = await context.Entity.getWhere({ fieldA: { _eq: a }, fieldB: { _eq: b } });
 
 // Write
 context.Entity.set(entity);          // create or update (sync — no await)
 context.Entity.deleteUnsafe(id);     // delete (sync — no await)
 ```
 
-`getWhere` operators: `_eq`, `_gt`, `_lt`, `_gte`, `_lte`, `_in`. Only `@index` fields are queryable. See `indexer-schema` for @index syntax.
+`getWhere` operators: `_eq`, `_gt`, `_lt`, `_gte`, `_lte`, `_in`. Multiple fields and operators combine with AND semantics. Only `id` and `@index` fields are queryable. See `indexer-schema` for @index syntax.
 
 ### Context Properties
 
@@ -68,7 +75,7 @@ context.Entity.deleteUnsafe(id);     // delete (sync — no await)
 context.chain.id           // number — current chain ID
 context.chain.isRealtime   // boolean — true when ALL chains have caught up to head
 context.isPreload      // boolean — true during preload phase
-context.log            // { debug, info, warn, error, errorWithExn }
+context.log            // { debug, info, warn, error }
 context.effect(fn, input)  // external call via Effect API (see indexer-external-calls)
 ```
 
@@ -126,6 +133,4 @@ This is globally unique across chains and blocks. Use it as the default unless t
 
 **Schema & config** — see `indexer-schema` and `indexer-configuration` skills for full reference.
 
-## Deep Documentation
-
-Full reference: https://docs.envio.dev/docs/HyperIndex-LLM/hyperindex-complete
+> If something is unclear, use the `envio-docs` skill to search and read the latest documentation.
