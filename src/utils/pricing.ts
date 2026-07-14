@@ -49,15 +49,22 @@ export async function getNativePriceInUSD(
 
 /**
  * A pool may only set a token's price when the value it implies for the token
- * side is consistent with the pool's verifiable (whitelisted) side. In any pool
- * with real price discovery, arbitrage keeps the two sides' values within ~2
- * orders of magnitude; observed poison pools are 5-24 orders apart. Without
- * this guard an attacker passes minimumNativeLocked with ~1 ETH, sets an
- * absurd price with one swap, and (optionally) withdraws — freezing a junk
- * derivedETH that inflates TVL/volume USD everywhere the token appears.
- * With it, faking $X of value requires depositing ~$X/100 of real capital.
+ * side is consistent with the pool's verifiable (whitelisted) side.
+ *
+ * The bound is empirical, not an AMM invariant — v4 concentrated liquidity
+ * legitimately allows lopsided pools (one-sided range orders, wide-range
+ * launch overhangs valued at spot). Measured across all organically traded
+ * one-sided pools on the production indexer (2,584 pools with >=500 txs above
+ * the pricing threshold, 2026-07-14): 96% sit below 10x, 99.6% below 100x,
+ * 99.9% below 1000x, and NONE between 1e4x and 1e6x — while every observed
+ * poison pool sits at 7.6e3x-1e24x. 1000x cuts through the empty band with
+ * ~7x margin to the nearest junk and one-in-a-thousand impact on real pools.
+ * Without this guard an attacker passes minimumNativeLocked with ~1 ETH, sets
+ * an absurd price with one swap, and (optionally) withdraws — freezing a junk
+ * derivedETH that inflates TVL/volume USD everywhere the token appears. With
+ * it, faking $X of value requires depositing ~$X/1000 of real capital.
  */
-export const MAX_PRICING_POOL_VALUE_IMBALANCE = new BigDecimal("100");
+export const MAX_PRICING_POOL_VALUE_IMBALANCE = new BigDecimal("1000");
 
 /**
  * Search through graph to find derived Eth per token.

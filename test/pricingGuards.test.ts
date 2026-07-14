@@ -1,8 +1,10 @@
 /**
  * Tests for findNativePerToken's imbalance guard
  * (MAX_PRICING_POOL_VALUE_IMBALANCE): a pool may only set a token's derivedETH
- * when the value it implies for the token side is ≤ 100× the pool's verifiable
- * (whitelisted) side.
+ * when the value it implies for the token side is ≤ 1000× the pool's
+ * verifiable (whitelisted) side. The bound is empirical (see pricing.ts) —
+ * concentrated liquidity legitimately produces lopsided pools into the
+ * hundreds×, junk starts at ~7,600×.
  *
  * Fixtures replicate real attacks observed on the production indexer
  * (2026-07-13 forensics):
@@ -180,7 +182,7 @@ describe("findNativePerToken imbalance guard", () => {
   });
 
   it("accepts exactly at the imbalance bound (lte, not lt)", async () => {
-    // implied side value == 100 × ethLocked must still pass.
+    // implied side value == 1000 × ethLocked must still pass.
     const token = makeToken("0x1111111111111111111111111111111111111111", {
       whitelistPools: ["edge-pool"],
     });
@@ -188,14 +190,35 @@ describe("findNativePerToken imbalance guard", () => {
       token0: WETH,
       token1: token.id.split("_")[1]!,
       tvl0: bd("10"),
-      tvl1: bd("1000"),
-      token0Price: bd("1"), // implied = 1000 = 100 × 10
+      tvl1: bd("10000"),
+      token0Price: bd("1"), // implied = 10000 = 1000 × 10
     });
     const context = makeContext([pool], [weth]);
 
     const price = await priceFor(context, token);
     expect(price.eq(bd("1"))).toBe(true);
-    expect(MAX_PRICING_POOL_VALUE_IMBALANCE.eq(bd(100))).toBe(true);
+    expect(MAX_PRICING_POOL_VALUE_IMBALANCE.eq(bd(1000))).toBe(true);
+  });
+
+  it("accepts a legitimately lopsided launch pool (wide one-sided range, ~500x)", async () => {
+    // v4 concentrated liquidity: a wide-range launch that has only been
+    // bought into slightly holds most of its value as token overhang at spot.
+    // Measured organic pools reach the hundreds×; the guard must not reject
+    // them (this shape sat in the false-positive band when the bound was 100).
+    const launch = makeToken("0x4444444444444444444444444444444444444444", {
+      whitelistPools: ["launch-pool"],
+    });
+    const pool = makePool("launch-pool", {
+      token0: WETH,
+      token1: launch.id.split("_")[1]!,
+      tvl0: bd("2"), // real ETH bought in so far
+      tvl1: bd("900000000"), // remaining overhang
+      token0Price: bd("1.1e-6"), // implied ≈ 990 ETH ≈ 495 × ethLocked
+    });
+    const context = makeContext([pool], [weth]);
+
+    const price = await priceFor(context, launch);
+    expect(price.eq(bd("1.1e-6"))).toBe(true);
   });
 
   it("still enforces minimumNativeLocked on balanced pools", async () => {
