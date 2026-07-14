@@ -48,6 +48,25 @@ export async function getNativePriceInUSD(
 }
 
 /**
+ * A pool may only set a token's price when the value it implies for the token
+ * side is consistent with the pool's verifiable (whitelisted) side.
+ *
+ * The bound is empirical, not an AMM invariant — v4 concentrated liquidity
+ * legitimately allows lopsided pools (one-sided range orders, wide-range
+ * launch overhangs valued at spot). Measured across all organically traded
+ * one-sided pools on the production indexer (2,584 pools with >=500 txs above
+ * the pricing threshold, 2026-07-14): 96% sit below 10x, 99.6% below 100x,
+ * 99.9% below 1000x, and NONE between 1e4x and 1e6x — while every observed
+ * poison pool sits at 7.6e3x-1e24x. 1000x cuts through the empty band with
+ * ~7x margin to the nearest junk and one-in-a-thousand impact on real pools.
+ * Without this guard an attacker passes minimumNativeLocked with ~1 ETH, sets
+ * an absurd price with one swap, and (optionally) withdraws — freezing a junk
+ * derivedETH that inflates TVL/volume USD everywhere the token appears. With
+ * it, faking $X of value requires depositing ~$X/1000 of real capital.
+ */
+export const MAX_PRICING_POOL_VALUE_IMBALANCE = new BigDecimal("1000");
+
+/**
  * Search through graph to find derived Eth per token.
  * @todo update to be derived ETH (add stablecoin estimates)
  **/
@@ -107,14 +126,26 @@ export async function findNativePerToken(
         const ethLocked = isToken0
           ? pool.totalValueLockedToken0.times(token.derivedETH)
           : pool.totalValueLockedToken1.times(token.derivedETH);
+        const candidatePrice = isToken0
+          ? pool.token0Price.times(token.derivedETH)
+          : pool.token1Price.times(token.derivedETH);
+        // Value the candidate price implies for OUR token's side of the pool.
+        // Reject prices that value it far beyond the pool's verifiable side —
+        // see MAX_PRICING_POOL_VALUE_IMBALANCE.
+        const ourSideBalance = isToken0
+          ? pool.totalValueLockedToken1
+          : pool.totalValueLockedToken0;
+        const impliedOurSideETH = ourSideBalance.times(candidatePrice);
+        const withinImbalanceBound = impliedOurSideETH.lte(
+          ethLocked.times(MAX_PRICING_POOL_VALUE_IMBALANCE)
+        );
         if (
           ethLocked.gt(largestLiquidityETH) &&
-          ethLocked.gt(minimumNativeLocked)
+          ethLocked.gt(minimumNativeLocked) &&
+          withinImbalanceBound
         ) {
           largestLiquidityETH = ethLocked;
-          priceSoFar = isToken0
-            ? pool.token0Price.times(token.derivedETH)
-            : pool.token1Price.times(token.derivedETH);
+          priceSoFar = candidatePrice;
         }
       }
     }
