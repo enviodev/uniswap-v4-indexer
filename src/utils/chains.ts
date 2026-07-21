@@ -17,6 +17,9 @@ export enum ChainId {
   MONAD = 143,
   LINEA = 59144,
   CELO = 42220,
+  INK = 57073,
+  MEGAETH = 4326,
+  ROBINHOOD = 4663,
 }
 
 // Native token details interface
@@ -500,6 +503,83 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
     nativeTokenDetails: {
       symbol: "CELO",
       name: "Celo",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.INK]: {
+    poolManagerAddress: "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
+    stablecoinWrappedNativePoolId:
+      "0x26354d494b48cc544076d4afe855b5bf224e6a5d4e403bbbf04cbc7f25790b90", // native ETH/USDT0
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0x0000000000000000000000000000000000000000", // Native ETH
+    minimumNativeLocked: new BigDecimal("1"),
+    stablecoinAddresses: [
+      "0x0200c29006150606b650577bbe7b6248f58470c1", // USDT0
+      "0xf1815bd50389c46847f0bda824ec8da914045d14", // USDC.e
+    ],
+    whitelistTokens: [
+      "0x4200000000000000000000000000000000000006", // WETH
+      "0x0000000000000000000000000000000000000000", // Native ETH
+      "0x0200c29006150606b650577bbe7b6248f58470c1", // USDT0
+      "0xf1815bd50389c46847f0bda824ec8da914045d14", // USDC.e
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "ETH",
+      name: "Ethereum",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.MEGAETH]: {
+    poolManagerAddress: "0xacb7e78fa05d562e0a5d3089ec896d57d057d38e",
+    stablecoinWrappedNativePoolId:
+      "0xf1fc7e1b96823086b3821db02223910112d139b28c6a132befccada2a3ecae89", // native ETH/USDT0
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0x4200000000000000000000000000000000000006", // WETH
+    minimumNativeLocked: new BigDecimal("1"),
+    stablecoinAddresses: [
+      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDT0
+      "0xfafddbb3fc7688494971a79cc65dca3ef82079e7", // USDm
+    ],
+    whitelistTokens: [
+      "0x4200000000000000000000000000000000000006", // WETH
+      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDT0
+      "0xfafddbb3fc7688494971a79cc65dca3ef82079e7", // USDm
+      "0x28b7e77f82b25b95953825f1e3ea0e36c1c29861", // MEGA
+      "0x0000000000000000000000000000000000000000", // Native ETH
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "ETH",
+      name: "Ethereum",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.ROBINHOOD]: {
+    poolManagerAddress: "0x8366a39cc670b4001a1121b8f6a443a643e40951",
+    // Native ETH/USDG 0.05% pool (fee 500, tickSpacing 10, no hooks), the most
+    // active ETH/USDG pool on chain. The upstream subgraph still carries a zero
+    // placeholder here (its TODO predates the pool being seeded).
+    stablecoinWrappedNativePoolId:
+      "0x387bf619da4d3fb62bb276482693dba1b9b3520f573cabdfe033384a24125982",
+    stablecoinIsToken0: false, // currency0 = native ETH (0x0), currency1 = USDG
+    wrappedNativeAddress: "0x0bd7d308f8e1639fab988df18a8011f41eacad73", // WETH
+    minimumNativeLocked: new BigDecimal("1"),
+    stablecoinAddresses: [
+      "0x5fc5360d0400a0fd4f2af552add042d716f1d168", // USDG
+    ],
+    whitelistTokens: [
+      "0x0000000000000000000000000000000000000000", // Native ETH
+      "0x0bd7d308f8e1639fab988df18a8011f41eacad73", // WETH
+      "0x5fc5360d0400a0fd4f2af552add042d716f1d168", // USDG
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      symbol: "ETH",
+      name: "Ethereum",
       decimals: BigInt(18),
     },
   },

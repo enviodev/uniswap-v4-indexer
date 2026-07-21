@@ -132,6 +132,56 @@ type HookStats @storage(postgres: true, clickhouse: true) {
   totalFeesUSD: BigDecimal! # Total fees across all pools using this hook
 }
 
+type Position @storage(postgres: true, clickhouse: true) {
+  id: ID! # <chainId>_<tokenId>
+  chainId: BigInt!
+  tokenId: BigInt! @index
+  owner: String! @index # address of current owner
+  origin: String! # the EOA that minted the position
+  createdAtTimestamp: BigInt!
+  # derived fields
+  subscriptions: [Subscribe!]! @derivedFrom(field: "position")
+  unsubscriptions: [Unsubscribe!]! @derivedFrom(field: "position")
+  transfers: [Transfer!]! @derivedFrom(field: "position")
+}
+
+type Transfer @storage(postgres: true, clickhouse: true) {
+  id: ID!
+  chainId: BigInt!
+  tokenId: BigInt! @index
+  from: String! # address of previous owner
+  to: String! # address of new owner
+  transaction: String! # Instead of Transaction reference
+  logIndex: BigInt!
+  timestamp: BigInt! @index
+  origin: String! # the EOA that initiated the tx
+  position: Position!
+}
+
+type Subscribe @storage(postgres: true, clickhouse: true) {
+  id: ID!
+  chainId: BigInt!
+  tokenId: BigInt! @index
+  address: String! # address of subscriber
+  transaction: String! # Instead of Transaction reference
+  logIndex: BigInt!
+  timestamp: BigInt! @index
+  origin: String! # the EOA that initiated the tx
+  position: Position!
+}
+
+type Unsubscribe @storage(postgres: true, clickhouse: true) {
+  id: ID!
+  chainId: BigInt!
+  tokenId: BigInt! @index
+  address: String! # address of unsubscriber
+  transaction: String! # Instead of Transaction reference
+  logIndex: BigInt!
+  timestamp: BigInt! @index
+  origin: String! # the EOA that initiated the tx
+  position: Position!
+}
+
 type ModifyLiquidity
   @storage(postgres: true, clickhouse: true)
   @index(fields: ["timestamp", "pool"])
