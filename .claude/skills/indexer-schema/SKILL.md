@@ -96,7 +96,7 @@ type Trade @index(fields: ["poolId", ["date", "DESC"]]) {
 
 - Fields default to ASC; use `["field", "DESC"]` for descending
 - IDs and `@derivedFrom` fields are automatically indexed
-- Only `@index` fields are queryable via `context.Entity.getWhere()`
+- Only `id` and `@index` fields are queryable via `context.Entity.getWhere()`
 
 ## @config
 
@@ -163,6 +163,4 @@ type Swap {
 
 Codegen always appends `_id` to entity reference field names in the TypeScript types. Do **not** add `_id` yourself in the schema.
 
-## Deep Documentation
-
-Full reference: https://docs.envio.dev/docs/HyperIndex-LLM/hyperindex-complete
+> If something is unclear, use the `envio-docs` skill to search and read the latest documentation.
