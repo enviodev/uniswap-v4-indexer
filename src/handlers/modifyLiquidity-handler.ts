@@ -71,7 +71,6 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
       lowerTickId,
       lowerTickIdx,
       poolId,
-      BigInt(event.chainId),
       BigInt(event.block.timestamp),
       BigInt(event.block.number)
     );
@@ -81,7 +80,6 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
       upperTickId,
       upperTickIdx,
       poolId,
-      BigInt(event.chainId),
       BigInt(event.block.timestamp),
       BigInt(event.block.number)
     );
@@ -208,7 +206,6 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
   const modifyLiquidityId = `${event.chainId}_${event.transaction.hash}_${event.logIndex}`;
   const modifyLiquidity = {
     id: modifyLiquidityId,
-    chainId: BigInt(event.chainId),
     transaction: event.transaction.hash,
     timestamp: BigInt(event.block.timestamp),
     pool_id: pool.id,
