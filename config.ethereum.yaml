@@ -2,6 +2,7 @@
 name: uniswap-v4-indexer-ethereum
 storage:
   postgres: true
+  clickhouse: true
 contracts:
   - name: PoolManager
     events:
