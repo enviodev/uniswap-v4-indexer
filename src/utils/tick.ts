@@ -6,13 +6,11 @@ export function createInitialTick(
   tickId: string,
   tickIdx: number,
   poolId: string,
-  chainId: bigint,
   timestamp: bigint,
   blockNumber: bigint
 ) {
   const tick = {
     id: tickId,
-    chainId,
     pool_id: poolId,
     tickIdx: BigInt(tickIdx),
     poolAddress: poolId,

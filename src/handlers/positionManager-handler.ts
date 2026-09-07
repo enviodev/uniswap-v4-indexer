@@ -26,7 +26,6 @@ indexer.onEvent(
     // change ownership
     const position = (await context.Position.get(id)) ?? {
       id,
-      chainId: BigInt(event.chainId),
       tokenId: event.params.id,
       owner: event.params.to,
       origin: event.transaction.from || "NONE",
@@ -37,7 +36,6 @@ indexer.onEvent(
 
     context.Transfer.set({
       id: eventId(event),
-      chainId: BigInt(event.chainId),
       tokenId: event.params.id,
       from: event.params.from,
       to: event.params.to,
@@ -55,7 +53,6 @@ indexer.onEvent(
   async ({ event, context }) => {
     context.Subscribe.set({
       id: eventId(event),
-      chainId: BigInt(event.chainId),
       tokenId: event.params.tokenId,
       address: event.params.subscriber,
       transaction: event.transaction.hash,
@@ -72,7 +69,6 @@ indexer.onEvent(
   async ({ event, context }) => {
     context.Unsubscribe.set({
       id: eventId(event),
-      chainId: BigInt(event.chainId),
       tokenId: event.params.tokenId,
       address: event.params.subscriber,
       transaction: event.transaction.hash,

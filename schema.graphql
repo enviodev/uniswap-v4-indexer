@@ -2,7 +2,6 @@ type Swap
   @storage(postgres: true, clickhouse: true)
   @index(fields: ["pool", ["timestamp", "DESC"]]) {
   id: ID!
-  chainId: BigInt!
   transaction: String! # Instead of Transaction reference
   timestamp: BigInt! @index
   pool: String! # Instead of Pool reference
@@ -24,7 +23,6 @@ type Swap
 
 type PoolManager @storage(postgres: true, clickhouse: true) {
   id: ID!
-  chainId: BigInt!
   poolCount: BigInt!
   txCount: BigInt!
   totalVolumeUSD: BigDecimal!
@@ -44,10 +42,8 @@ type PoolManager @storage(postgres: true, clickhouse: true) {
 
 type Pool
   @storage(postgres: true, clickhouse: true)
-  @index(fields: ["chainId", ["totalValueLockedUSD", "DESC"]])
-  @index(fields: ["hooks", "chainId", ["totalValueLockedUSD", "DESC"]]) {
+  @index(fields: ["hooks", ["totalValueLockedUSD", "DESC"]]) {
   id: ID!
-  chainId: BigInt!
   name: String!
   createdAtTimestamp: BigInt! @index
   createdAtBlockNumber: BigInt!
@@ -86,7 +82,6 @@ type Tick
   @storage(postgres: true, clickhouse: true)
   @index(fields: ["pool", "tickIdx"]) {
   id: ID! # <pool address>#<tickIdx>
-  chainId: BigInt!
   pool: Pool! # Pointer back to Pool
   tickIdx: BigInt!
   liquidityGross: BigInt! # abs liquidity at this boundary
@@ -99,7 +94,6 @@ type Tick
 
 type Token @storage(postgres: true, clickhouse: true) {
   id: ID!
-  chainId: BigInt! @index
   symbol: String!
   name: String!
   decimals: BigInt!
@@ -126,7 +120,6 @@ type Bundle @storage(postgres: true, clickhouse: true) {
 
 type HookStats @storage(postgres: true, clickhouse: true) {
   id: ID! # hook address
-  chainId: BigInt!
   numberOfPools: BigInt!
   numberOfSwaps: BigInt!
   firstPoolCreatedAt: BigInt!
@@ -138,7 +131,6 @@ type HookStats @storage(postgres: true, clickhouse: true) {
 
 type Position @storage(postgres: true, clickhouse: true) {
   id: ID! # <chainId>_<tokenId>
-  chainId: BigInt!
   tokenId: BigInt! @index
   owner: String! @index # address of current owner
   origin: String! # the EOA that minted the position
@@ -151,7 +143,6 @@ type Position @storage(postgres: true, clickhouse: true) {
 
 type Transfer @storage(postgres: true, clickhouse: true) {
   id: ID!
-  chainId: BigInt!
   tokenId: BigInt! @index
   from: String! # address of previous owner
   to: String! # address of new owner
@@ -164,7 +155,6 @@ type Transfer @storage(postgres: true, clickhouse: true) {
 
 type Subscribe @storage(postgres: true, clickhouse: true) {
   id: ID!
-  chainId: BigInt!
   tokenId: BigInt! @index
   address: String! # address of subscriber
   transaction: String! # Instead of Transaction reference
@@ -176,7 +166,6 @@ type Subscribe @storage(postgres: true, clickhouse: true) {
 
 type Unsubscribe @storage(postgres: true, clickhouse: true) {
   id: ID!
-  chainId: BigInt!
   tokenId: BigInt! @index
   address: String! # address of unsubscriber
   transaction: String! # Instead of Transaction reference
@@ -191,7 +180,6 @@ type ModifyLiquidity
   @index(fields: ["pool", ["timestamp", "DESC"]])
   @index(fields: ["pool", "transaction"]) {
   id: ID!
-  chainId: BigInt!
   transaction: String! # Instead of Transaction reference
   timestamp: BigInt! @index
   pool: Pool! # Instead of Pool reference
