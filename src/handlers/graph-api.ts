@@ -17,10 +17,32 @@
  * whole thing is opt-in behind GRAPH_API_CHAIN_ID besides.
  */
 
-import { value as envioGlobal } from "envio/src/EnvioGlobal.res.mjs";
-
-import { bootGraphApi } from "../graph-api/boot.js";
-
-if (envioGlobal?.persistence !== undefined) {
-  bootGraphApi();
-}
+/*
+ * Everything below is dynamically imported inside a try/catch, and that is
+ * load-bearing rather than defensive noise.
+ *
+ * `envio/src/EnvioGlobal.res.mjs` is an UNDOCUMENTED internal path — envio ships
+ * no types for it and no `exports` map that promises it. A static import that
+ * fails to resolve (a different packaging on the hosted platform, or a future
+ * envio version moving the file) would throw at module load, and HandlerLoader
+ * awaits every handler import in one Promise.all whose rejection aborts
+ * `Main.start`. So an unresolvable cosmetic dependency would stop the INDEXER
+ * from running, which is exactly backwards.
+ *
+ * Dynamic + caught means the worst case is "the API is unavailable and says so",
+ * never "the indexer refuses to boot".
+ */
+void (async () => {
+  try {
+    const { value: envioGlobal } = await import("envio/src/EnvioGlobal.res.mjs");
+    // A live persistence layer is what distinguishes a real indexing run from
+    // createTestIndexer, which loads handlers but never sets it.
+    if (envioGlobal?.persistence === undefined) return;
+    const { bootGraphApi } = await import("../graph-api/boot.js");
+    bootGraphApi();
+  } catch (e) {
+    console.error(
+      `graph-api: not started, indexing continues (${e instanceof Error ? e.message : String(e)})`,
+    );
+  }
+})();

@@ -59,7 +59,14 @@ try {
 }
 
 docker(["exec", "-i", CONTAINER, "sh", "-c", `cat > ${TARGET}`], { input: XML });
-docker(["restart", CONTAINER]);
+
+/*
+ * Deliberately NO `docker restart`. ClickHouse watches users.d and hot-reloads
+ * it within ~2s, and restarting drops the connections of any indexer already
+ * running — which surfaces as an opaque mid-write
+ * "Failed to insert items into ClickHouse table" on a process that was healthy.
+ * Measured: auth is restored ~2s after the file lands, with no restart.
+ */
 
 /*
  * Verify over HTTP FROM THE HOST, not via `docker exec`. An exec'd
@@ -68,7 +75,7 @@ docker(["restart", CONTAINER]);
  * script exists to fix is still broken.
  */
 const port = hostPort();
-const deadline = Date.now() + 60_000;
+const deadline = Date.now() + 30_000;
 for (;;) {
   try {
     const res = await fetch(`http://localhost:${port}/?query=SELECT%201`, {
@@ -81,7 +88,7 @@ for (;;) {
   }
   if (Date.now() > deadline) {
     console.error(
-      `clickhouse-allow-host: ${CONTAINER} still refuses host connections on :${port} after 60s`,
+      `clickhouse-allow-host: ${CONTAINER} still refuses host connections on :${port} after 30s`,
     );
     process.exit(1);
   }

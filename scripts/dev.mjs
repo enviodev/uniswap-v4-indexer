@@ -13,7 +13,8 @@
  * still wins.
  */
 
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const argv = process.argv.slice(2);
 const flagIndex = argv.indexOf("--config");
@@ -40,6 +41,63 @@ console.log(
     `clickhouseDb=${env.ENVIO_CLICKHOUSE_DATABASE}` +
     (process.env.GRAPH_API_CHAIN_ID ? ` graphApi=chain ${process.env.GRAPH_API_CHAIN_ID}` : ""),
 );
+
+
+/*
+ * Heal the local ClickHouse container's host auth before starting.
+ *
+ * The clickhouse image restricts `default` to localhost when no password is set,
+ * and envio connects from the HOST via the published port — so it is refused.
+ * The users.d drop-in that fixes it lives in the container filesystem and does
+ * NOT survive a recreate, which a Docker Desktop restart does routinely. This
+ * has broken startup four times, always presenting as an opaque
+ * "ClickHouse resume failed", so heal it here instead of after the fact.
+ *
+ * Only runs when the chosen config actually enables ClickHouse storage.
+ */
+function clickhouseEnabled(configPath) {
+  try {
+    const text = readFileSync(configPath ?? "config.yaml", "utf8");
+    const storage = /\nstorage:\s*\n((?:[ \t]+.*\n)+)/.exec(text);
+    return storage ? /clickhouse:\s*true/.test(storage[1]) : false;
+  } catch {
+    return false;
+  }
+}
+
+async function healClickhouse() {
+  const port = process.env.ENVIO_CLICKHOUSE_PORT ?? "8123";
+  const ok = async () => {
+    try {
+      const res = await fetch(`http://localhost:${port}/?query=SELECT%201`, {
+        headers: { "x-clickhouse-user": "default", "x-clickhouse-key": "" },
+        signal: AbortSignal.timeout(3000),
+      });
+      return res.ok && (await res.text()).trim() === "1";
+    } catch {
+      return false;
+    }
+  };
+  // A refused connection here is usually "not started yet" rather than "auth
+  // broken" — envio brings the container up itself, so only heal a container
+  // that already exists.
+  try {
+    execFileSync("docker", ["inspect", "--format", "{{.State.Running}}", "envio-clickhouse"], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+  } catch {
+    return;
+  }
+  if (await ok()) return;
+  console.log("dev: ClickHouse refuses host connections — re-applying the users.d fix");
+  try {
+    execFileSync("node", ["scripts/clickhouse-allow-host.mjs"], { stdio: "inherit" });
+  } catch {
+    console.error("dev: could not heal ClickHouse automatically; run `pnpm clickhouse:allow-host`");
+  }
+}
+
+if (clickhouseEnabled(configPath)) await healClickhouse();
 
 const child = spawn("pnpm", ["envio", "dev", ...argv], { stdio: "inherit", env });
 child.on("exit", (code, signal) => process.exit(signal ? 1 : (code ?? 0)));

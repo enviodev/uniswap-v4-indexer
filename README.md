@@ -78,20 +78,21 @@ Connection settings come from envio's own `ENVIO_PG_*` variables, so it reads
 the same database the indexer writes. `GET /health` returns liveness; queries are
 `POST /`, like any subgraph endpoint.
 
-### Local ClickHouse auth
+### ClickHouse
 
-The official clickhouse image restricts the `default` user to localhost when no
-password is set, but envio connects from the host via the published port — so the
-container rejects it with `Authentication failed`. envio's orchestration passes
-only `CLICKHOUSE_DB` when creating the container, so a users.d drop-in is the only
-lever, and it does not survive a container **recreate** (a Docker Desktop restart
-is enough).
+Storage is Postgres only. ClickHouse was removed because nothing in this repo
+reads it — the Graph-dialect API goes straight to Postgres — and because Envio
+Cloud rejects `storage.clickhouse` unless the indexer is entitled for it,
+reporting "ClickHouse mismatch" on every commit and blocking the deploy. That is
+not a plan-tier limit: it was still rejected on Production Small.
 
-```bash
-pnpm clickhouse:allow-host
-```
+`storage:` in the config and the `@storage` directives in `schema.graphql` must
+agree, or envio refuses to start — so both were changed together.
 
-Re-runnable, local development only.
+`pnpm clickhouse:allow-host` and the auto-heal in `scripts/dev.mjs` are kept but
+now inert: the heal is gated on the active config actually enabling ClickHouse.
+They exist for anyone who re-enables it, since the local container restricts
+`default` to localhost and envio connects from the host.
 
 ### When it does and does not start
 
