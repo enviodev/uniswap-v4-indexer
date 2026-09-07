@@ -1,5 +1,5 @@
 type Swap
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["pool", ["timestamp", "DESC"]]) {
   id: ID!
   chainId: BigInt!
@@ -22,7 +22,7 @@ type Swap
   fee: BigInt!
 }
 
-type PoolManager @storage(postgres: true, clickhouse: true) {
+type PoolManager @storage(postgres: true) {
   id: ID!
   chainId: BigInt!
   poolCount: BigInt!
@@ -43,7 +43,7 @@ type PoolManager @storage(postgres: true, clickhouse: true) {
 }
 
 type Pool
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["chainId", ["totalValueLockedUSD", "DESC"]])
   @index(fields: ["hooks", "chainId", ["totalValueLockedUSD", "DESC"]]) {
   id: ID!
@@ -85,7 +85,7 @@ type Pool
 }
 
 type Tick
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["pool", "tickIdx"]) {
   id: ID! # <pool address>#<tickIdx>
   chainId: BigInt!
@@ -99,7 +99,7 @@ type Tick
   createdAtBlockNumber: BigInt!
 }
 
-type Token @storage(postgres: true, clickhouse: true) {
+type Token @storage(postgres: true) {
   id: ID!
   chainId: BigInt! @index
   symbol: String!
@@ -123,13 +123,13 @@ type Token @storage(postgres: true, clickhouse: true) {
 }
 
 # stores for USD calculations
-type Bundle @storage(postgres: true, clickhouse: true) {
+type Bundle @storage(postgres: true) {
   id: ID!
   # price of ETH in usd
   ethPriceUSD: BigDecimal!
 }
 
-type HookStats @storage(postgres: true, clickhouse: true) {
+type HookStats @storage(postgres: true) {
   id: ID! # hook address
   chainId: BigInt!
   numberOfPools: BigInt!
@@ -141,7 +141,7 @@ type HookStats @storage(postgres: true, clickhouse: true) {
   totalFeesUSD: BigDecimal! # Total fees across all pools using this hook
 }
 
-type Position @storage(postgres: true, clickhouse: true) {
+type Position @storage(postgres: true) {
   id: ID! # <chainId>_<tokenId>
   chainId: BigInt!
   tokenId: BigInt! @index
@@ -154,7 +154,7 @@ type Position @storage(postgres: true, clickhouse: true) {
   transfers: [Transfer!]! @derivedFrom(field: "position")
 }
 
-type Transfer @storage(postgres: true, clickhouse: true) {
+type Transfer @storage(postgres: true) {
   id: ID!
   chainId: BigInt!
   tokenId: BigInt! @index
@@ -167,7 +167,7 @@ type Transfer @storage(postgres: true, clickhouse: true) {
   position: Position!
 }
 
-type Subscribe @storage(postgres: true, clickhouse: true) {
+type Subscribe @storage(postgres: true) {
   id: ID!
   chainId: BigInt!
   tokenId: BigInt! @index
@@ -179,7 +179,7 @@ type Subscribe @storage(postgres: true, clickhouse: true) {
   position: Position!
 }
 
-type Unsubscribe @storage(postgres: true, clickhouse: true) {
+type Unsubscribe @storage(postgres: true) {
   id: ID!
   chainId: BigInt!
   tokenId: BigInt! @index
@@ -192,7 +192,7 @@ type Unsubscribe @storage(postgres: true, clickhouse: true) {
 }
 
 type ModifyLiquidity
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["pool", ["timestamp", "DESC"]])
   @index(fields: ["pool", "transaction"]) {
   id: ID!
@@ -215,7 +215,7 @@ type ModifyLiquidity
 
 # Data accumulated and condensed into day stats for all of Uniswap, per chain
 type UniswapDayData
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["chainId", ["date", "DESC"]]) {
   id: ID! # <chainId>_<dayIndex>
   chainId: BigInt!
@@ -230,7 +230,7 @@ type UniswapDayData
 
 # Data accumulated and condensed into day stats for each pool
 type PoolDayData
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["pool", ["date", "DESC"]]) {
   id: ID! # <chainId>_<poolId>_<dayIndex>
   chainId: BigInt!
@@ -255,7 +255,7 @@ type PoolDayData
 
 # hourly stats tracker for pool
 type PoolHourData
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["pool", ["periodStartUnix", "DESC"]]) {
   id: ID! # <chainId>_<poolId>_<hourIndex>
   chainId: BigInt!
@@ -280,7 +280,7 @@ type PoolHourData
 
 # daily stats tracker for token
 type TokenDayData
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["token", ["date", "DESC"]]) {
   id: ID! # <chainId>_<tokenAddress>_<dayIndex>
   chainId: BigInt!
@@ -301,7 +301,7 @@ type TokenDayData
 
 # hourly stats tracker for token
 type TokenHourData
-  @storage(postgres: true, clickhouse: true)
+  @storage(postgres: true)
   @index(fields: ["token", ["periodStartUnix", "DESC"]]) {
   id: ID! # <chainId>_<tokenAddress>_<hourIndex>
   chainId: BigInt!
