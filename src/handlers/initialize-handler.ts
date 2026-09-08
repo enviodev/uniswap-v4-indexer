@@ -3,6 +3,7 @@
  */
 
 import { indexer, BigDecimal } from "envio";
+import { hookMetadata } from "../utils/hooklist";
 import { getChainConfig } from "../utils/chains";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 import { getTokenMetadata } from "../utils/tokenMetadata";
@@ -75,6 +76,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
         totalVolumeUSD: new BigDecimal("0"),
         untrackedVolumeUSD: new BigDecimal("0"),
         totalFeesUSD: new BigDecimal("0"),
+        ...hookMetadata(event.chainId, event.params.hooks),
       };
     }
 

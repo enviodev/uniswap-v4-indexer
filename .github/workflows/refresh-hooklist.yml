@@ -1,0 +1,39 @@
+name: Refresh hooklist
+
+# hooklist.json is vendored so handlers never do network I/O for curation
+# data. This keeps it current: pull the upstream file weekly and open a PR
+# when it changed, so a human still reviews what lands in the schema.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch upstream hooklist.json
+        run: |
+          curl -sSfL -o hooklist.json \
+            https://raw.githubusercontent.com/Uniswap/hooklist/main/hooklist.json
+          python3 -c "import json; d=json.load(open('hooklist.json')); print(f'{len(d)} hooks')"
+
+      - name: Open PR if changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/refresh-hooklist
+          title: "chore: refresh hooklist.json from Uniswap/hooklist"
+          commit-message: "chore: refresh hooklist.json from Uniswap/hooklist"
+          body: |
+            Weekly pull of `hooklist.json` from https://github.com/Uniswap/hooklist.
+
+            Hook metadata is set on `HookStats` the first time a hook is seen, so
+            new names here only reach hooks that initialize a pool after this lands.
+            Existing rows keep what they had until the next resync.
+          delete-branch: true

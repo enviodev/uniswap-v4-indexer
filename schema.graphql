@@ -127,6 +127,37 @@ type HookStats @storage(postgres: true, clickhouse: true) {
   totalVolumeUSD: BigDecimal! # Total volume across all pools using this hook
   untrackedVolumeUSD: BigDecimal! # Untracked volume for non-whitelisted tokens
   totalFeesUSD: BigDecimal! # Total fees across all pools using this hook
+
+  # Permissions, decoded from the hook address itself (v4 stores them in its
+  # low 14 bits), so they are present for every hook whether listed or not.
+  permissions: Int! # raw 14-bit mask
+  beforeInitialize: Boolean!
+  afterInitialize: Boolean!
+  beforeAddLiquidity: Boolean!
+  afterAddLiquidity: Boolean!
+  beforeRemoveLiquidity: Boolean!
+  afterRemoveLiquidity: Boolean!
+  beforeSwap: Boolean!
+  afterSwap: Boolean!
+  beforeDonate: Boolean!
+  afterDonate: Boolean!
+  beforeSwapReturnsDelta: Boolean!
+  afterSwapReturnsDelta: Boolean!
+  afterAddLiquidityReturnsDelta: Boolean!
+  afterRemoveLiquidityReturnsDelta: Boolean!
+
+  # Curated metadata from github.com/Uniswap/hooklist. Null when the hook is
+  # not in the list; isListed separates curated hooks from the wild.
+  isListed: Boolean!
+  name: String
+  description: String
+  deployer: String
+  verifiedSource: Boolean
+  auditUrl: String
+  dynamicFee: Boolean
+  upgradeable: Boolean
+  vanillaSwap: Boolean
+  swapAccess: String # none | other | temporal | governance | allowlist
 }
 
 type Position @storage(postgres: true, clickhouse: true) {
