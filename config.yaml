@@ -49,26 +49,26 @@ contracts:
             - "hash"
             - "from"
 chains:
-# ─────────────────────────────────────────────────────────────────────────────
-# ONE config, many chains. Every UNCOMMENTED block below is indexed, and Envio
-# runs them all in parallel in a single process — so enabling a chain is
-# uncommenting its block, and disabling one is commenting it out again.
-#
-# This replaces the old per-chain config.ethereum.yaml / config.robinhood.yaml
-# files. Those existed only to run one chain at a time, and `scripts/dev.mjs`
-# derived a Postgres schema from the filename to keep their data apart. With a
-# single config there is one schema (`public`), which is what you want when the
-# point is to serve several chains from one endpoint.
-#
-# `start_block` is the v4 PoolManager DEPLOY block where it is known, taken from
-# the Ponder indexer's networks.json. Do not set it to 0 on a chain that has a
-# real deploy block: it costs a scan of every block before the contract existed,
-# and on a fast chain that is the difference between minutes and days.
-#
-# A chain with no deploy block recorded is left at 0 and marked below — set it
-# before enabling that chain for anything beyond a smoke test.
-# ─────────────────────────────────────────────────────────────────────────────
-# ── Ethereum (1)
+  # ─────────────────────────────────────────────────────────────────────────────
+  # ONE config, many chains. Every UNCOMMENTED block below is indexed, and Envio
+  # runs them all in parallel in a single process — so enabling a chain is
+  # uncommenting its block, and disabling one is commenting it out again.
+  #
+  # This replaces the old per-chain config.ethereum.yaml / config.robinhood.yaml
+  # files. Those existed only to run one chain at a time, and `scripts/dev.mjs`
+  # derived a Postgres schema from the filename to keep their data apart. With a
+  # single config there is one schema (`public`), which is what you want when the
+  # point is to serve several chains from one endpoint.
+  #
+  # `start_block` is the v4 PoolManager DEPLOY block where it is known, taken from
+  # the Ponder indexer's networks.json. Do not set it to 0 on a chain that has a
+  # real deploy block: it costs a scan of every block before the contract existed,
+  # and on a fast chain that is the difference between minutes and days.
+  #
+  # A chain with no deploy block recorded is left at 0 and marked below — set it
+  # before enabling that chain for anything beyond a smoke test.
+  # ─────────────────────────────────────────────────────────────────────────────
+  # ── Ethereum (1)
   - id: 1
     start_block: 21688326
     contracts:
@@ -78,89 +78,89 @@ chains:
       - name: PoolManager
         address:
           - "0x000000000004444c5dc75cB358380D2e3dE08A90"
-# ── Optimism (10)
-#  - id: 10
-#    start_block: 130947675
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
-#      - name: PoolManager
-#        address:
-#          - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
-# ── Base (8453)   # start_block unverified — set the deploy block before real use
-#  - id: 8453
-#    start_block: 0
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0x7c5f5a4bbd8fd63184577525326123b519429bdc
-#      - name: PoolManager
-#        address:
-#          - 0x498581ff718922c3f8e6a244956af099b2652b2b
-# ── Arbitrum One (42161)
-#  - id: 42161
-#    start_block: 297842872
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
-#      - name: PoolManager
-#        address:
-#          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-# ── Polygon (137)   # start_block unverified — set the deploy block before real use
-#  - id: 137
-#    start_block: 0
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0x1ec2ebf4f37e7363fdfe3551602425af0b3ceef9
-#      - name: PoolManager
-#        address:
-#          - 0x67366782805870060151383f4bbff9dab53e5cd6
-# ── Blast (81457)   # start_block unverified — set the deploy block before real use
-#  - id: 81457
-#    start_block: 0
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad
-#      - name: PoolManager
-#        address:
-#          - 0x1631559198a9e474033433b2958dabc135ab6446
-# ── Zora (7777777)   # start_block unverified — set the deploy block before real use
-#  - id: 7777777
-#    start_block: 0
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
-#      - name: PoolManager
-#        address:
-#          - 0x0575338e4c17006ae181b47900a84404247ca30f
-# ── Ink (57073)   # start_block unverified — set the deploy block before real use
-#  - id: 57073
-#    start_block: 4580556
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
-#      - name: PoolManager
-#        address:
-#          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-# ── Soneium (1868)   # start_block unverified — set the deploy block before real use
-#  - id: 1868
-#    hypersync_config:
-#      url: https://1868.hypersync.xyz
-#    start_block: 0
-#    contracts:
-#      - name: PositionManager
-#        address:
-#          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
-#      - name: PoolManager
-#        address:
-#          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-# ── Avalanche (43114)
+  # ── Optimism (10)
+  #  - id: 10
+  #    start_block: 130947675
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
+  #      - name: PoolManager
+  #        address:
+  #          - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
+  # ── Base (8453)   # start_block unverified — set the deploy block before real use
+  #  - id: 8453
+  #    start_block: 0
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0x7c5f5a4bbd8fd63184577525326123b519429bdc
+  #      - name: PoolManager
+  #        address:
+  #          - 0x498581ff718922c3f8e6a244956af099b2652b2b
+  # ── Arbitrum One (42161)
+  - id: 42161
+    start_block: 297842872
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
+      - name: PoolManager
+        address:
+          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  # ── Polygon (137)   # start_block unverified — set the deploy block before real use
+  #  - id: 137
+  #    start_block: 0
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0x1ec2ebf4f37e7363fdfe3551602425af0b3ceef9
+  #      - name: PoolManager
+  #        address:
+  #          - 0x67366782805870060151383f4bbff9dab53e5cd6
+  # ── Blast (81457)   # start_block unverified — set the deploy block before real use
+  #  - id: 81457
+  #    start_block: 0
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad
+  #      - name: PoolManager
+  #        address:
+  #          - 0x1631559198a9e474033433b2958dabc135ab6446
+  # ── Zora (7777777)   # start_block unverified — set the deploy block before real use
+  #  - id: 7777777
+  #    start_block: 0
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
+  #      - name: PoolManager
+  #        address:
+  #          - 0x0575338e4c17006ae181b47900a84404247ca30f
+  # ── Ink (57073)   # start_block unverified — set the deploy block before real use
+  #  - id: 57073
+  #    start_block: 4580556
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
+  #      - name: PoolManager
+  #        address:
+  #          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  # ── Soneium (1868)   # start_block unverified — set the deploy block before real use
+  #  - id: 1868
+  #    hypersync_config:
+  #      url: https://1868.hypersync.xyz
+  #    start_block: 0
+  #    contracts:
+  #      - name: PositionManager
+  #        address:
+  #          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
+  #      - name: PoolManager
+  #        address:
+  #          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  # ── Avalanche (43114)
   - id: 43114
     start_block: 56195376
     contracts:
