@@ -101,7 +101,7 @@ export function tokenHourDataId(tokenId: string, blockTimestamp: number): string
 // txCount) are last-writer-wins.
 //
 // Invariant: exactly one PoolManager address per chain (true in config.yaml and
-// config.robinhood.yaml today). If a chain ever gains a second PoolManager,
+// config.yaml today). If a chain ever gains a second PoolManager,
 // switch to `${poolManager.id}_${dayIndex(...)}`.
 export function uniswapDayDataId(chainId: bigint | number, blockTimestamp: number): string {
   return `${chainId}_${dayIndex(blockTimestamp)}`;

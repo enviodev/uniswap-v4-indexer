@@ -58,16 +58,15 @@ starts an HTTP server on import and reads Postgres directly. No Hasura, no
 sidecar, no second process.
 
 ```bash
-ENVIO_HASURA=false GRAPH_API_CHAIN_ID=1 pnpm dev --config config.ethereum.yaml
+ENVIO_HASURA=false GRAPH_API_CHAIN_ID=1 pnpm dev
 ```
 
 `pnpm dev` wraps `envio dev` via `scripts/dev.mjs`, which derives
-`ENVIO_PG_SCHEMA` and `ENVIO_CLICKHOUSE_DATABASE` from the config filename —
-`config.ethereum.yaml` gets the `ethereum` schema, plain `config.yaml` keeps
-envio's `public` default. A single-chain config is a different dataset with a
-different `name:`, so sharing storage with the multi-chain one trips envio's
-incompatible-config guard. Setting either variable explicitly overrides the
-derivation; `pnpm dev:raw` bypasses the wrapper entirely.
+`ENVIO_PG_SCHEMA` and `ENVIO_CLICKHOUSE_DATABASE` from the config filename. There
+is now only `config.yaml`, so that resolves to envio's `public` default; the
+derivation remains for a one-off `config.<slug>.yaml`, which would get the
+`<slug>` schema. Setting either variable explicitly overrides it; `pnpm dev:raw`
+bypasses the wrapper entirely.
 
 | Env | Default | Meaning |
 |---|---|---|
@@ -202,3 +201,300 @@ This indexer is open to contributions. Open an issue or pull request on [GitHub]
 
 - [Discord community](https://discord.com/invite/envio)
 - [Envio Docs](https://docs.envio.dev)
+
+## Position indexing (ported from the Ponder indexer)
+
+This fork now carries the Uniswap v4 **position** surface that previously lived only in
+`copypools-subgraph/ponder`. The port is mechanism-for-mechanism deliberate: that logic is already
+tested against live data on four chains, so the arithmetic, the guards and the RPC strategy are
+unchanged and only the runtime differs.
+
+| Concern | Where | Cost |
+| --- | --- | --- |
+| Position identity, ticks, liquidity, cashflows | `src/handlers/modifyLiquidity-handler.ts` | zero RPC |
+| Current pooled `amount0`/`amount1` | `src/utils/positions.ts` | zero RPC |
+| DEPOSIT / WITHDRAW transaction rows | `src/handlers/modifyLiquidity-handler.ts` | zero RPC |
+| Uncollected fees | `src/handlers/feeSync-block.ts` + `src/effects/positionState.ts` | one multicall per 400-position chunk, HEAD ONLY |
+| Collected fees + COLLECT_FEES rows | `src/effects/feesAccrued.ts` | one `debug_traceTransaction` per SETTLING tx |
+| Serving the backend | the backend's own converter (`backend/src/subgraph/hyperindex/`) | — |
+
+### Three things that are load-bearing
+
+**`ModifyLiquidity.salt` IS the NFT tokenId.** Without reading it the event is position-blind and
+none of this can exist. The field was always delivered and never read.
+
+**`amount0`/`amount1` need no `eth_call`.** They are pure math over
+`(ticks, pool.tick, liquidity, pool.sqrtPrice)`, and the tick comes from `Initialize`/`Swap` — in
+v4 only a swap moves it, so the event-tracked value equals on-chain slot0. Ponder spends a
+`getSlot0` per refresh cycle on this. It also means the in-range set is known for free, so the fee
+sweep reads only positions that can actually have accrued.
+
+**`updatedAtBlock` and `feesUpdatedAtBlock` are separate on purpose.** Ponder has one column for
+both, and because the backend watches it as a change feed, every fee sweep there presents the whole
+active set as changed and triggers thousands of pointless refreshes. The fee sweep here writes only
+the fee watermark.
+
+### Choosing which chains run
+
+**One `config.yaml`, chains as commentable blocks.** Every uncommented `networks:` entry is
+indexed, and envio runs them all in parallel in one process, so enabling a chain is uncommenting
+its block. Ethereum (1) and Avalanche (43114) ship uncommented; the rest are present with their
+addresses and, where known, their real v4 PoolManager deploy block from the Ponder indexer's
+`networks.json`.
+
+This replaces the previous `config.ethereum.yaml` / `config.robinhood.yaml` files, which existed
+only to run one chain at a time and whose filenames drove a separate Postgres schema. One config
+means one dataset, which is what you want when the point is to serve several chains from one
+endpoint.
+
+Two things to know before editing it:
+
+- **`start_block: 0` on a chain with a real deploy block costs a full pre-contract scan** — on a
+  fast chain that is the difference between minutes and days. Blocks left at 0 are marked as
+  unverified in the file; set one before using that chain for anything past a smoke test.
+- **Do not map over `EvmChainId`.** That type is GENERATED from the currently-active chains, so any
+  `{ [chainId in EvmChainId]: ... }` map fails to compile the moment a chain is commented out.
+  `src/utils/chains.ts` keys on `number` for exactly this reason.
+
+After changing the file, run `pnpm codegen`.
+
+### Reading positions from the backend
+
+The backend does not need a new endpoint. `PonderCompatibleAdapter.positionSource` reads positions
+from `integration.subgraphUrl` when that chain sets
+`<CHAIN>_UNISWAP_V4_POSITIONS_FROM_SUBGRAPH=true` and has no `PONDER_URL`, translating through the
+converter that already serves pools, tokens and the interval snapshots (`dialect: 'hyperindex'`
+against the raw endpoint). See `backend/AGENTS.md` §8B — including the two fields that are named
+differently here and are aliased back, and `Token.verified`, which this indexer deliberately does
+not have.
+
+### Four things the port got wrong, and what they cost
+
+Recorded because each was a defect that produced a plausible number rather than an
+error, and each is a shape worth recognising again.
+
+**Deferring head-only work until the head, in two layers.** This is what keeps the sweep's RPC
+from competing with the backfill for the node.
+
+The first layer is a `_gte` floor: `headAtStartup` reads each active chain's head once at module
+load and `where` passes it as `_gte` alongside `_every`, so Envio never *generates* a block item
+below it. A fresh indexer starting at 56M with the chain at 94M is silent for the entire backfill
+and starts firing exactly when indexing reaches the tip — not one no-op handler call per stride,
+zero. It uses top-level await because `where` is synchronous and runs at registration; the fetch
+is bounded by a timeout and degrades to no floor, so a sick RPC costs startup that timeout at
+worst and can never hang or fail the indexer. Only chains `config.yaml` has UNCOMMENTED are asked
+(`activeChainIds`), since the address table is a superset and the rest would hit public fallback
+endpoints for chains this process never indexes.
+
+The second layer is the runtime gate, for what a fixed floor cannot cover: a startup where the
+head was unreadable, and an indexer that LOSES the head later. It **latches** — once a chain
+reaches the tip it stays enabled through ordinary lag, and only disables again on a
+backfill-sized regression (50 intervals). Without the latch a live indexer drifting a few hundred
+blocks behind between firings would switch the sweep off and on repeatedly; with it, "after the
+initial backfill, keep refreshing fees even if we lag a bit" is expressible, which a plain
+distance test cannot say because it cannot tell "briefly behind" from "still backfilling".
+
+Note what is NOT deferred, and why. Collected fees come from `debug_traceTransaction` and are a
+HISTORICAL fact per transaction, so they must be computed during the backfill or lost — they are
+what the trace-skip gate exists to make affordable. Only uncollected fees are current-state, and
+only current-state work can be deferred to the head at all.
+
+**The fee sweep ran across the whole backfill.** Ponder registers it as
+`blocks: { FeeSync: { startBlock: "latest" } }` — head-only, never historical. Envio's
+`indexer.onBlock` `where` predicate is evaluated once per chain at REGISTRATION time, so it
+cannot express head-proximity, and an `_every` stride matches history exactly as it matches
+the tip. On the two enabled chains that was ~14,100 firings on Ethereum and ~32,150 on
+Avalanche, all of it producing values the next firing overwrote — uncollected fees are a
+current-state quantity. A block handler also has no block timestamp (Envio builds its block
+"from the handler's own block number, not from the stores"), so the gate asks the node for
+the head instead: `src/utils/chainHead.ts`, TTL-cached, and failing CLOSED so an RPC outage
+cannot start a full-history sweep.
+
+**The fee-growth multicall could never succeed.** The client was built without a `chain`,
+copying `tokenMetadata.ts`, and viem then throws `client chain not configured.
+multicallAddress is required.` at the top of the multicall action — before any RPC. Every
+uncollected-fee read returned the all-zero failure sentinel, so `totalFeesUncollected0/1`
+was served as a measured zero for every in-range position on every chain. The fix passes
+`multicallAddress` explicitly rather than a viem chain object, because viem ships no chain
+definition for several chains this indexer configures (4663 among them) and resolving through
+`client.chain` would have fixed most chains and left those silently throwing.
+
+**Every ModifyLiquidity was traced.** Ponder gates the trace on a three-way AND —
+`existing && prevLiquidity > 0n && feeGrowthChanged` — where the last conjunct compares the
+pool's current `feeGrowthInside` against the baseline stored at the position's last settle.
+Equal means no fee accrued, so `feesAccrued` is provably zero and the trace would learn
+nothing. The port had this as an OR of two weaker conditions, which traced essentially
+everything: one `debug_traceTransaction`, the most expensive call here, per event. It now
+trades that for one cheap cached `getFeeGrowthInside`. Exactness is untouched — the skip only
+ever fires on provably-zero cases, and an out-of-range position's fee growth still changes,
+so it is still traced.
+
+**Failures were cached, and failed reads never advanced the watermark.** A degraded trace
+returned `[]` under `cache: true`, freezing "no collected fee for this transaction" into the
+persisted cache permanently; the failure paths now opt out with `context.cache = false`, the
+idiom already in `tokenMetadata.ts`. And the sweep's `continue` on a failed read skipped the
+write that advances `feesUpdatedAtBlock`, so those rows stayed below the cutoff and were
+re-selected on every firing forever — the stale set could only grow. Ponder's per-position
+write is unconditional for this reason, and so is this one now.
+
+**An effect that threw took down the whole indexer.** Envio 3.7.0 has no retry and no skip for an
+exception out of a handler or an effect: `EventProcessing.res:65` wraps it as `ProcessingError`
+and `BatchProcessing.res:156` hands that to `IndexerState.errorExit`. The trace effect rethrew
+transient errors with the comment "let the runtime's own retry handle it" — there is no such
+retry. Under `envio dev`, which restarts the process, one flaky RPC response became a
+crash-restart loop that re-processed the same batch and died on the same transaction, which is why
+Ethereum sat at zero events. Transient failures are now retried in the effect with backoff, and
+exhaustion degrades to "no collected fee recorded" — Ponder's own tested trade ("Trading one
+event's exact fee for liveness, per design call").
+
+**The PositionManager sender filter was missing.** Ponder's first line is
+`if (sender.toLowerCase() !== POSITION_MANAGER_ADDRESS) return;` (apps/v4/src/index.ts:165),
+because `salt` is only an NFT tokenId when PositionManager is the caller — any contract may call
+`modifyLiquidity` with an arbitrary salt. Positions are keyed `<chainId>_<tokenId>`, so a salt
+equal to a live NFT id addresses THAT NFT's row, and small salts are both what a hook naturally
+picks and what v4 issued first. Without the filter that is a corrupted real position, not just a
+junk row. `POSITION_MANAGERS` covers all 18 chains `config.yaml` declares, and a test asserts the
+two stay equal — a wrong address there means zero positions on that chain, silently.
+
+**A transient `decimals()` failure cached a guessed 18 forever.** `getTokenMetadata` gated its
+cache opt-out on a three-way AND — `nameFailed && symbolFailed && decimalsFailed` — so a blip on
+`decimals()` alone, with name and symbol succeeding, WAS cached, with 18 substituted. The effect
+cache is persisted and keyed on the input, so that 18 survived restarts and a full resync and
+mis-scaled every amount for the token by 10^(18 - real): a factor of 10^12 for USDC. The
+asymmetry the old gate missed is that a fallback name or symbol is cosmetic while a fallback
+`decimals` silently rescales real money. `decimals` now opts out on its own; name/symbol keep the
+looser rule deliberately, since a token may genuinely implement neither.
+
+`decimalsResolved` is added alongside it, mirroring Ponder's `core/token-meta.ts` — and because it
+is a REQUIRED output field, every row already cached without it fails `S.parseOrThrow` on load and
+re-runs. That is what covers the git-tracked `.envio/cache/getTokenMetadata.tsv`, which is 86 MB
+and would otherwise re-import the stale values on the next clean initialize. The refill is lazy,
+so nothing needs rewriting, but that file is still dead weight in git history and worth pruning.
+
+Measured state at the time of writing: 208/208 cached Avalanche tokens and 35/35 live `Token`
+rows agree with the vanilla subgraph on `decimals`, with 48 distinct non-18 values resolved
+correctly (USDC 6, WBTC.e 8, SOL 9, wSAC 7 among them) — so no poisoned row is currently being
+served on that chain. The fix closes the latent path, it is not repairing observed damage.
+
+Two more, found by reading Envio's own runtime rather than the handlers: **the sweep ran twice
+per firing**, because `Block(...)` items get a preload pass (`EventProcessing.res`) — writes are
+discarded there (`set` is `noopSet`), so nothing double-counted, but the uncached multicall was
+issued, thrown away and issued again; and **the rate limits were global**, because `crossChain`
+defaults to `true` and only `false` isolates "the cache and rate limiting" per chain, so two
+chains backfilling in parallel contended for one 20/sec allowance despite having separate
+endpoints and separate quotas.
+
+**WITHDRAW rows carried the signed amount, not the magnitude.** Ponder writes
+`toHuman(isAdd ? eventAmt0 : -eventAmt0, dec0)`, so a withdraw's row amounts are POSITIVE there;
+this port passed through the event amounts, which are signed by `liquidityDelta` and negative on a
+withdraw. Identical magnitudes, opposite sign, on 164 of 164 Avalanche rows. The backend serves
+this column to the customer with the sign intact, so it would have flipped every withdraw amount
+negative at cutover.
+
+**Gas was charged for events that write no ledger row.** Ponder computes gas inside
+`if (willWriteRow)`, where `willWriteRow = liquidityDelta !== 0n || settled0 > 0 || settled1 > 0`.
+A zero-delta ModifyLiquidity that settles nothing — a collect on a position with nothing accrued —
+gets no row and no gas there. This port charged it anyway, inflating `totalGasCostETH` by a whole
+transaction's gas with no row to account for it: 4-31% over on 5 of 223 Avalanche positions, and
+it broke the invariant that the aggregate equals the sum of the position's own rows.
+
+**The sweep never wrote `liquidity` back.** Ponder writes the on-chain value every cycle
+(apps/v4/src/index.ts:452-459) so a missed or out-of-order event heals instead of drifting
+forever; the port used the on-chain value for the fee math and then discarded it. Now written,
+along with `isActive` and the close/reopen handling — but only for IN-RANGE positions, because
+those are the only ones this sweep reads. Ponder pays an RPC per active position to cover both;
+that trade is deliberate and is stated at the write site rather than left implicit.
+
+Smaller parity gaps closed at the same time: transaction gas is charged once per transaction
+rather than to every position it touches; negative running liquidity is clamped and warned
+rather than stored; `closedAtTimestamp` is stamped on the first close and preserved; the
+degenerate-pool guard (`isDegenerate`) zeroes amounts and clears `isPriceable` instead of
+publishing edge-of-domain artifacts; `feeGrowthInside0/1LastX128` are actually maintained;
+`feesUpdatedAtTimestamp` is a real clock rather than a copy of its own previous value; the
+stale-set query uses `_lte` so the real cadence matches the configured interval; and the
+sweep sorts by watermark, since `getWhere` has no ordering and the documented
+"oldest fee-read first" rotation was otherwise fiction.
+
+### Validating against Ponder and the subgraph
+
+Ponder is the tested reference, so the cutover gate is agreement with it, not passing tests.
+Two scripts, with no overlap:
+
+```bash
+# Every position + transaction field, one chain, vs Ponder AND the subgraph.
+node scripts/diff-positions.mjs --chain 43114
+
+# Collected fees only — works where the other cannot, see below.
+node scripts/diff-collected-fees.mjs --chain 1 --limit 400
+node scripts/diff-collected-fees.mjs --mode totals --chain 1
+```
+
+`diff-positions.mjs` is the broad one: it pulls every `Position` and
+`PositionTransaction` row for a chain and compares each field, classifying every
+difference as EXACT, within-double-precision, not-comparable-by-sync-height, or a real
+mismatch — plus position identity and unit-free pool counters against the subgraph.
+
+`diff-collected-fees.mjs` stays separate because it reaches sources the other one cannot:
+its `txns` mode walks a bounded block range instead of doing per-position lookups, which
+is the only shape a mid-backfill Ponder can serve on a busy chain, and its `totals` mode
+uses primary-key lookups, which work when nothing else does.
+
+Both exit 1 on disagreement and **2 when a source could not be reached**, so an unusable
+comparison never reads as a pass.
+
+**It compares per-TRANSACTION collected fees, not position totals**, and that choice is what
+makes it usable mid-backfill. `Position.totalFeesCollected0/1` are running sums over whatever
+each indexer has processed, so a half-synced Envio legitimately reports less than a caught-up
+Ponder and the comparison fails for a reason unrelated to correctness. A `COLLECT_FEES` row
+records what one transaction settled — a fact about the chain that does not move as either
+indexer advances — so matching on `(chainId, tokenId, txHash)` is valid today and tests exactly
+the `debug_traceTransaction` path that has to be exact.
+
+**The tolerance is not a fudge.** Ponder stores these as JS numbers (`toHuman(...)` returns a
+double); Envio stores exact BigDecimals. Past ~15 significant digits Ponder's stored value is
+lossy and Envio is the more accurate of the two, so a difference within double precision is
+agreement. Exact-match counts are printed separately so that distinction stays visible.
+
+**It walks a bounded block range rather than looking positions up individually.** Ponder builds
+its declared indexes only after a backfill completes and drops them on every crash-recovery
+start, so `position_transaction` on a mid-backfill deployment has nothing but a primary key.
+Per-position lookups are then one full table scan each, and mainnet answers `canceling statement
+due to statement timeout`. One range walk amortises a single scan across many pages. If a chain
+still times out, that deployment needs
+`copypools-subgraph/ponder/sql/2026-09-07-position-query-indexes.sql` — index 3 of 3 there is
+exactly this query shape.
+
+### What the first validation run found
+
+Per-transaction mode, Avalanche: **34/34 rows agree, zero mismatches** (14 exact, 20 within double
+precision).
+
+Totals mode over 250 closed positions per chain: Avalanche **23/23 agree**. Mainnet **244/247
+agree** — and the three that did not are Ponder being wrong, verified by tracing the
+transactions directly and decoding `feesAccrued`:
+
+| tokenId | Envio | Ponder | chain says |
+| --- | --- | --- | --- |
+| 926 | 333387.830400084026115227 | **0** | `333387830400084026115227` raw → Envio, exactly |
+| 686 | 0.007791580127644008 | 0.00249974636142716 | two collects; Ponder has only the second |
+| 706 | 0.000000164039415489 | **0** | `164039415489` raw → Envio, exactly |
+
+The mechanism is Ponder's own classifier. `isTraceCapabilityError` matches
+`msg.includes("tracer")`, and viem embeds the full request body — which always contains
+`"tracer":"callTracer"` — in every error message. So in Ponder EVERY trace error, transient ones
+included, is treated as a permanent capability gap and records ZERO collected fees; its comment
+accepts the consequence ("we just under-count this one collect until a re-sync"). Dropping that
+substring is this port's one deliberate divergence from the reference, and these three positions
+are it paying off: 333,387 OSAK of real collected fees that Ponder lost.
+
+That asymmetry is why the gate classifies `envio > ponder` as **Ponder LOW** and reports it
+separately, while `envio < ponder` always fails. Ponder's defect can only make it record less
+than the chain says, never more.
+
+### Requirements the fee paths add
+
+`src/effects/feesAccrued.ts` needs an **archive node with the `debug` namespace** on every chain
+you want exact collected fees for; there is no event-only alternative, because `feesAccrued` is a
+return value of `PoolManager.modifyLiquidity` and v4 has no Collect event. A chain whose RPC lacks
+it degrades to zero collected fees with a warning rather than halting. Endpoints resolve through
+`src/utils/rpc.ts`; contract addresses live in `src/utils/v4Addresses.ts`.

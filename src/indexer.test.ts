@@ -4,12 +4,28 @@
  * Uses HyperIndex's createTestIndexer() to replay real chain events through
  * the handlers and snapshot the resulting entity changes. See
  * .claude/skills/testing/SKILL.md for conventions.
+ *
+ * `eventsProcessed` COUNTS BLOCK-HANDLER ITEMS TOO. The fee sweep registers with
+ * a `_gte` floor at the chain head as of process start (see
+ * `src/handlers/feeSync-block.ts`), so no `feeSync` item is generated for a
+ * historical block and this count is one lower than it was before that floor
+ * existed. If you change the floor, expect this number to move — check that the
+ * `changes` above it did NOT, since a real dropped event would show up there.
+ *
+ * TIMEOUT: these fetch real chain data over the network, so vitest's 5s default
+ * is not a meaningful budget for them — it measures the network, not the code.
+ * Two of them began failing at exactly 5006ms once the suite grew to eight
+ * files, purely because more parallel workers compete for the same bandwidth;
+ * each passes in ~2s when run alone. Raised here rather than globally, so unit
+ * tests keep a tight budget and a genuine hang in one still fails fast.
  */
 
 import { describe, it } from "vitest";
 import { createTestIndexer } from "envio";
 
-describe("Uniswap V4 Indexer", () => {
+const NETWORK_TIMEOUT_MS = 60_000;
+
+describe("Uniswap V4 Indexer", { timeout: NETWORK_TIMEOUT_MS }, () => {
   it("Does not create Ticks for ModifyLiquidity on unknown pools", async (t) => {
     const indexer = createTestIndexer();
 
@@ -27,12 +43,37 @@ describe("Uniswap V4 Indexer", () => {
             "Position": {
               "sets": [
                 {
+                  "amount0": "0",
+                  "amount1": "0",
                   "chainId": 1n,
+                  "closedAtTimestamp": undefined,
+                  "createdAtBlockNumber": 24240005n,
                   "createdAtTimestamp": 1768478831n,
+                  "depositedToken0": "0",
+                  "depositedToken1": "0",
+                  "feeGrowthInside0LastX128": 0n,
+                  "feeGrowthInside1LastX128": 0n,
+                  "feesUpdatedAtBlock": 0n,
+                  "feesUpdatedAtTimestamp": 0n,
                   "id": "1_133850",
+                  "isActive": false,
+                  "isPriceable": true,
+                  "liquidity": 0n,
                   "origin": "0x16a4eC779ec71F9019fF79CbdD082a078C9eA06A",
                   "owner": "0x16a4eC779ec71F9019fF79CbdD082a078C9eA06A",
+                  "poolId": "",
+                  "tickLower": 0n,
+                  "tickUpper": 0n,
                   "tokenId": 133850n,
+                  "totalFeesCollected0": "0",
+                  "totalFeesCollected1": "0",
+                  "totalFeesUncollected0": "0",
+                  "totalFeesUncollected1": "0",
+                  "totalGasCostETH": "0",
+                  "updatedAtBlock": 24240005n,
+                  "updatedAtTimestamp": 1768478831n,
+                  "withdrawnToken0": "0",
+                  "withdrawnToken1": "0",
                 },
               ],
             },
