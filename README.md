@@ -120,6 +120,14 @@ a cursor walk on `orderBy: id` + `id_gt` depends on to terminate.
 nested `token0 { symbol decimals }` is resolved by one batched `Token` lookup and
 stitched.
 
+`Token.decimalsResolved` is deliberately NOT in `ENTITIES` — this layer answers in
+the vanilla subgraph's dialect and the vanilla schema has no such field, so no
+caller speaking it can ask. Exposing it means two edits, not one: the field spec
+in `schema-map.ts` AND the hard-coded column list in `db.loadTokens`, which backs
+the stitch above and would otherwise return the field as null on any
+`pool { token0 { … } }` selection. Read it from the Envio/Hasura surface, where
+the schema generates it.
+
 Nested `@derivedFrom` lists (`poolDayData(first: 7)`) become **one windowed
 follow-up query** for the whole page rather than a LATERAL per row. envio does not
 create the declared `@index` directives until `finalizeBackfill`, so during a
@@ -376,6 +384,43 @@ re-runs. That is what covers the git-tracked `.envio/cache/getTokenMetadata.tsv`
 and would otherwise re-import the stale values on the next clean initialize. The refill is lazy,
 so nothing needs rewriting, but that file is still dead weight in git history and worth pruning.
 
+**`decimalsResolved` was computed and thrown away.** It lived only on the effect's output schema:
+`schema.graphql` had no such field and `initialize-handler.ts` wrote `decimals` alone, so the live
+API answered `field 'decimalsResolved' not found in type: 'Token'` and no consumer could tell a
+guessed 18 from a real one. It is now `decimalsResolved: Boolean!` on `Token`, written at both
+creation sites.
+
+Two adjacent limitations are deliberately NOT fixed. Both were implemented and then removed,
+so they are written down here to stop the next person re-attempting them.
+
+- **The row is written once and never refreshed.** `initialize-handler.ts` creates a `Token` on
+  the first Initialize naming it and only bumps `poolCount` afterwards, so a `decimals()` read
+  that failed that one time pins the 18 fallback onto the entity for the rest of the run —
+  `decimalsResolved: false` is how a consumer detects it. Upgrading the row in place on a later
+  Initialize was built and reverted: it cannot repair the amounts already derived from the guess
+  (`totalFeesCollected0` among them, via `convertTokenToDecimal` in `modifyLiquidity-handler.ts`),
+  and because the upgrade lands whenever RPC health happens to allow it, two runs over the same
+  block range produce different entity values at the same block — precisely what
+  `scripts/diff-at-block.mjs` assumes cannot happen. The remedy is a resync once the RPC is
+  healthy: `context.cache = false` keeps the unresolved read out of the effect cache, so the next
+  run genuinely re-asks.
+- **A permanent failure is still retried, on purpose.** v4 permits initializing a pool against an
+  address with no code — `PoolManager.initialize` validates only tickSpacing bounds,
+  `currency0 < currency1` and the hook address, never `extcodesize` — and caching that verdict
+  was tried and rejected on two counts. First, `eth_getCode` with no block tag answers at
+  `latest`, and a replica behind head or a load balancer routing to an unsynced node returns `0x`
+  for a live contract WITHOUT throwing, so the probe cannot fail safe and the failure is
+  correlated with the outage that triggered it. Second, "no code" is not a permanent fact.
+  `0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42` is the motivating address and it is not junk: it is
+  Circle's **EURC on Base, decimals 6**, used on Arbitrum by mistake, and on Arbitrum it is the
+  nonce-1 CREATE address of an EOA whose Arbitrum nonce is still 0 — two ordinary transactions and
+  real code lands there. This repo's own `.envio/cache/getTokenMetadata.tsv` already holds both
+  rows side by side (`,42161]` → 18, `,8453]` → EURC 6). Caching the codeless verdict would make
+  that 18 permanent against a real 6, mis-scaling every derived amount by `10^12`. The cost of not
+  caching is one guaranteed-useless `eth_call` per run for ~14 of Arbitrum's 15,384 pools (0.09%),
+  which is the cheaper side of the trade. Note the asymmetry if this is ever revisited: post-EIP-6780
+  "has code" IS effectively monotone and safe to cache; "has no code" is not.
+
 Measured state at the time of writing: 208/208 cached Avalanche tokens and 35/35 live `Token`
 rows agree with the vanilla subgraph on `decimals`, with 48 distinct non-18 values resolved
 correctly (USDC 6, WBTC.e 8, SOL 9, wSAC 7 among them) — so no poisoned row is currently being
@@ -423,7 +468,7 @@ sweep sorts by watermark, since `getWhere` has no ordering and the documented
 ### Validating against Ponder and the subgraph
 
 Ponder is the tested reference, so the cutover gate is agreement with it, not passing tests.
-Two scripts, with no overlap:
+Three scripts, with no overlap:
 
 ```bash
 # Every position + transaction field, one chain, vs Ponder AND the subgraph.
@@ -432,6 +477,10 @@ node scripts/diff-positions.mjs --chain 43114
 # Collected fees only — works where the other cannot, see below.
 node scripts/diff-collected-fees.mjs --chain 1 --limit 400
 node scripts/diff-collected-fees.mjs --mode totals --chain 1
+
+# The DEPLOYED indexer vs the subgraph AT OUR OWN INDEXED BLOCK, and vs Ponder.
+node scripts/diff-at-block.mjs                      # all three chains
+node scripts/diff-at-block.mjs --chain 43114 --pools 60 --positions 120
 ```
 
 `diff-positions.mjs` is the broad one: it pulls every `Position` and
@@ -444,8 +493,76 @@ its `txns` mode walks a bounded block range instead of doing per-position lookup
 is the only shape a mid-backfill Ponder can serve on a busy chain, and its `totals` mode
 uses primary-key lookups, which work when nothing else does.
 
-Both exit 1 on disagreement and **2 when a source could not be reached**, so an unusable
-comparison never reads as a pass.
+`diff-at-block.mjs` reads the HOSTED deployment rather than the local Postgres, and it is
+the only one that pins the comparison to a block. The Graph supports time-travel queries
+(`pools(block: { number: N })`), so the subgraph can be asked what it held at exactly the
+block Envio has reached — cumulative state then has to be EQUAL, not merely lower, and a
+difference is a defect rather than a height artifact. Ponder has no equivalent, so its
+comparisons stay gated on its own `updatedAtBlock` being at or below that block. It covers
+four dimensions: pool identity/price/cumulative units and position identity against the
+subgraph, and collected fees, cashflows and the transaction ledger against Ponder.
+Uncollected fees have no external reference — neither the subgraph nor Ponder holds them at
+our block — so they are checked against our OWN data instead. The sweep is the only writer of
+both `totalFeesUncollected*` and `feesUpdatedAtBlock`, so a readable non-zero uncollected figure
+against a readable zero sweep block is a self-contradiction and FAILS. A value that will not
+parse as a number is *not measured* (exit 2), not a disagreement — unless the contradiction is
+already proven by the two legs that DO parse, in which case the unreadable third leg cannot
+un-prove it and it still fails.
+
+**`totalValueLockedToken0/1` are NOT COMPARED against the subgraph at all** — not tolerated, not
+advisory, not compared. The deployed subgraph is pre-#20 (upstream `05558b0`, 2025-02-11) and
+computes them through the old `getAmount0`/`getAmount1`; this fork is post-#20. The two sides are
+not computing the same quantity, so there is nothing to compare. The error is bounded by RANGE
+width, not tick width, so on tickSpacing-1 pools it reaches 100% and no percentage threshold
+helps. Every run prints the skipped count twice — a `NOT COMPARED` line in the pool section and a
+top-level `EXCLUDED: N field comparison(s) were NOT MADE` line directly above `RESULT`. **A pass
+from this script says nothing whatsoever about TVL.** The exclusion is scoped to those two fields
+only; `depositedToken0/1`, `withdrawnToken0/1` and the ledger's `amount0/amount1` also flow
+through `getAmount0/1` but are compared against PONDER, which is not a pre-#20 deployment, so they
+keep being asserted.
+
+**Ledger block range.** The Envio `PositionTransaction` read is capped server-side at 1000 rows
+regardless of the requested limit and is ordered `blockNumber desc`, so the lowest block in the
+fetched window is a partial tie group. The script COMPLETES that block with a second query pinned
+to it and merges by entity id, then joins over the full span. Excluding the block instead — the
+first attempt — left the lost-fee gate blind at exactly one block and made a single-block chain
+permanently inconclusive. If the pinned query returns at the cap, or returns fewer rows than the
+window already holds at that block, completeness is unprovable and the ledger is recorded as not
+compared. Ponder's `blockNumber_gte`/`_lte` bounds are sent as strings but were verified to
+compare NUMERICALLY (`_gte: "9999999"` returns 8-digit blocks), so the range is sound.
+
+**Exit codes.** `diff-collected-fees.mjs` and `diff-at-block.mjs` are three-state: **1 on a
+measured disagreement, 2 when something was never measured** — a source unreachable, a chain
+skipped, a requested `--chain` that produced no report, or a dimension whose join left zero
+comparisons — and **0 when every dimension ran and every difference it measured either agrees or
+is explained**. Silence must not read as success, so `diff-at-block.mjs` records each skip as a
+structured `{ site, reason }` entry rather than as prose, and the summary prints one
+`not compared: <site> — <reason>` line per skip above its `RESULT:` verdict.
+
+Two things a `0` does not mean. Value comparisons use a **1e-12 relative** floor, forced by
+Ponder typing `amount0`, `amount1`, `gasCostETH`, `totalFeesCollected*`, `deposited*`,
+`withdrawn*` and `totalGasCostETH` as GraphQL `Float` — anything wider than ~15 significant digits
+is rounded in transit and can never reach EXACT however correct it is. That floor is applied
+uniformly, so it also touches the wide subgraph integers: a ~1e16-unit drift on a 29-digit
+`sqrtPrice` is ~1e-13 relative and lands in TOL. Read TOL as "agrees to 12 significant digits",
+not "identical". And row-set coverage is gated in ONE place only — the Ponder ledger, where both
+directions fail: rows we hold that Ponder lacks, and rows Ponder holds inside our compared range
+that we lack (a potentially lost fee). The subgraph comparisons are value checks over the
+intersection.
+
+**What a green run looks like today.** Chain 43114 passes. Chain 42161 still FAILS, and not on
+TVL: `txCount` and `volumeToken0/1` disagree on ~108 of 200 pools (ours strictly higher, never
+lower, up to 2.66%) plus one dynamic-fee pool's `feeTier` (we resolve 400, the subgraph keeps the
+`0x800000` sentinel). Those are pre-existing, unexplained, and deliberately still failing. Chain 1
+is usually inconclusive — the Graph gateway is frequently `Unavailable` for it, and Ponder mainnet
+times out on the ledger for want of the SQL indexes in `sql/`. A full three-chain pass is not
+currently achievable and the script should not be expected to produce one.
+
+`diff-positions.mjs` does **not** yet have that third state end to end. It exits 2 on
+pre-flight failures only (no Ponder endpoint for the chain, no local `envio-postgres`
+container, nothing indexed yet); a subgraph or Ponder source that dies *mid-run* is logged
+and skipped, and the run can still exit 0. Read its "not compared" lines before treating a
+zero from it as a pass.
 
 **It compares per-TRANSACTION collected fees, not position totals**, and that choice is what
 makes it usable mid-backfill. `Position.totalFeesCollected0/1` are running sums over whatever

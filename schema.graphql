@@ -105,6 +105,19 @@ type Token @storage(postgres: true) {
   symbol: String!
   name: String!
   decimals: BigInt!
+  # Did the CONTRACT answer for `decimals`, or is the value above the 18 fallback?
+  # `false` means every amount scaled by this token is only as good as that guess
+  # (a real 6-decimal token read as 18 is wrong by 10^12), so a consumer that
+  # cares about exactness must gate on this rather than trust a bare `18`.
+  # Mirrors Ponder's `decimalsResolved`. Written once, at the two creation sites
+  # in src/handlers/initialize-handler.ts, and never rewritten afterwards: a row
+  # that lands `false` stays `false` for the run. Upgrading it in place was tried
+  # and removed — amounts already derived from the guessed 18 (totalFeesCollected0
+  # among them) stay wrong, and an upgrade that lands whenever RPC health allowed
+  # makes the same block range produce different entity values run to run.
+  # The fix for a `false` row is a resync once the RPC is healthy: the effect
+  # cache refuses to persist an unresolved read, so the retry actually happens.
+  decimalsResolved: Boolean!
   totalSupply: BigInt!
   volume: BigDecimal!
   volumeUSD: BigDecimal!

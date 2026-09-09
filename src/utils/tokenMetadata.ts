@@ -159,7 +159,14 @@ export const getTokenMetadata = createEffect(
   }
 );
 
-async function fetchTokenMetadataMulticall(
+/**
+ * Exported ONLY as a test seam. `createEffect` returns an opaque `Effect<I, O>`
+ * handle (envio/index.d.ts) with no way to invoke its handler, so the caching
+ * gate below — the one rule that keeps a substituted 18 out of the persisted
+ * effect cache — is unreachable from a test through `getTokenMetadata`.
+ * The effect above remains the only production caller.
+ */
+export async function fetchTokenMetadataMulticall(
   address: Address,
   chainId: number,
   context: { cache: boolean; log: { warn: (msg: string) => void } }
