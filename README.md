@@ -236,11 +236,16 @@ the fee watermark.
 
 ### Choosing which chains run
 
-**One `config.yaml`, chains as commentable blocks.** Every uncommented `networks:` entry is
+**One `config.yaml`, chains as commentable blocks.** Every uncommented entry under `chains:` is
 indexed, and envio runs them all in parallel in one process, so enabling a chain is uncommenting
-its block. Ethereum (1) and Avalanche (43114) ship uncommented; the rest are present with their
-addresses and, where known, their real v4 PoolManager deploy block from the Ponder indexer's
-`networks.json`.
+its block and disabling one is commenting it out again. All 18 are present with their addresses
+and, where known, their real v4 PoolManager deploy block from the Ponder indexer's
+`networks.json`. Which ones are live is whatever the file currently has uncommented — read it
+rather than a list here, since any list here goes stale the first time someone enables a chain.
+
+The key is `chains:`, not `networks:` — envio v3 renamed it, and code that reads the file has to
+match. `activeChainIds` in `src/utils/chains.ts` looked for `networks:` at first and silently
+returned an empty set, which disabled the startup floor described below on every chain.
 
 This replaces the previous `config.ethereum.yaml` / `config.robinhood.yaml` files, which existed
 only to run one chain at a time and whose filenames drove a separate Postgres schema. One config

@@ -473,17 +473,36 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
      * expensive call in the indexer, against a rate limit. This trades it for
      * one `getFeeGrowthInside` eth_call, which is cheap and cached.
      */
-    // The read is worth making only when its answer can change the decision:
-    // when the position already existed and held liquidity. A mint, or a
-    // position at zero liquidity, fails the AND on those grounds alone and no
-    // fee can have accrued to it, so the call is skipped — which also keeps a
-    // brand-new position off the RPC entirely. Its baseline stays 0, so the
-    // first subsequent modify sees a change and traces; conservative, and never
-    // the direction that misses a fee.
     const hadPosition = existing.poolId !== "";
     const gateCanPass = !degenerate && hadPosition && existing.liquidity > 0n;
 
-    const fgNow = gateCanPass
+    /*
+     * The read is gated on `!degenerate` ALONE — the same place Ponder has it
+     * (apps/v4/src/index.ts:211-212) — and NOT on `gateCanPass`.
+     *
+     * IT WAS GATED ON `gateCanPass`, AND THAT SILENTLY LOST FEES.
+     *
+     * A mint has `hadPosition === false`, so the read was skipped and
+     * `feeGrowthInside0/1LastX128` kept `newPosition()`'s default of 0n. The old
+     * comment here claimed that was safe — "its baseline stays 0, so the first
+     * subsequent modify sees a change and traces; conservative, and never the
+     * direction that misses a fee". That was wrong, because 0 is not only a
+     * sentinel: `getFeeGrowthInside` genuinely returns exactly (0, 0) when both
+     * of the position's ticks have been CLEARED — which v4 does when the
+     * position was the last liquidity at those ticks — and the pool price sits
+     * outside the range. That is precisely the state a full close leaves behind.
+     *
+     * So on close: stored baseline 0, fresh read 0, `feeGrowthChanged` false, no
+     * trace, fee recorded as zero, no COLLECT_FEES row. Measured on Avalanche
+     * tokenId 1097 (0.000851642671045544 / 2.142870 paid out by the chain and
+     * recorded as nothing) and on Arbitrum tokenIds 268 and 771. Ponder gets
+     * these right for the one reason that it re-baselines BEFORE the trace gate
+     * rather than inside it.
+     *
+     * `gateCanPass` still gates the TRACE below, so this traces nothing extra;
+     * the cost is one cached `eth_call` per mint.
+     */
+    const fgNow = !degenerate
       ? await context.effect(getFeeGrowthInside, {
           chainId: event.chainId,
           stateView: v4AddressesFor(event.chainId)?.stateView ?? "",

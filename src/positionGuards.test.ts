@@ -237,13 +237,24 @@ describe("POSITION_MANAGERS must equal config.yaml", () => {
 });
 
 describe("activeChainIds — which chains config.yaml actually indexes", () => {
-  it("returns exactly the uncommented chains", async () => {
+  it("returns every uncommented chain, and only those", async () => {
     const { activeChainIds } = await import("./utils/chains");
-    const ids = [...activeChainIds()].sort((a, b) => a - b);
-    // Envio exposes the active set only as a TYPE, so startup work that needs it
-    // has to read the config. Getting this wrong means firing RPC at chains this
-    // process does not index — three of five with the file as it ships.
-    expect(ids).toEqual([1, 43114]);
+    const { readFileSync } = await import("node:fs");
+    const cfg = readFileSync("config.yaml", "utf8");
+
+    // Derived from the file, NOT hardcoded. An earlier version asserted
+    // [1, 43114] and broke the moment a chain was uncommented — a test that
+    // fails when the config legitimately changes is testing the config, not the
+    // parser. What matters is that the parser agrees with the file.
+    const expected = [...cfg.matchAll(/^\s*-\s*id:\s*(\d+)/gm)]
+      .map((m) => Number(m[1]))
+      .sort((a, b) => a - b);
+
+    // Non-empty is its own assertion: the parser looked for `networks:` at
+    // first, which Envio v3 spells `chains:`, and that returned an empty set —
+    // silently disabling the startup floor everywhere.
+    expect(expected.length).toBeGreaterThan(0);
+    expect([...activeChainIds()].sort((a, b) => a - b)).toEqual(expected);
   });
 
   it("excludes chains that are present but commented out", async () => {

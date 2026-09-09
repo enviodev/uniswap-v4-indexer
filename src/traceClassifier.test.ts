@@ -82,6 +82,33 @@ describe("isTraceCapabilityError — permanent gap vs recoverable failure", () =
     expect(isTraceCapabilityError({ message: far })).toBe(false);
   });
 
+  it("is FALSE for the REAL Arbitrum pruning message seen in production", async () => {
+    const { isTraceCapabilityError } = await import("./effects/feesAccrued");
+    // Verbatim shape from the running indexer on chain 42161, where a nominally
+    // archive endpoint could not serve state at a historical block. This must be
+    // transient: classifying it permanent records ZERO collected fees for a
+    // transaction that really settled one, and pruning is precisely the case
+    // where retrying — or pointing at a real archive node — fixes it.
+    const real =
+      "Missing or invalid parameters. Double check you have provided the correct parameters.\n\n" +
+      "URL: https://api-arbitrum-mainnet-archive.example.com/key\n" +
+      'Request body: {"method":"debug_traceTransaction","params":["0xabc",{"tracer":"callTracer"}]}\n\n' +
+      "Details: missing trie node c1a4c1d3876268bb662a74b0a1087f095138c83e1dc966ce5bba9c92c06be70d " +
+      "(path ) state 0xc1a4c1d3876268bb662a74b0a1087f095138c83e1dc966ce5bba9c92c06be70d " +
+      "is not available, not found\nVersion: 2.21.0";
+    expect(isTraceCapabilityError({ message: real })).toBe(false);
+    // And the same body carrying a genuine capability refusal still reads TRUE,
+    // so tightening the classifier did not blunt it.
+    expect(
+      isTraceCapabilityError({
+        message: real.replace(
+          "Details: missing trie node",
+          "Details: the method debug_traceTransaction is not supported. missing trie node",
+        ),
+      }),
+    ).toBe(true);
+  });
+
   it("does not repeat Ponder's mistake of matching the tracer parameter", async () => {
     const { isTraceCapabilityError } = await import("./effects/feesAccrued");
     // Ponder's `msg.includes("tracer")` makes this TRUE, which is the defect

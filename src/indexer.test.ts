@@ -5,6 +5,13 @@
  * the handlers and snapshot the resulting entity changes. See
  * .claude/skills/testing/SKILL.md for conventions.
  *
+ * `eventsProcessed` ALSO MOVES WITH EFFECT CALLS. It went 12 -> 11 when the fee
+ * sweep gained its `_gte` floor, and 11 -> 12 when `getFeeGrowthInside` stopped
+ * being gated on `gateCanPass` (a mint now establishes its fee-growth baseline,
+ * which is what stops a full close silently losing its collected fee). In both
+ * cases the `changes` above were byte-identical — check that, since a real
+ * dropped or duplicated event would show up there rather than in this counter.
+ *
  * `eventsProcessed` COUNTS BLOCK-HANDLER ITEMS TOO. The fee sweep registers with
  * a `_gte` floor at the chain head as of process start (see
  * `src/handlers/feeSync-block.ts`), so no `feeSync` item is generated for a
@@ -95,7 +102,7 @@ describe("Uniswap V4 Indexer", { timeout: NETWORK_TIMEOUT_MS }, () => {
             },
             "block": 24240005,
             "chainId": 1,
-            "eventsProcessed": 11,
+            "eventsProcessed": 12,
           },
         ],
       }
