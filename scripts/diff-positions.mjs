@@ -26,6 +26,7 @@
  * fees or amounts.
  *
  * USAGE  node scripts/diff-positions.mjs [--chain 43114] [--limit N]
+ *        node scripts/diff-positions.mjs --chain 43114 --envio <hasura-url>   (deployed)
  */
 
 import { execFileSync } from "node:child_process";
@@ -128,6 +129,44 @@ const cmpBool = (a, b) => (asBool(a) === asBool(b) ? "EXACT" : "DIFF");
 
 /* ── 1. Envio side ────────────────────────────────────────────────────────── */
 
+/*
+ * WHERE THE ENVIO SIDE COMES FROM: local Postgres, or a deployed endpoint.
+ *
+ * `--envio <url>` reads the deployed HyperIndex Hasura endpoint instead of the
+ * dev container. That is what makes this usable against production, where there
+ * is no docker socket to exec into — and production is the only place the whole
+ * path (indexer -> Hasura -> the backend's converter) actually exists.
+ *
+ * Both sources return the SAME shape: rows of strings keyed by the schema's own
+ * camelCase field names, which is why the comparison code below does not care
+ * which one it got. Envio's Hasura exposes the entity tables with those exact
+ * names, and every numeric comes back as a string, matching `psql -At`.
+ */
+const ENVIO_URL = argVal("envio");
+
+async function hasuraRows(entity, where, cols, orderBy, limit) {
+  const out = [];
+  const PAGE = 1000;
+  for (let offset = 0; ; offset += PAGE) {
+    const take = Math.min(PAGE, limit - out.length);
+    if (take <= 0) break;
+    const d = await gql(
+      ENVIO_URL,
+      `query R($where: ${entity}_bool_exp, $limit: Int!, $offset: Int!) {
+         ${entity}(where: $where, limit: $limit, offset: $offset, order_by: ${orderBy}) { ${cols.join(" ")} }
+       }`,
+      { where, limit: take, offset },
+    );
+    const page = d[entity] ?? [];
+    // Normalise to the psql shape: every value a string, nulls as "".
+    for (const r of page) {
+      out.push(Object.fromEntries(cols.map((c) => [c, r[c] === null || r[c] === undefined ? "" : String(r[c])])));
+    }
+    if (page.length < take) break;
+  }
+  return out;
+}
+
 /**
  * A clear message when the local indexer is not up.
  *
@@ -147,11 +186,23 @@ function requireLocalDb() {
     process.exit(2);
   }
 }
-requireLocalDb();
+if (!ENVIO_URL) requireLocalDb();
 
-const head = Number(
-  psql(`select coalesce(max("blockNumber"),0)::text from public."PositionTransaction" where "chainId"=${CHAIN};`).trim(),
-);
+const head = ENVIO_URL
+  ? Number(
+      (
+        await hasuraRows(
+          "PositionTransaction",
+          { chainId: { _eq: String(CHAIN) } },
+          ["blockNumber"],
+          "{blockNumber: desc}",
+          1,
+        )
+      )[0]?.blockNumber ?? 0,
+    )
+  : Number(
+      psql(`select coalesce(max("blockNumber"),0)::text from public."PositionTransaction" where "chainId"=${CHAIN};`).trim(),
+    );
 
 const POS_COLS = [
   "tokenId", "owner", "origin", "poolId", "tickLower", "tickUpper", "liquidity",
@@ -163,26 +214,37 @@ const POS_COLS = [
   "updatedAtBlock", "updatedAtTimestamp", "feesUpdatedAtBlock",
 ];
 
-const positions = psql(
-  `select ${POS_COLS.map((c) => `coalesce("${c}"::text,'')`).join(", ")}
-     from public."Position" where "chainId"=${CHAIN}
-     order by "tokenId"::numeric limit ${LIMIT};`,
-)
-  .trim()
-  .split("\n")
-  .filter(Boolean)
-  .map((l) => Object.fromEntries(l.split("\t").map((v, i) => [POS_COLS[i], v])));
+const positions = ENVIO_URL
+  ? await hasuraRows("Position", { chainId: { _eq: String(CHAIN) } }, POS_COLS, "{tokenId: asc}", LIMIT)
+  : psql(
+      `select ${POS_COLS.map((c) => `coalesce("${c}"::text,'')`).join(", ")}
+         from public."Position" where "chainId"=${CHAIN}
+         order by "tokenId"::numeric limit ${LIMIT};`,
+    )
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => Object.fromEntries(l.split("\t").map((v, i) => [POS_COLS[i], v])));
 
 const TX_COLS = ["tokenId", "txHash", "logIndex", "type", "amount0", "amount1", "gasCostETH", "timestamp", "blockNumber", "sender"];
-const txs = psql(
-  `select ${TX_COLS.map((c) => `coalesce("${c}"::text,'')`).join(", ")}
-     from public."PositionTransaction" where "chainId"=${CHAIN}
-     order by "blockNumber", "logIndex";`,
-)
-  .trim()
-  .split("\n")
-  .filter(Boolean)
-  .map((l) => Object.fromEntries(l.split("\t").map((v, i) => [TX_COLS[i], v])));
+const txs = ENVIO_URL
+  ? await hasuraRows(
+      "PositionTransaction",
+      { chainId: { _eq: String(CHAIN) } },
+      TX_COLS,
+      "{blockNumber: asc, logIndex: asc}",
+      // Bounded so a large deployed chain cannot pull an unbounded ledger.
+      Math.min(LIMIT, 20000),
+    )
+  : psql(
+      `select ${TX_COLS.map((c) => `coalesce("${c}"::text,'')`).join(", ")}
+         from public."PositionTransaction" where "chainId"=${CHAIN}
+         order by "blockNumber", "logIndex";`,
+    )
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => Object.fromEntries(l.split("\t").map((v, i) => [TX_COLS[i], v])));
 
 console.log(`Envio chain ${CHAIN}: ${positions.length} positions, ${txs.length} transaction rows`);
 console.log(`Envio synced head (max PositionTransaction block): ${head}\n`);
@@ -306,19 +368,35 @@ const poolResult = { compared: 0, over: [], usdPolicy: 0, skipped: null };
   const url = subgraphUrl();
   if (!url) poolResult.skipped = "no subgraph URL configured";
   else {
-    const rows = psql(
-      `select replace(id, '${CHAIN}_', ''), "txCount"::text, "volumeToken0"::text,
-              "volumeToken1"::text, "volumeUSD"::text
-         from public."Pool" where "chainId"=${CHAIN}
-         order by "totalValueLockedUSD" desc limit 200;`,
-    )
-      .trim()
-      .split("\n")
-      .filter(Boolean)
-      .map((l) => {
-        const [id, txCount, volToken0, volToken1, volUSD] = l.split("\t");
-        return { id, txCount, volToken0, volToken1, volUSD };
-      });
+    const rows = ENVIO_URL
+      ? (
+          await hasuraRows(
+            "Pool",
+            { chainId: { _eq: String(CHAIN) } },
+            ["id", "txCount", "volumeToken0", "volumeToken1", "volumeUSD"],
+            "{totalValueLockedUSD: desc}",
+            200,
+          )
+        ).map((r) => ({
+          id: r.id.replace(`${CHAIN}_`, ""),
+          txCount: r.txCount,
+          volToken0: r.volumeToken0,
+          volToken1: r.volumeToken1,
+          volUSD: r.volumeUSD,
+        }))
+      : psql(
+          `select replace(id, '${CHAIN}_', ''), "txCount"::text, "volumeToken0"::text,
+                  "volumeToken1"::text, "volumeUSD"::text
+             from public."Pool" where "chainId"=${CHAIN}
+             order by "totalValueLockedUSD" desc limit 200;`,
+        )
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .map((l) => {
+            const [id, txCount, volToken0, volToken1, volUSD] = l.split("\t");
+            return { id, txCount, volToken0, volToken1, volUSD };
+          });
     if (rows.length === 0) poolResult.skipped = "no pools indexed yet";
     else {
       const sg = new Map();
