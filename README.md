@@ -36,6 +36,7 @@ The GraphQL API exposes pool statistics, swap history, liquidity positions, and 
 
 ## Quick Start
 
+
 ```bash
 # Install dependencies
 pnpm i
