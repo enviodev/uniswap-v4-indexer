@@ -27,7 +27,6 @@ describe("Uniswap V4 Indexer", () => {
             "Position": {
               "sets": [
                 {
-                  "chainId": 1n,
                   "createdAtTimestamp": 1768478831n,
                   "id": "1_133850",
                   "origin": "0x16a4eC779ec71F9019fF79CbdD082a078C9eA06A",
@@ -39,7 +38,6 @@ describe("Uniswap V4 Indexer", () => {
             "Transfer": {
               "sets": [
                 {
-                  "chainId": 1n,
                   "from": "0x0000000000000000000000000000000000000000",
                   "id": "1_24240005_344",
                   "logIndex": 344n,

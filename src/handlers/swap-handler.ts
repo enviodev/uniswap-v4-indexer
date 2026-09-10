@@ -308,7 +308,6 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
 
   let entity: Swap = {
     id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
-    chainId: BigInt(event.chainId),
     transaction: event.transaction.hash,
     timestamp: BigInt(event.block.timestamp),
     pool: `${event.chainId}_${event.params.id}`,

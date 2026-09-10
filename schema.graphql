@@ -105,6 +105,19 @@ type Token @storage(postgres: true) {
   symbol: String!
   name: String!
   decimals: BigInt!
+  # Did the CONTRACT answer for `decimals`, or is the value above the 18 fallback?
+  # `false` means every amount scaled by this token is only as good as that guess
+  # (a real 6-decimal token read as 18 is wrong by 10^12), so a consumer that
+  # cares about exactness must gate on this rather than trust a bare `18`.
+  # Mirrors Ponder's `decimalsResolved`. Written once, at the two creation sites
+  # in src/handlers/initialize-handler.ts, and never rewritten afterwards: a row
+  # that lands `false` stays `false` for the run. Upgrading it in place was tried
+  # and removed — amounts already derived from the guessed 18 (totalFeesCollected0
+  # among them) stay wrong, and an upgrade that lands whenever RPC health allowed
+  # makes the same block range produce different entity values run to run.
+  # The fix for a `false` row is a resync once the RPC is healthy: the effect
+  # cache refuses to persist an unresolved read, so the retry actually happens.
+  decimalsResolved: Boolean!
   totalSupply: BigInt!
   volume: BigDecimal!
   volumeUSD: BigDecimal!
@@ -143,15 +156,104 @@ type HookStats @storage(postgres: true) {
 
 type Position @storage(postgres: true) {
   id: ID! # <chainId>_<tokenId>
-  chainId: BigInt!
+  chainId: BigInt! @index
   tokenId: BigInt! @index
   owner: String! @index # address of current owner
   origin: String! # the EOA that minted the position
+
+  # ─── Liquidity position state ──────────────────────────────────────────────
+  # Sourced entirely from ModifyLiquidity, whose `salt` IS the tokenId. No RPC.
+  poolId: String! @index
+  tickLower: BigInt!
+  tickUpper: BigInt!
+  liquidity: BigInt! # raw liquidity units, running sum of liquidityDelta
+  isActive: Boolean! @index # liquidity > 0
+  # false ⇒ amounts are NOT physically trustworthy (degenerate-pool guard).
+  isPriceable: Boolean!
+
   createdAtTimestamp: BigInt!
+  createdAtBlockNumber: BigInt!
+  closedAtTimestamp: BigInt # null while open
+
+  # ─── Cashflow aggregates, human-readable token units ──────────────────────
+  depositedToken0: BigDecimal!
+  depositedToken1: BigDecimal!
+  withdrawnToken0: BigDecimal!
+  withdrawnToken1: BigDecimal!
+  totalFeesCollected0: BigDecimal!
+  totalFeesCollected1: BigDecimal!
+  totalFeesUncollected0: BigDecimal!
+  totalFeesUncollected1: BigDecimal!
+
+  # ─── Current in-pool amounts, human units ─────────────────────────────────
+  # Pure math: getAmount0/1(ticks, pool.tick, liquidity, pool.sqrtPrice).
+  # pool.tick and pool.sqrtPrice come from Initialize/Swap, and in v4 only a
+  # swap moves the tick — so this needs NO eth_call, unlike Ponder's getSlot0.
+  amount0: BigDecimal!
+  amount1: BigDecimal!
+
+  # Internal: last-settled fee growth, for the next uncollected delta. Never
+  # served — the backend has no consumer for it.
+  feeGrowthInside0LastX128: BigInt!
+  feeGrowthInside1LastX128: BigInt!
+
+  totalGasCostETH: BigDecimal! # human, chain-native token
+
+  # ─── Two watermarks, deliberately separate ────────────────────────────────
+  # `updatedAtBlock` moves ONLY when the position itself changed (a
+  # ModifyLiquidity or a Transfer). The backend's live listener watches it as a
+  # change feed and enqueues one refresh per row returned.
+  #
+  # `feesUpdatedAtBlock` moves when the periodic fee sweep re-read this row.
+  # Ponder conflates the two in one column, so each sweep presents the entire
+  # active set as changed and triggers thousands of refreshes for quantities
+  # that did not move. Keeping them apart is the fix, and it only works if it is
+  # in the schema from the start.
+  updatedAtBlock: BigInt! @index
+  updatedAtTimestamp: BigInt!
+  # Indexed: the fee sweep queries `feesUpdatedAtBlock _lt <cutoff>` to find
+  # positions it has not refreshed this cycle, which is what keeps its working
+  # set bounded instead of scanning every active position like Ponder does.
+  feesUpdatedAtBlock: BigInt! @index
+  feesUpdatedAtTimestamp: BigInt!
+
   # derived fields
   subscriptions: [Subscribe!]! @derivedFrom(field: "position")
   unsubscriptions: [Unsubscribe!]! @derivedFrom(field: "position")
   transfers: [Transfer!]! @derivedFrom(field: "position")
+  positionTransactions: [PositionTransaction!]! @derivedFrom(field: "position")
+}
+
+# One row per position-touching event. The backend reads this for the detail
+# transaction list and for all four position charts (PnL, assets, APR, div loss).
+#
+# `type` is part of the identity, not just a label: a single ModifyLiquidity can
+# emit BOTH a WITHDRAW and a COLLECT_FEES row at the same txHash and logIndex,
+# so the id must carry it or one of the two is silently dropped.
+type PositionTransaction @storage(postgres: true) {
+  id: ID! # <chainId>_<txHash>_<logIndex>_<type>
+  chainId: BigInt!
+  position: Position!
+  tokenId: BigInt! @index
+  txHash: String! @index
+  logIndex: BigInt!
+  type: PositionTransactionType!
+  # Human units, signed: positive into the position, negative out of it.
+  amount0: BigDecimal!
+  amount1: BigDecimal!
+  # Attributed to ONE row per transaction so the detail view cannot double-count
+  # gas: a pure collect carries it, a withdraw-plus-fees puts it on the WITHDRAW
+  # row and leaves the COLLECT_FEES row at zero.
+  gasCostETH: BigDecimal!
+  timestamp: BigInt! @index
+  blockNumber: BigInt!
+  sender: String!
+}
+
+enum PositionTransactionType {
+  DEPOSIT
+  WITHDRAW
+  COLLECT_FEES
 }
 
 type Transfer @storage(postgres: true) {
