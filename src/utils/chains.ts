@@ -1,4 +1,5 @@
 import { BigDecimal, type EvmChainId } from "envio";
+import { readFileSync } from "node:fs";
 
 // Chain IDs
 export enum ChainId {
@@ -54,7 +55,21 @@ export interface StaticTokenDefinition {
 // Chain-specific configurations
 // Note: All token and pool addresses should be lowercase
 
-export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
+/*
+ * Keyed by the ChainId enum, NOT by envio's `EvmChainId`.
+ *
+ * `EvmChainId` is generated from the ACTIVE chains in config.yaml, so mapping
+ * over it meant this file stopped compiling every time a chain was commented out
+ * — and config.yaml is now deliberately a set of commentable blocks, so that
+ * would happen constantly. The config table is reference data about chains this
+ * indexer knows how to handle; which of them are switched on is config.yaml's
+ * business, not this file's.
+ *
+ * `getChainConfig` still narrows to what is actually configured, so an active
+ * chain missing an entry here is caught at its call site rather than by a type
+ * error in a file nobody was editing.
+ */
+export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
   [ChainId.MAINNET]: {
     poolManagerAddress: "0x000000000004444c5dc75cb358380d2e3de08a90",
     stablecoinWrappedNativePoolId:
@@ -592,4 +607,52 @@ export function getChainConfig(chainId: EvmChainId): ChainConfig {
     throw new Error(`Unsupported chain ID: ${chainId}`);
   }
   return config;
+}
+
+/**
+ * The chain ids `config.yaml` actually has UNCOMMENTED.
+ *
+ * Envio exposes the active chain set only as a TYPE (`EvmChainId`), so anything
+ * that needs it at runtime has to read the config. That is worth doing rather
+ * than guessing: startup work sized to "every chain we have addresses for"
+ * would fire RPC at chains this process does not index — three of five, with the
+ * file as it ships — and those calls land on public fallback endpoints.
+ *
+ * Parsed with a line scanner rather than a YAML dependency because only one
+ * shape is needed: `- id: <n>` entries under `chains:` that are not commented
+ * out. A commented
+ * chain is genuinely inactive, which is exactly the distinction being drawn, so
+ * lines beginning `#` are skipped rather than unwrapped.
+ *
+ * Resolved relative to this MODULE, not the working directory, so it does not
+ * depend on where the process was launched from. Unreadable config returns an
+ * empty set, and callers must treat that as "unknown" rather than "none".
+ */
+let activeChainIdsCache: ReadonlySet<number> | undefined;
+export function activeChainIds(): ReadonlySet<number> {
+  if (activeChainIdsCache) return activeChainIdsCache;
+  const out = new Set<number>();
+  try {
+    const path = new URL("../../config.yaml", import.meta.url);
+    const text = readFileSync(path, "utf8");
+    let inChains = false;
+    for (const raw of text.split("\n")) {
+      // Envio v3 spells this `chains:`; `networks:` is the older name and is
+      // accepted so this does not silently return nothing on an older config.
+      if (/^\s*(chains|networks):/.test(raw)) {
+        inChains = true;
+        continue;
+      }
+      // A new top-level key ends the block.
+      if (inChains && /^[A-Za-z_]/.test(raw)) break;
+      if (!inChains) continue;
+      if (/^\s*#/.test(raw)) continue; // commented-out chain: inactive
+      const m = /^\s*-\s*id:\s*(\d+)/.exec(raw);
+      if (m) out.add(Number(m[1]));
+    }
+  } catch {
+    // Unreadable: leave empty and let the caller decide. See the note above.
+  }
+  activeChainIdsCache = out;
+  return out;
 }

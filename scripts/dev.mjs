@@ -5,8 +5,14 @@
  * different `name:`. Sharing storage with it trips envio's incompatible-config
  * guard, so each config needs its own schema and ClickHouse database:
  *
- *   config.ethereum.yaml   -> ethereum
+ *   config.<slug>.yaml     -> <slug>
  *   config.yaml (or unset) -> public   (envio's own default)
+ *
+ * The per-chain config files this was written for are gone: config.yaml now
+ * carries every chain as a commentable block and runs the uncommented ones in
+ * parallel, so the normal case is one schema. The slug derivation stays for a
+ * deliberate side-by-side run — e.g. reindexing into a second schema while the
+ * first keeps serving.
  *
  * This exists because the alternative — remembering to pass ENVIO_PG_SCHEMA on
  * every invocation — has already failed twice in practice. An explicit value

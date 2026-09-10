@@ -1,6 +1,7 @@
 import { createPublicClient, http, getContract, type PublicClient } from "viem";
 import { ADDRESS_ZERO } from "./constants";
 import { getChainConfig } from "./chains";
+import { getRpcUrl } from "./rpc";
 import { createEffect, S, type Address, type EvmChainId } from "envio";
 
 const ERC20_ABI = [
@@ -45,59 +46,30 @@ const TokenMetadata = S.schema({
   name: S.string,
   symbol: S.string,
   decimals: S.number,
+  /**
+   * Did the CONTRACT answer for `decimals`, or is the 18 below a guess?
+   *
+   * Mirrors Ponder's `decimalsResolved` (core/token-meta.ts). `true` means a
+   * value came back, or came back unusable and 18 is the canonical default —
+   * either way the answer is deterministic and safe to cache forever. `false`
+   * means the TRANSPORT never answered, so 18 is a guess and the row must not
+   * be cached.
+   *
+   * The asymmetry this exists to capture: a fallback name or symbol is
+   * cosmetic, but a fallback `decimals` is quantitatively wrong and silently
+   * rescales real money by 10^(18 - real) — a factor of 10^12 for a 6-decimal
+   * token like USDC.
+   *
+   * Adding it as a REQUIRED field also invalidates every row already cached
+   * without it: such a row now fails `S.parseOrThrow` on load, is counted as an
+   * invalidation, and re-runs. That covers both the Postgres effect cache and
+   * the git-tracked `.envio/cache/getTokenMetadata.tsv`, which would otherwise
+   * re-import the stale values on the next clean initialize.
+   */
+  decimalsResolved: S.boolean,
 });
 type TokenMetadata = S.Output<typeof TokenMetadata>;
 
-const getRpcUrl = (chainId: number): string => {
-  switch (chainId) {
-    case 1:
-      return process.env.ENVIO_MAINNET_RPC_URL || "https://eth.drpc.org";
-    case 42161:
-      return process.env.ENVIO_ARBITRUM_RPC_URL || "https://arbitrum.drpc.org";
-    case 10:
-      return process.env.ENVIO_OPTIMISM_RPC_URL || "https://optimism.drpc.org";
-    case 8453:
-      return process.env.ENVIO_BASE_RPC_URL || "https://base.drpc.org";
-    case 137:
-      return process.env.ENVIO_POLYGON_RPC_URL || "https://polygon.drpc.org";
-    case 43114:
-      return (
-        process.env.ENVIO_AVALANCHE_RPC_URL || "https://avalanche.drpc.org"
-      );
-    case 56:
-      return process.env.ENVIO_BSC_RPC_URL || "https://bsc.drpc.org";
-    case 81457:
-      return process.env.ENVIO_BLAST_RPC_URL || "https://blast.drpc.org";
-    case 7777777:
-      return process.env.ENVIO_ZORA_RPC_URL || "https://zora.drpc.org";
-    case 1868:
-      return process.env.ENVIO_SONIEUM_RPC_URL || "https://sonieum.drpc.org";
-    case 130:
-      return process.env.ENVIO_UNICHAIN_RPC_URL || "https://unichain.drpc.org";
-    case 57073:
-      return process.env.ENVIO_INK_RPC_URL || "https://ink.drpc.org";
-    case 480:
-      return (
-        process.env.ENVIO_WORLDCHAIN_RPC_URL || "https://worldchain.drpc.org"
-      );
-    case 143:
-      return process.env.ENVIO_MONAD_RPC_URL || "https://monad.drpc.org";
-    case 59144:
-      return process.env.ENVIO_LINEA_RPC_URL || "https://linea.drpc.org";
-    case 42220:
-      return process.env.ENVIO_CELO_RPC_URL || "https://celo.drpc.org";
-    case 4326:
-      return process.env.ENVIO_MEGAETH_RPC_URL || "https://megaeth.drpc.org";
-    case 4663:
-      return (
-        process.env.ENVIO_ROBINHOOD_RPC_URL ||
-        "https://rpc.mainnet.chain.robinhood.com"
-      );
-    // Add generic fallback for any chain
-    default:
-      throw new Error(`No RPC URL configured for chainId ${chainId}`);
-  }
-};
 
 // Cache of clients per chainId
 const clients: Record<number, PublicClient> = {};
@@ -151,6 +123,8 @@ export const getTokenMetadata = createEffect(
         name: chainConfig.nativeTokenDetails.name,
         symbol: chainConfig.nativeTokenDetails.symbol,
         decimals: Number(chainConfig.nativeTokenDetails.decimals),
+        // From config, not an RPC read: there is nothing to retry.
+        decimalsResolved: true,
       };
     }
 
@@ -165,6 +139,8 @@ export const getTokenMetadata = createEffect(
         name: tokenOverride.name,
         symbol: tokenOverride.symbol,
         decimals: Number(tokenOverride.decimals),
+        // From config, not an RPC read: there is nothing to retry.
+        decimalsResolved: true,
       };
     }
 
@@ -183,7 +159,14 @@ export const getTokenMetadata = createEffect(
   }
 );
 
-async function fetchTokenMetadataMulticall(
+/**
+ * Exported ONLY as a test seam. `createEffect` returns an opaque `Effect<I, O>`
+ * handle (envio/index.d.ts) with no way to invoke its handler, so the caching
+ * gate below — the one rule that keeps a substituted 18 out of the persisted
+ * effect cache — is unreachable from a test through `getTokenMetadata`.
+ * The effect above remains the only production caller.
+ */
+export async function fetchTokenMetadataMulticall(
   address: Address,
   chainId: number,
   context: { cache: boolean; log: { warn: (msg: string) => void } }
@@ -249,10 +232,27 @@ async function fetchTokenMetadataMulticall(
     );
   }
 
-  // If every ERC-20 read failed, the most likely cause is a transient RPC
-  // error rather than a token that genuinely implements none of the methods.
-  // Don't persist this result so the next sync can retry.
-  if (nameFailed && symbolFailed && decimalsFailed) {
+  /*
+   * A DECIMALS failure alone must prevent caching. This gate used to be a
+   * three-way AND, so a transient failure of `decimals()` with `name()` and
+   * `symbol()` succeeding WAS cached — with 18 substituted at the return below.
+   * Envio's effect cache is persisted and keyed on the input, so that 18
+   * survived restarts and a full resync, and every amount derived from the
+   * token was mis-scaled by 10^(18 - real) from then on.
+   *
+   * `name`/`symbol` keep the old, looser rule on purpose: a token may genuinely
+   * implement neither, their fallbacks are cosmetic, and re-reading them on
+   * every sync is the cost the AND was originally trying to avoid.
+   */
+  const decimalsResolved = !decimalsFailed;
+  if (decimalsFailed) {
+    context.cache = false;
+    context.log.warn(
+      `decimals() did not resolve for ${address} on chain ${chainId}; not caching the 18 fallback`
+    );
+  } else if (nameFailed && symbolFailed) {
+    // Every read that could fail did, which points at the transport rather than
+    // a token implementing none of the methods.
     context.cache = false;
     context.log.warn(
       `All ERC-20 reads failed for ${address} on chain ${chainId}; not caching fallback metadata`
@@ -271,5 +271,6 @@ async function fetchTokenMetadataMulticall(
       decimalsResult <= 50
         ? decimalsResult
         : 18,
-  };
+      decimalsResolved,
+};
 }
