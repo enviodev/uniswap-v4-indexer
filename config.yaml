@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 name: uniswap-v4-indexer
+disable_default_cross_chain: true
 storage:
   postgres: true
 contracts:
