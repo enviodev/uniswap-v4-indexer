@@ -16,8 +16,13 @@ import {
   tokenIdFromSalt,
 } from "../utils/positions";
 import { getFeesAccrued } from "../effects/feesAccrued";
-import { getFeeGrowthInside } from "../effects/positionState";
-import { positionManagerFor, v4AddressesFor } from "../utils/v4Addresses";
+import {
+  feeGate,
+  readFeeGrowthInside,
+  shouldTraceFees,
+  type FeeGateEvent,
+} from "../utils/feeGate";
+import { positionManagerFor } from "../utils/v4Addresses";
 import { ZERO_BD } from "../utils/constants";
 import { convertTokenToDecimal, sanitizeBD } from "../utils";
 import { createInitialTick } from "../utils/tick";
@@ -84,15 +89,82 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
     ]);
   if (!existingToken0 || !existingToken1 || !bundle) return;
 
+  /*
+   * The fee gate's whole input, built ONCE and shared by both passes.
+   *
+   * `existingPool` rather than the mutated `pool` below, and that is exact, not
+   * approximate: `pool` is `{...existingPool}` with `txCount`,
+   * `totalValueLockedToken0/1`, `liquidity`, `totalValueLockedETH` and
+   * `totalValueLockedUSD` overridden (the `let pool = {...}` block below, and
+   * the two reassignments after it — :240-284 at the time of writing). `tick` and
+   * `sqrtPrice` — the only two fields `isDegenerate` reads — are never touched,
+   * so the predicate cannot differ between the two objects.
+   *
+   * One object, not two constructions, because the effect memo is keyed on the
+   * input: if the preload pass and the real pass built even slightly different
+   * inputs, the real pass would miss the dict and pay full RPC latency inside
+   * the strictly serial handler loop. See utils/feeGate.ts for the mechanism.
+   */
+  const feeGateEvent: FeeGateEvent = {
+    chainId: event.chainId,
+    sender: event.params.sender,
+    salt: event.params.salt,
+    poolId: event.params.id,
+    tickLower: event.params.tickLower,
+    tickUpper: event.params.tickUpper,
+    blockNumber: event.block.number,
+    poolTick: existingPool.tick,
+    poolSqrtPrice: existingPool.sqrtPrice,
+  };
+
   if (context.isPreload) {
-    // Warm the interval rows here - see the note in swap-handler.ts.
-    await preloadIntervalData(context, {
-      blockTimestamp: event.block.timestamp,
-      chainId: event.chainId,
-      poolId,
-      tokenIds: [existingToken0.id, existingToken1.id],
-      includeUniswapDayData: true,
-    });
+    /*
+     * Everything this handler can possibly need from the network or the store,
+     * issued HERE so the whole batch's reads overlap.
+     *
+     * `preloadBatchOrThrow` runs every handler in the batch concurrently;
+     * `runBatchHandlersOrThrow` then runs them one at a time. A read left
+     * behind the `return` below is therefore a read taken at full latency, in
+     * series, once per event — which is what `getFeeGrowthInside` was, and it
+     * is issued on nearly every PositionManager ModifyLiquidity.
+     *
+     * The two entity reads are the same story without the RPC:
+     * `Position.get` and `PositionTransaction.getWhere` are one SELECT each per
+     * event in the serial pass, and collapse into grouped queries under preload
+     * (`UserContext.res.mjs:69,84` pass `isPreload` through as `shouldGroup`).
+     *
+     * Results are discarded, exactly as `preloadIntervalData` documents at
+     * utils/intervalUpdates.ts:159-171 — the point is the side effect on the
+     * load layer and the effect output dict, which the real pass reads back.
+     *
+     * `getFeesAccrued` is deliberately NOT hoisted. It is gated on the RESULT of
+     * `getFeeGrowthInside`, so hoisting it means tracing speculatively, and at
+     * {calls: 20, per: "second"} those speculative traces would displace real
+     * ones in the same rate-limit window for an upside capped near 1x.
+     */
+    const gate = feeGate(feeGateEvent);
+    await Promise.all([
+      // Warm the interval rows here - see the note in swap-handler.ts.
+      preloadIntervalData(context, {
+        blockTimestamp: event.block.timestamp,
+        chainId: event.chainId,
+        poolId,
+        tokenIds: [existingToken0.id, existingToken1.id],
+        includeUniswapDayData: true,
+      }),
+      readFeeGrowthInside(context, feeGateEvent),
+      // Only for a PositionManager caller: a non-attributable event never
+      // reaches either read in the real pass, so warming them would be a query
+      // spent on nothing.
+      gate.attributable
+        ? context.PositionTransaction.getWhere({
+            txHash: { _eq: event.transaction.hash },
+          })
+        : undefined,
+      gate.tokenId !== undefined
+        ? context.Position.get(positionId(event.chainId, gate.tokenId))
+        : undefined,
+    ]);
     return;
   }
 
@@ -463,10 +535,15 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
      * conjuncts are the same argument: a position that does not exist yet, or
      * held no liquidity, cannot have accrued anything.
      *
-     * It only ever skips provably-zero cases, so exactness is preserved — an
-     * out-of-range position's fee growth still CHANGES, so it is still traced
-     * and still exact, which is why this is not the out-of-range shortcut the
-     * port previously used.
+     * Ponder claims it only ever skips provably-zero cases. THAT CLAIM IS
+     * FALSE ON A DECREASE, and `shouldTraceFees` below no longer relies on it
+     * there — see its docstring in utils/feeGate.ts for the (0, 0)-from-cleared-
+     * ticks hole and the Avalanche tokenId 137 ground truth. On an INCREASE the
+     * argument holds and the heuristic is kept in full.
+     *
+     * An out-of-range position's fee growth still CHANGES, so it is still
+     * traced and still exact, which is why this is not the out-of-range
+     * shortcut the port previously used.
      *
      * The port had this as an OR of two conditions, which traced essentially
      * every event: one `debug_traceTransaction` per ModifyLiquidity, the most
@@ -477,41 +554,31 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
     const gateCanPass = !degenerate && hadPosition && existing.liquidity > 0n;
 
     /*
-     * The read is gated on `!degenerate` ALONE — the same place Ponder has it
-     * (apps/v4/src/index.ts:211-212) — and NOT on `gateCanPass`.
+     * THE SAME CALL THE PRELOAD BLOCK ABOVE ALREADY MADE, with the same
+     * `feeGateEvent`, so this normally resolves from the effect output dict
+     * without touching the network (`LoadManager.res.mjs:80`). It stays here
+     * rather than being read out of a variable so that the real path remains
+     * correct on its own — a preload pass that was skipped, or whose throw was
+     * swallowed, costs latency here and nothing else.
      *
-     * IT WAS GATED ON `gateCanPass`, AND THAT SILENTLY LOST FEES.
+     * The predicate lives in `feeGate` (utils/feeGate.ts) and is NOT repeated
+     * here. Two copies is the specific failure this refactor exists to prevent:
+     * a preload copy that drifts from the real one either warms an input nobody
+     * asks for or, worse, misses the one that is asked for and puts a full RPC
+     * round trip back inside the serial loop.
      *
-     * A mint has `hadPosition === false`, so the read was skipped and
-     * `feeGrowthInside0/1LastX128` kept `newPosition()`'s default of 0n. The old
-     * comment here claimed that was safe — "its baseline stays 0, so the first
-     * subsequent modify sees a change and traces; conservative, and never the
-     * direction that misses a fee". That was wrong, because 0 is not only a
-     * sentinel: `getFeeGrowthInside` genuinely returns exactly (0, 0) when both
-     * of the position's ticks have been CLEARED — which v4 does when the
-     * position was the last liquidity at those ticks — and the pool price sits
-     * outside the range. That is precisely the state a full close leaves behind.
-     *
-     * So on close: stored baseline 0, fresh read 0, `feeGrowthChanged` false, no
-     * trace, fee recorded as zero, no COLLECT_FEES row. Measured on Avalanche
-     * tokenId 1097 (0.000851642671045544 / 2.142870 paid out by the chain and
-     * recorded as nothing) and on Arbitrum tokenIds 268 and 771. Ponder gets
-     * these right for the one reason that it re-baselines BEFORE the trace gate
-     * rather than inside it.
-     *
-     * `gateCanPass` still gates the TRACE below, so this traces nothing extra;
-     * the cost is one cached `eth_call` per mint.
+     * Within this branch the gate reduces to `!degenerate` — the caller is
+     * already known to be the PositionManager and `tokenId` is already known to
+     * exist — which is exactly where Ponder has it
+     * (apps/v4/src/index.ts:211-212), and deliberately NOT on `gateCanPass`.
+     * Gating the READ on `gateCanPass` silently lost fees: a mint has
+     * `hadPosition === false`, so the read was skipped and
+     * `feeGrowthInside0/1LastX128` kept `newPosition()`'s default of 0n, which
+     * is indistinguishable from the genuine (0, 0) that a cleared tick pair
+     * reports on the eventual close. Measured on Avalanche tokenId 1097 and
+     * Arbitrum tokenIds 268 and 771.
      */
-    const fgNow = !degenerate
-      ? await context.effect(getFeeGrowthInside, {
-          chainId: event.chainId,
-          stateView: v4AddressesFor(event.chainId)?.stateView ?? "",
-          poolId: event.params.id,
-          tickLower: Number(event.params.tickLower),
-          tickUpper: Number(event.params.tickUpper),
-          blockNumber: BigInt(event.block.number),
-        })
-      : undefined;
+    const fgNow = await readFeeGrowthInside(context, feeGateEvent);
 
     // A FAILED read is not "unchanged". Treating it as unchanged would skip the
     // trace and silently record no collected fee, so an unknown answer forces
@@ -530,7 +597,26 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
 
     let settled0 = ZERO_BD;
     let settled1 = ZERO_BD;
-    if (gateCanPass && feeGrowthChanged) {
+    /*
+     * `gateCanPass && (feeGrowthChanged || liquidityDelta < 0n)`.
+     *
+     * The disjunct is the reason a re-index is being spent, and the full
+     * argument — including the Avalanche tokenId 137 ground truth and why this
+     * DIVERGES FROM PONDER on purpose — is on `shouldTraceFees` in
+     * utils/feeGate.ts. In one line: `getFeeGrowthInside` returns exactly (0, 0)
+     * from a CLEARED tick pair, which is the state a full close leaves, so on a
+     * close the baseline and the fresh read are both 0, `feeGrowthChanged` is
+     * false, and the collected fee was silently recorded as ZERO. A v4 liquidity
+     * decrease always returns `feesAccrued`, so the heuristic has nothing useful
+     * to add on that path and is dropped there.
+     */
+    if (
+      shouldTraceFees({
+        gateCanPass,
+        feeGrowthChanged,
+        liquidityDelta: event.params.liquidityDelta,
+      })
+    ) {
       const fees = await context.effect(getFeesAccrued, {
         chainId: event.chainId,
         txHash: event.transaction.hash,

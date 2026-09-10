@@ -167,14 +167,30 @@ indexer.onBlock(
      * loads and effects in parallel, then again for real (`EventProcessing.res`
      * dispatches `Block(...)` items in the preload pass). Entity writes are
      * safely discarded in that pass (`set` is `noopSet` under preload), so
-     * nothing double-counts, but the RPC is NOT free: this sweep's fee read is
-     * uncached by design (its input is block-pinned, so a cache entry could
-     * never be hit twice), which means the preload pass issues the whole
-     * multicall, throws the result away, and the real pass issues it again.
+     * nothing double-counts.
      *
-     * Returning early halves the sweep's node load. Nothing is lost by skipping
-     * the warm-up: the sweep's reads are one batched effect the real pass
-     * awaits anyway, not the many independent loads preload exists to overlap.
+     * THE EARLY RETURN IS CORRECT. Its old justification was not, and the wrong
+     * reason is worth naming because it appears elsewhere in this repo: it
+     * claimed the preload pass issues the multicall and "the real pass issues it
+     * again". It does not. On 3.7.0 a successful effect result is memoised in an
+     * in-memory dict (`LoadLayer.res.mjs:82` -> `InMemoryStore.res.mjs:66-83`)
+     * that is cleared only BEFORE the preload pass, and the real pass reads
+     * straight out of it (`LoadManager.res.mjs:80`, reached because
+     * `UserContext.res.mjs:69` passes `isPreload` through as `shouldGroup`).
+     * The `cache` flag controls DB persistence, not that dict.
+     *
+     * THE REAL REASON, which does hold: the memo is keyed on the effect INPUT,
+     * and this effect's input is the `positions` ARRAY assembled below. Its
+     * membership is derived from a `Position.getWhere` on `feesUpdatedAtBlock`
+     * plus an in-range partition — state the preload pass cannot have settled,
+     * since its own writes are discarded — so the two passes would in general
+     * build DIFFERENT arrays, produce different keys, and miss the memo
+     * entirely. A warm-up that cannot be hit is a whole extra multicall per
+     * firing, so returning early halves the sweep's node load.
+     *
+     * Nothing is lost by skipping it either way: the sweep's reads are one
+     * batched effect the real pass awaits anyway, not the many independent
+     * loads preload exists to overlap.
      */
     if (context.isPreload) return;
 

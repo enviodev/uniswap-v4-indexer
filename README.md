@@ -6,7 +6,6 @@ A public, open-source multichain Uniswap V4 indexer built with [Envio HyperIndex
 
 Open to contributions.
 
-
 ![v4.xyz Dashboard](./v4.gif)
 
 ## What This Indexes
@@ -14,6 +13,7 @@ Open to contributions.
 This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionManager` contracts across multiple chains:
 
 **Events indexed:**
+
 - `Initialize` - pool creation with fee, tick spacing, and hooks
 - `Swap` - all swaps with amounts, price, liquidity, and transaction details
 - `ModifyLiquidity` - liquidity additions and removals
@@ -27,7 +27,6 @@ Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BNB Chain, 
 
 The GraphQL API exposes pool statistics, swap history, liquidity positions, and ERC-6909 token data across all supported chains. You can use this to power analytics dashboards, trading interfaces, liquidity trackers, hook monitors, and cross-chain Uniswap V4 data aggregations.
 
-
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/en/download/current) v24 or newer
@@ -35,7 +34,6 @@ The GraphQL API exposes pool statistics, swap history, liquidity positions, and 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ## Quick Start
-
 
 ```bash
 # Install dependencies
@@ -69,11 +67,11 @@ derivation remains for a one-off `config.<slug>.yaml`, which would get the
 `<slug>` schema. Setting either variable explicitly overrides it; `pnpm dev:raw`
 bypasses the wrapper entirely.
 
-| Env | Default | Meaning |
-|---|---|---|
-| `GRAPH_API_CHAIN_ID` | *unset* | The one chain to serve. **Unset = server does not start.** |
-| `GRAPH_API_PORT` | `4350` | |
-| `GRAPH_API_PG_MAX` | `4` | Its own pool, separate from the indexer's writer pool |
+| Env                  | Default | Meaning                                                    |
+| -------------------- | ------- | ---------------------------------------------------------- |
+| `GRAPH_API_CHAIN_ID` | _unset_ | The one chain to serve. **Unset = server does not start.** |
+| `GRAPH_API_PORT`     | `4350`  |                                                            |
+| `GRAPH_API_PG_MAX`   | `4`     | Its own pool, separate from the indexer's writer pool      |
 
 Connection settings come from envio's own `ENVIO_PG_*` variables, so it reads
 the same database the indexer writes. `GET /health` returns liveness; queries are
@@ -100,11 +98,11 @@ They exist for anyone who re-enables it, since the local container restricts
 `src/handlers/graph-api.ts` is the only file under `src/handlers/` that is not an
 event handler, and it binds a port only when there is a live persistence layer:
 
-| Context | Loads handlers? | Starts server? |
-|---|---|---|
-| `envio dev` / `envio start` | yes — `Main.res.mjs:494` | **yes** (`:492` sets `EnvioGlobal.value.persistence` first) |
-| `createTestIndexer` | yes — `TestIndexer.res.mjs:420` | no — never touches `EnvioGlobal` |
-| `envio codegen` | no | n/a |
+| Context                     | Loads handlers?                 | Starts server?                                              |
+| --------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| `envio dev` / `envio start` | yes — `Main.res.mjs:494`        | **yes** (`:492` sets `EnvioGlobal.value.persistence` first) |
+| `createTestIndexer`         | yes — `TestIndexer.res.mjs:420` | no — never touches `EnvioGlobal`                            |
+| `envio codegen`             | no                              | n/a                                                         |
 
 A failure to start is logged and swallowed: the indexer keeps indexing. That
 matters because HandlerLoader aborts startup if any handler import rejects.
@@ -180,10 +178,14 @@ Once running, query the GraphQL API to explore pool and swap data:
 
 ```graphql
 {
-  Pool(limit: 10, order_by: {volumeUSD: desc}) {
+  Pool(limit: 10, order_by: { volumeUSD: desc }) {
     id
-    token0 { symbol }
-    token1 { symbol }
+    token0 {
+      symbol
+    }
+    token1 {
+      symbol
+    }
     volumeUSD
     totalValueLockedUSD
   }
@@ -218,14 +220,15 @@ This fork now carries the Uniswap v4 **position** surface that previously lived 
 tested against live data on four chains, so the arithmetic, the guards and the RPC strategy are
 unchanged and only the runtime differs.
 
-| Concern | Where | Cost |
-| --- | --- | --- |
-| Position identity, ticks, liquidity, cashflows | `src/handlers/modifyLiquidity-handler.ts` | zero RPC |
-| Current pooled `amount0`/`amount1` | `src/utils/positions.ts` | zero RPC |
-| DEPOSIT / WITHDRAW transaction rows | `src/handlers/modifyLiquidity-handler.ts` | zero RPC |
-| Uncollected fees | `src/handlers/feeSync-block.ts` + `src/effects/positionState.ts` | one multicall per 400-position chunk, HEAD ONLY |
-| Collected fees + COLLECT_FEES rows | `src/effects/feesAccrued.ts` | one `debug_traceTransaction` per SETTLING tx |
-| Serving the backend | the backend's own converter (`backend/src/subgraph/hyperindex/`) | — |
+| Concern                                        | Where                                                            | Cost                                            |
+| ---------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------- |
+| Position identity, ticks, liquidity, cashflows | `src/handlers/modifyLiquidity-handler.ts`                        | zero RPC                                        |
+| Current pooled `amount0`/`amount1`             | `src/utils/positions.ts`                                         | zero RPC                                        |
+| DEPOSIT / WITHDRAW transaction rows            | `src/handlers/modifyLiquidity-handler.ts`                        | zero RPC                                        |
+| Uncollected fees                               | `src/handlers/feeSync-block.ts` + `src/effects/positionState.ts` | one multicall per 400-position chunk, HEAD ONLY |
+| Fee-growth baseline + trace gate               | `src/utils/feeGate.ts` + `src/effects/positionState.ts`          | one cached `eth_call`, issued in the PRELOAD pass |
+| Collected fees + COLLECT_FEES rows             | `src/effects/feesAccrued.ts`                                     | one `debug_traceTransaction` per SETTLING tx and per liquidity DECREASE |
+| Serving the backend                            | the backend's own converter (`backend/src/subgraph/hyperindex/`) | —                                               |
 
 ### Three things that are load-bearing
 
@@ -291,7 +294,7 @@ error, and each is a shape worth recognising again.
 from competing with the backfill for the node.
 
 The first layer is a `_gte` floor: `headAtStartup` reads each active chain's head once at module
-load and `where` passes it as `_gte` alongside `_every`, so Envio never *generates* a block item
+load and `where` passes it as `_gte` alongside `_every`, so Envio never _generates_ a block item
 below it. A fresh indexer starting at 56M with the chain at 94M is silent for the entire backfill
 and starts firing exactly when indexing reaches the tip — not one no-op handler call per stride,
 zero. It uses top-level await because `where` is synchronous and runs at registration; the fetch
@@ -339,9 +342,11 @@ pool's current `feeGrowthInside` against the baseline stored at the position's l
 Equal means no fee accrued, so `feesAccrued` is provably zero and the trace would learn
 nothing. The port had this as an OR of two weaker conditions, which traced essentially
 everything: one `debug_traceTransaction`, the most expensive call here, per event. It now
-trades that for one cheap cached `getFeeGrowthInside`. Exactness is untouched — the skip only
-ever fires on provably-zero cases, and an out-of-range position's fee growth still changes,
-so it is still traced.
+trades that for one cheap cached `getFeeGrowthInside` (`src/utils/feeGate.ts`,
+`shouldTraceFees`). An out-of-range position's fee growth still changes, so it is still traced.
+
+**...but `feeGrowthChanged` is NOT provably-zero on a close, and that lost real fees.**
+See the next section — this is the one place the gate now diverges from Ponder on purpose.
 
 **Failures were cached, and failed reads never advanced the watermark.** A degraded trace
 returned `[]` under `cache: true`, freezing "no collected fee for this transaction" into the
@@ -352,8 +357,13 @@ re-selected on every firing forever — the stale set could only grow. Ponder's 
 write is unconditional for this reason, and so is this one now.
 
 **An effect that threw took down the whole indexer.** Envio 3.7.0 has no retry and no skip for an
-exception out of a handler or an effect: `EventProcessing.res:65` wraps it as `ProcessingError`
-and `BatchProcessing.res:156` hands that to `IndexerState.errorExit`. The trace effect rethrew
+exception that escapes a handler in the SEQUENTIAL pass: `EventProcessing.res.mjs:57-66` wraps it
+as `ProcessingError` and `BatchProcessing.res.mjs:62-64` hands that to `IndexerState.errorExit`.
+(The PRELOAD pass swallows it instead — every preload handler promise goes through
+`Utils.$$Promise.silentCatch`, `EventProcessing.res.mjs:124-138` — so "a throw is always fatal" is
+too strong, and the stronger reason to keep the sentinel returns is dedup: a failed effect is
+neither memoised nor deduped, while a sentinel is both, so a throw multiplies one bad trace into
+`1 + N` serial re-invocations each paying the full retry ladder.) The trace effect rethrew
 transient errors with the comment "let the runtime's own retry handle it" — there is no such
 retry. Under `envio dev`, which restarts the process, one flaky RPC response became a
 crash-restart loop that re-processed the same batch and died on the same transaction, which is why
@@ -427,13 +437,27 @@ rows agree with the vanilla subgraph on `decimals`, with 48 distinct non-18 valu
 correctly (USDC 6, WBTC.e 8, SOL 9, wSAC 7 among them) — so no poisoned row is currently being
 served on that chain. The fix closes the latent path, it is not repairing observed damage.
 
-Two more, found by reading Envio's own runtime rather than the handlers: **the sweep ran twice
-per firing**, because `Block(...)` items get a preload pass (`EventProcessing.res`) — writes are
-discarded there (`set` is `noopSet`), so nothing double-counted, but the uncached multicall was
-issued, thrown away and issued again; and **the rate limits were global**, because `crossChain`
-defaults to `true` and only `false` isolates "the cache and rate limiting" per chain, so two
-chains backfilling in parallel contended for one 20/sec allowance despite having separate
-endpoints and separate quotas.
+Two more, found by reading Envio's own runtime rather than the handlers: **the sweep did work in
+the preload pass that could never be reused**, because `Block(...)` items get a preload pass
+(`EventProcessing.res`) — writes are discarded there (`set` is `noopSet`), so nothing
+double-counted, but the multicall went out anyway and its result could not be hit again, since
+the effect memo is keyed on the input and the sweep's `positions` array is assembled from state
+the preload pass cannot have settled (`feeSync-block.ts` now returns early, with that reasoning
+at the guard); and **the rate limits were global**, because `crossChain` defaults to `true` and
+only `false` isolates "the cache and rate limiting" per chain, so two chains backfilling in
+parallel contended for one 20/sec allowance despite having separate endpoints and separate
+quotas.
+
+> **An earlier version of this README, and several comments in `src/`, said the preload pass
+> "issues the RPC and the real pass issues it again". THAT IS FALSE ON ENVIO 3.7.0** and it has
+> been corrected everywhere it appeared. A successful effect result is memoised in an in-memory
+> dict (`LoadLayer.res.mjs:82` → `InMemoryStore.res.mjs:66-83`) that is cleared only BEFORE the
+> preload pass, never between the two, and the real pass reads straight out of it
+> (`LoadManager.res.mjs:80`, reached because `UserContext.res.mjs:69` passes `isPreload` through
+> as `shouldGroup`). The `cache` flag governs DB persistence only. Measured on both `cache: true`
+> and `cache: false`: the real pass issues **zero** additional invocations. A preloaded read is
+> issued once, and hoisting one into the preload pass is a pure win — which is what
+> **"The fee gate: one predicate, hoisted into the preload pass"** below does.
 
 **WITHDRAW rows carried the signed amount, not the magnitude.** Ponder writes
 `toHuman(isAdd ? eventAmt0 : -eventAmt0, dec0)`, so a withdraw's row amounts are POSITIVE there;
@@ -465,6 +489,86 @@ publishing edge-of-domain artifacts; `feeGrowthInside0/1LastX128` are actually m
 stale-set query uses `_lte` so the real cadence matches the configured interval; and the
 sweep sorts by watermark, since `getWhere` has no ordering and the documented
 "oldest fee-read first" rotation was otherwise fiction.
+
+### The fee gate: one predicate, hoisted into the preload pass
+
+Both gates on the ModifyLiquidity fee path live in **`src/utils/feeGate.ts`** and nowhere else.
+The handler calls them; it does not restate them.
+
+**`feeGate` — should this event read `getFeeGrowthInside`?** The read is issued from TWO call
+sites in `modifyLiquidity-handler.ts`: the `context.isPreload` block, and the real path where the
+result is used. `preloadBatchOrThrow` invokes every handler in a batch concurrently while
+`runBatchHandlersOrThrow` runs them one at a time, so a read left behind the preload `return` is
+a read taken at full RPC latency, in series, once per event — and this one fires on nearly every
+PositionManager `ModifyLiquidity`. Hoisting it lets the whole batch go out at once; the real
+path's identical call then resolves from the in-memory effect dict for free.
+
+Two call sites is also the hazard, which is why the predicate is extracted rather than copied.
+The memo is keyed on the effect INPUT, so if the two sites ever built even slightly different
+inputs the real pass would miss the dict and pay the round trip anyway — silently, with nothing
+failing. `feeGate` returns the constructed input, so there is one construction, not two.
+
+The same block also warms `Position.get` and `PositionTransaction.getWhere`, which are one
+serialised SELECT each per event in the sequential pass and collapse into grouped queries under
+preload (`UserContext.res.mjs:69,84`).
+
+**`getFeesAccrued` is deliberately NOT hoisted.** It is gated on the RESULT of
+`getFeeGrowthInside`, so hoisting means tracing speculatively, and at `{calls: 20, per: "second"}`
+those speculative traces would displace real ones in the same rate-limit window for an upside
+capped near 1x.
+
+**`getFeeGrowthInside`'s rate limit is now load-bearing, and is 500/s.** With the read hoisted,
+the limiter — not RPC latency — is the ceiling on how wide a preload batch can go. `config.yaml`
+sets no `disable_default_cross_chain`, so `crossChain` defaults to true and the window is SHARED
+across every chain: the old 100/s was ~20/s each across the five uncommented chains. 500/s
+restores ~100/s per chain, and since `stateClient` uses `http(url, { batch: true })`, viem
+coalesces a preload pass's concurrent calls into a handful of JSON-RPC requests rather than 500.
+It is a ceiling, not a target, and `LoadLayer.executeWithRateLimit` queues the overflow into the
+next window rather than failing. **Do not "fix" the sharing with `crossChain: false`:** the effect
+cache table's NAME encodes the scope (`Internal.res.mjs:222-228`), so re-scoping points the effect
+at a different table and silently orphans every cached row. `rateLimit` is runtime-only and has no
+cache identity, which is why it is the safe knob.
+
+### A full close silently recorded ZERO collected fees — in this indexer AND in Ponder
+
+This is the defect a re-index is being spent on, and it is the one deliberate behavioural
+divergence from the reference.
+
+`getFeeGrowthInside` returns **exactly (0, 0)** when both of a position's ticks have been
+CLEARED — which v4 does when the position was the last liquidity at those ticks — and the price
+sits outside the range. That is precisely the state a full close leaves behind. So on a close the
+stored baseline is 0, the fresh read is 0, `feeGrowthChanged` is false, no
+`debug_traceTransaction` runs, and the collected fee is recorded as **zero** with no
+`COLLECT_FEES` row.
+
+Ground truth: **Avalanche tokenId 137**, WITHDRAW tx
+`0x283901105bd7a3cfe6227b0283ff38786c1002fbb1fb1c135b63fefa966f8b13` at block **57816979**. The
+trace decodes `feesAccrued = (262354965774593714, 6708203)` while BOTH indexers stored 0, and
+`callerDelta0 - feesAccrued0` reproduces `withdrawnToken0` to the wei.
+
+The gate is therefore now:
+
+```ts
+gateCanPass && (feeGrowthChanged || liquidityDelta < 0n)
+```
+
+In v4 a liquidity DECREASE always returns `feesAccrued`, so `feeGrowthChanged` has nothing useful
+to add on that path — it can only remove a trace that was warranted. On an INCREASE the argument
+holds and the heuristic is kept in full. `gateCanPass` is unchanged, so a decrease on a position
+with no prior liquidity still traces nothing.
+
+Cost: about **2.4x TOTAL traces** — ~94 → ~226 per 1000 rows, on a sample whose type mix was
+DEPOSIT 680 / WITHDRAW 226 / COLLECT_FEES 94. Note the denominator: that is the multiplier on all
+traces, not on the decrease path, where it is much larger. Still ~100x below tracing every
+`ModifyLiquidity`. The sample predates the 5-chain deployment — re-measure per chain before using
+it for capacity planning, and watch it against `getFeesAccrued`'s `{calls: 20, per: "second"}`.
+
+**This DIVERGES FROM PONDER on purpose, per an explicit user decision.** Ponder has the identical
+defect, so Envio-vs-Ponder parity is structurally blind to it — the two agree on the wrong number.
+A parity failure on a decrease is now the EXPECTED result and the divergence is the fix working,
+not a regression. `scripts/diff-collected-fees.mjs` should be read with that in mind: this port
+reporting MORE collected fees than Ponder on a close is the classifier's existing
+"Ponder LOW" case and remains correct.
 
 ### Validating against Ponder and the subgraph
 
@@ -506,7 +610,7 @@ Uncollected fees have no external reference — neither the subgraph nor Ponder 
 our block — so they are checked against our OWN data instead. The sweep is the only writer of
 both `totalFeesUncollected*` and `feesUpdatedAtBlock`, so a readable non-zero uncollected figure
 against a readable zero sweep block is a self-contradiction and FAILS. A value that will not
-parse as a number is *not measured* (exit 2), not a disagreement — unless the contradiction is
+parse as a number is _not measured_ (exit 2), not a disagreement — unless the contradiction is
 already proven by the two legs that DO parse, in which case the unreadable third leg cannot
 un-prove it and it still fails.
 
@@ -561,7 +665,7 @@ currently achievable and the script should not be expected to produce one.
 
 `diff-positions.mjs` does **not** yet have that third state end to end. It exits 2 on
 pre-flight failures only (no Ponder endpoint for the chain, no local `envio-postgres`
-container, nothing indexed yet); a subgraph or Ponder source that dies *mid-run* is logged
+container, nothing indexed yet); a subgraph or Ponder source that dies _mid-run_ is logged
 and skipped, and the run can still exit 0. Read its "not compared" lines before treating a
 zero from it as a pass.
 
@@ -596,11 +700,11 @@ Totals mode over 250 closed positions per chain: Avalanche **23/23 agree**. Main
 agree** — and the three that did not are Ponder being wrong, verified by tracing the
 transactions directly and decoding `feesAccrued`:
 
-| tokenId | Envio | Ponder | chain says |
-| --- | --- | --- | --- |
-| 926 | 333387.830400084026115227 | **0** | `333387830400084026115227` raw → Envio, exactly |
-| 686 | 0.007791580127644008 | 0.00249974636142716 | two collects; Ponder has only the second |
-| 706 | 0.000000164039415489 | **0** | `164039415489` raw → Envio, exactly |
+| tokenId | Envio                     | Ponder              | chain says                                      |
+| ------- | ------------------------- | ------------------- | ----------------------------------------------- |
+| 926     | 333387.830400084026115227 | **0**               | `333387830400084026115227` raw → Envio, exactly |
+| 686     | 0.007791580127644008      | 0.00249974636142716 | two collects; Ponder has only the second        |
+| 706     | 0.000000164039415489      | **0**               | `164039415489` raw → Envio, exactly             |
 
 The mechanism is Ponder's own classifier. `isTraceCapabilityError` matches
 `msg.includes("tracer")`, and viem embeds the full request body — which always contains

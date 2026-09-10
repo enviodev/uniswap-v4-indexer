@@ -13,9 +13,13 @@
  * is why Ponder reads it and why this port keeps doing so rather than deriving
  * an approximation.
  *
- * IT NEVER THROWS. Envio treats an exception out of an effect as a FATAL EXIT
- * (no retry, no skip — see the note on TRANSIENT_BACKOFF_MS below), so every
- * failure path here degrades to "no collected fee recorded" with a warning.
+ * IT NEVER THROWS, and the reason is NOT the one an earlier version of this
+ * comment gave. See the note on TRANSIENT_BACKOFF_MS below: an uncaught throw
+ * in the REAL pass is a fatal exit, but the preload pass swallows it, and the
+ * decisive argument is about dedup rather than crashes — a failed effect is
+ * neither memoised nor deduped, so throwing turns one failed trace into a
+ * pile of serial re-invocations. Every failure path here degrades to "no
+ * collected fee recorded" with a warning instead.
  *
  * WHAT THE EFFECT WRAPPER ADDS OVER PONDER
  *
@@ -92,10 +96,29 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /**
  * THIS EFFECT MUST NEVER THROW, and that is not a style preference.
  *
- * Envio 3.7.0 has NO retry and NO skip for an exception out of a handler or an
- * effect. `EventProcessing.res:65-74` wraps it as `ProcessingError`, and
- * `BatchProcessing.res:156` hands that straight to
- * `IndexerState.errorExit(state, errHandler)` — a fatal exit of the indexer.
+ * TWO REASONS, AND THE SECOND IS THE STRONGER ONE. An earlier version of this
+ * comment gave only the first, and stated it too broadly.
+ *
+ * 1. A throw is fatal — UNCAUGHT, AND ONLY IN THE REAL PASS. Envio 3.7.0 has no
+ *    retry and no skip for an exception that escapes a handler in the
+ *    sequential pass: `EventProcessing.res.mjs:57-66` wraps it as
+ *    `ProcessingError` and `BatchProcessing.res.mjs:62-64` hands the result
+ *    straight to `IndexerState.errorExit`. But the PRELOAD pass swallows it —
+ *    every preload handler promise goes through `Utils.$$Promise.silentCatch`
+ *    (`EventProcessing.res.mjs:124-138`) — so "a throw is a fatal exit of the
+ *    whole indexer", full stop, is not true as written. It forbids as
+ *    impossible a pattern that is merely inadvisable.
+ *
+ * 2. THE DEDUP ARGUMENT, which holds in both passes and is why the sentinel
+ *    returns below are KEPT rather than replaced by throws. An effect's result
+ *    is memoised only on success: `LoadLayer.res.mjs:82` writes the output dict
+ *    inside `.then(...)`, and a rejection takes the `.catch(onError)` branch
+ *    instead, so nothing is recorded. A FAILED effect is therefore neither
+ *    memoised nor deduped, while a returned sentinel is both. Throwing would
+ *    turn one failed trace into 1 + N serial re-invocations — the swallowed
+ *    preload attempt plus one per event sharing that transaction in the
+ *    sequential pass — each paying the full retry ladder below, up to 8s of
+ *    backoff. Returning `[]` costs one attempt for the whole batch.
  *
  * An earlier version of this file rethrew transient errors with the comment
  * "let the runtime's own retry handle it". There is no such retry. Under
@@ -278,7 +301,10 @@ export const getFeesAccrued = createEffect(
           return [];
         }
         // Transient. Retried HERE, never rethrown — see the note on
-        // TRANSIENT_BACKOFF_MS: a throw is a fatal exit of the whole indexer.
+        // TRANSIENT_BACKOFF_MS: an uncaught throw in the sequential pass is a
+        // fatal exit, and even where it is caught (the preload pass swallows
+        // it) a failed effect is neither memoised nor deduped, so a throw
+        // multiplies one bad trace into a serial retry storm.
         if (attempt < TRACE_MAX_ATTEMPTS - 1) {
           const waitMs = TRANSIENT_BACKOFF_MS[Math.min(attempt, TRANSIENT_BACKOFF_MS.length - 1)]!;
           context.log.warn(

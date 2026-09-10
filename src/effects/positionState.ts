@@ -23,14 +23,20 @@
  * liquidity. For a swap crossing k initialized ticks that is one equation in
  * k+1 unknowns, so it cannot be reconstructed from events — hence the read.
  *
- * NO RESULT CACHE, DELIBERATELY
+ * NO RESULT CACHE ON THE BATCH EFFECT, DELIBERATELY — AND IT CANNOT BE FLIPPED
  *
- * Envio's effect cache keys on the input, and every input here carries the
- * block number it was read at, so a cache entry could never be hit twice: the
- * sweep reads a different block every firing. Declaring `cache: true` would
- * persist one row per (batch, block) forever and hit none of them. Worse, a
- * FAILED read returns a zero sentinel, and caching that would make a transient
- * RPC failure permanent.
+ * Three reasons, in ascending order of finality. See `cache: false` on
+ * `getPositionFeeGrowthBatch` below, where the decisive one is spelled out:
+ *
+ *   1. Envio's effect cache keys on the input, and every input here carries the
+ *      block number it was read at, so a cache entry could never be hit twice —
+ *      the sweep reads a different block every firing. `cache: true` would
+ *      persist one row per (batch, block) forever and hit none of them.
+ *   2. A FAILED read returns a zero sentinel, and caching that would make a
+ *      transient RPC failure permanent.
+ *   3. The input is a 400-POSITION ARRAY. The cache key is a TEXT PRIMARY KEY,
+ *      so flipping this flag is a fatal StorageError on the first write, not
+ *      merely a wasted row.
  */
 
 import { createEffect, S } from "envio";
@@ -138,8 +144,28 @@ export const getPositionFeeGrowthBatch = createEffect(
       positions: S.array(PositionInput),
     }),
     output: S.array(PositionFeeGrowth),
-    // See the header: a block-pinned input can never produce a cache hit, and
-    // caching a failure sentinel would make a transient failure permanent.
+    /*
+     * `cache: false`, AND THIS IS NOT A JUDGEMENT CALL — DO NOT FLIP IT.
+     *
+     * The two reasons in the header are real but only argue that a cache would
+     * be useless: the input is block-pinned so no entry could ever be hit
+     * twice, and caching the failure sentinel would freeze a transient RPC
+     * failure into a permanent zero. Neither is fatal on its own, so both have
+     * been re-litigated before. This one settles it:
+     *
+     * THE CACHE KEY IS THE WHOLE INPUT, VERBATIM, AS A PRIMARY KEY.
+     * `UserContext.res.mjs:61` builds `cacheKey` with `Utils.Hash.makeOrThrow`,
+     * which despite the name is NOT a digest — `Utils.res.mjs:559-620` is a
+     * canonical JSON-ish serialiser that walks the value and concatenates it.
+     * The effect cache table is `id` (String, PRIMARY KEY) + `output`
+     * (`Internal.res.mjs:315-320`), so that string IS the row id.
+     *
+     * `positions` here is a 400-entry array (SWEEP_CHUNK), each entry a bytes32
+     * poolId plus three numbers — roughly 135 characters serialised, so the key
+     * is on the order of 55 KB. Postgres caps a btree index tuple at 2704
+     * bytes. `cache: true` would therefore not waste a row; it would raise a
+     * StorageError on the FIRST write of every sweep and take the chain down.
+     */
     cache: false,
     // One call per CHUNK now, not per position, so this bounds chunks.
     rateLimit: { calls: 20, per: "second" },
@@ -235,10 +261,34 @@ export const getPositionFeeGrowthBatch = createEffect(
  * ModifyLiquidity (`readFeeGrowthInside`) for two purposes — to keep the
  * `fg*Last` baseline current, and to decide whether a trace is needed at all.
  *
- * Cached, unlike the batch: the input is one (pool, ticks, block) triple, and a
- * replay of the same block asks the identical question, so a hit is both
- * possible and correct. The block number is part of the key, which is what makes
- * it sound under reorgs — effect results are not rolled back.
+ * Cached, unlike the batch: the input is one (pool, ticks, block) triple, so
+ * the key is a few dozen bytes rather than the batch's ~55 KB, a replay of the
+ * same block asks the identical question, and a hit is both possible and
+ * correct. The block number is part of the key, which is what makes it sound
+ * under reorgs — effect results are not rolled back.
+ *
+ * ISSUED FROM TWO CALL SITES, AND STILL ONE RPC PER (POOL, TICKS, BLOCK)
+ *
+ * `utils/feeGate.ts` calls this from the ModifyLiquidity handler's PRELOAD
+ * block and again from its real path, so the whole batch's reads go out in
+ * parallel instead of one at a time inside the strictly serial handler loop.
+ *
+ * That is not the "issued twice" that this repo's comments used to assert, and
+ * that claim was FALSE ON 3.7.0 wherever it appeared. `UserContext.res.mjs:69`
+ * passes `isPreload` through as `shouldGroup`: in the preload pass the calls
+ * are grouped and executed, and `LoadLayer.res.mjs:82` writes each successful
+ * output into an in-memory dict; in the real pass `shouldGroup` is false, so
+ * `LoadManager.res.mjs:80` returns the dict entry without touching the network.
+ * The dict is cleared only BEFORE the preload pass, never between the two.
+ * Measured on both `cache: true` and `cache: false`: the real pass issues zero
+ * additional invocations. The `cache` flag governs DB PERSISTENCE only
+ * (`InMemoryStore.res.mjs:66-83` always writes the dict; only `idsToStore` is
+ * conditional), which is why `context.cache = false` below still dedupes
+ * within the batch while refusing to persist.
+ *
+ * The corollary the two call sites must respect: the input has to be
+ * byte-identical between the passes, because the memo is keyed on it. That is
+ * why `feeGate` builds the input in ONE place rather than at each site.
  */
 export const getFeeGrowthInside = createEffect(
   {
@@ -257,7 +307,73 @@ export const getFeeGrowthInside = createEffect(
       feeGrowthInside1X128: S.bigint,
     }),
     cache: true,
-    rateLimit: { calls: 100, per: "second" },
+    /*
+     * 500/s. AFTER THE PRELOAD HOIST THIS LIMITER, NOT RPC LATENCY, IS THE
+     * CEILING, so the number is now load-bearing rather than a safety net.
+     *
+     * HOW IT WAS CHOSEN. config.yaml sets no `disable_default_cross_chain`, so
+     * `crossChain` defaults to true and the window is SHARED across every
+     * chain: the five currently uncommented chains (1, 10, 42161, 43114, 4663)
+     * drew on one 100/s budget, i.e. ~20/s each. 500/s restores the evident
+     * intent of the old number — ~100/s per chain at five chains — with the
+     * shape of the sharing made explicit instead of accidental.
+     *
+     * WHAT THE PROVIDER CAN TAKE — and why this is 200 rather than 500.
+     *
+     * `stateClient` builds its transport with `http(url, { batch: true })` and
+     * viem's scheduler defaults to batchSize 1000 / wait 0, so the concurrent
+     * calls of a preload pass coalesce into few HTTP requests rather than many.
+     * That is the upside. The catch, MEASURED against the real `LoadLayer`:
+     * `executeWithRateLimit` releases `availableCalls` simultaneously, so
+     * `rateLimit.calls` maps ONE-FOR-ONE onto the WIDTH of the JSON-RPC body
+     * that leaves the process — n=600 at calls=100 produced 6 POSTs of width
+     * 100 (5036ms); at calls=500, 2 POSTs of width 500 and 100 (1018ms). So
+     * this number is a request-size knob, not just a rate knob, and a 500-wide
+     * `eth_call` body is the kind of thing an endpoint rejects outright.
+     *
+     * Overshooting is therefore NOT free, and the failure is silent rather than
+     * loud: a provider 429 is caught below and returns `ok: false`, which is
+     * deliberately read as "unknown" and FORCES a trace; if that trace also
+     * fails, `getFeesAccrued` returns `[]` and the fee is recorded as a plain
+     * ZERO with only a log line to distinguish it. Trading a 5x wider request
+     * for that risk is a bad trade on an indexer whose hard requirement is
+     * exact collected fees.
+     *
+     * WHY 200 SPECIFICALLY — measured, not picked. The emitted body width is
+     * min(rateLimit.calls, queue depth), so the right size is "one batch's
+     * worth". Measured on the live 5-chain deployment at ~20% backfill,
+     * PositionTransaction rows as a share of events processed:
+     *     chain 1      84,257 / 2,010,773 = 4.19%
+     *     chain 42161 140,020 / 4,860,676 = 2.88%
+     *     chain 4663  424,789 / 8,882,445 = 4.78%
+     * At full_batch_size 5000 that is ~145-240 qualifying ModifyLiquidity
+     * events per batch, i.e. ~145-240 concurrent reads. So:
+     *   100 is BINDING — a typical batch needs two windows for no reason.
+     *   200 clears a typical batch in ONE window, body width capped at 200.
+     *   500 is IDENTICAL on a typical batch (only ~200 are ever queued) and
+     *       differs only on an unusually dense one — which is exactly when it
+     *       emits a 500-wide body and invites the rejection described above.
+     * 500 therefore buys nothing measurable and only changes behaviour in the
+     * bad direction. Note this density is backfill-era; re-measure at head.
+     *
+     * RAISE IT ONLY AFTER MEASURING the actual provider: watch
+     * `envio_effect_call_seconds` against `envio_effect_call_seconds_total`
+     * (Metrics.res.mjs:181-183) — their RATIO is the achieved concurrency — and
+     * confirm no 429s. Note the local `.env` sets an RPC URL for only two of the
+     * five chains, so anyone testing locally is aiming this at keyless public
+     * endpoints that will reject a wide batch long before a paid tier would.
+     *
+     * DO NOT "FIX" THE SHARING WITH `crossChain: false`. The effect cache table
+     * is `id` + `output` only (`Internal.res.mjs:315-320`) and its NAME encodes
+     * the scope — `envio_effect_<name>` when crossChain, `envio_<chainId>_
+     * effect_<name>` when not (`Internal.res.mjs:222-228`, and the same split
+     * for the .tsv cache at :295-301). Re-scoping this effect therefore points
+     * it at a DIFFERENT table and silently orphans every row already cached, so
+     * every historical `getFeeGrowthInside` would be re-read from the node.
+     * `rateLimit` is runtime-only and has no cache identity, which is exactly
+     * why it is the safe knob here.
+     */
+    rateLimit: { calls: 200, per: "second" },
   },
   async ({ context, input }) => {
     try {

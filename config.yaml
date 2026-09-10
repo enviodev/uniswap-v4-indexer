@@ -89,15 +89,15 @@ chains:
         address:
           - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
   # ── Base (8453)   # start_block unverified — set the deploy block before real use
-  # - id: 8453
-  #   start_block: 0
-  #   contracts:
-  #     - name: PositionManager
-  #       address:
-  #         - 0x7c5f5a4bbd8fd63184577525326123b519429bdc
-  #     - name: PoolManager
-  #       address:
-  #         - 0x498581ff718922c3f8e6a244956af099b2652b2b
+  - id: 8453
+    start_block: 25350900
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x7c5f5a4bbd8fd63184577525326123b519429bdc
+      - name: PoolManager
+        address:
+          - 0x498581ff718922c3f8e6a244956af099b2652b2b
   # ── Arbitrum One (42161)
   - id: 42161
     start_block: 297842872
@@ -119,25 +119,25 @@ chains:
   #       address:
   #         - 0x67366782805870060151383f4bbff9dab53e5cd6
   # ── Blast (81457)   # start_block unverified — set the deploy block before real use
-  #  - id: 81457
-  #    start_block: 0
-  #    contracts:
-  #      - name: PositionManager
-  #        address:
-  #          - 0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad
-  #      - name: PoolManager
-  #        address:
-  #          - 0x1631559198a9e474033433b2958dabc135ab6446
+  # - id: 81457
+  #   start_block: 0
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad
+  #     - name: PoolManager
+  #       address:
+  #         - 0x1631559198a9e474033433b2958dabc135ab6446
   # ── Zora (7777777)   # start_block unverified — set the deploy block before real use
-  #  - id: 7777777
-  #    start_block: 0
-  #    contracts:
-  #      - name: PositionManager
-  #        address:
-  #          - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
-  #      - name: PoolManager
-  #        address:
-  #          - 0x0575338e4c17006ae181b47900a84404247ca30f
+  # - id: 7777777
+  #   start_block: 0
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
+  #     - name: PoolManager
+  #       address:
+  #         - 0x0575338e4c17006ae181b47900a84404247ca30f
   # ── Ink (57073)   # start_block unverified — set the deploy block before real use
   #  - id: 57073
   #    start_block: 4580556
@@ -221,15 +221,15 @@ chains:
   #        address:
   #          - 0x248083fb965359d82b06c1f5322480dcfc1ad857
   # ── Celo (42220)   # start_block unverified — set the deploy block before real use
-  #  - id: 42220
-  #    start_block: 43985160
-  #    contracts:
-  #      - name: PositionManager
-  #        address:
-  #          - 0xf7965f3981e4d5bc383bfbcb61501763e9068ca9
-  #      - name: PoolManager
-  #        address:
-  #          - 0x288dc841a52fca2707c6947b3a777c5e56cd87bc
+  # - id: 42220
+  #   start_block: 43985160
+  #   contracts:
+  #     - name: PositionManager
+  #       address:
+  #         - 0xf7965f3981e4d5bc383bfbcb61501763e9068ca9
+  #     - name: PoolManager
+  #       address:
+  #         - 0x288dc841a52fca2707c6947b3a777c5e56cd87bc
   # ── ? (4326)   # start_block unverified — set the deploy block before real use
   #  - id: 4326
   #    start_block: 7009653
