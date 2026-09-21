@@ -58,4 +58,31 @@ describe("Uniswap V4 Indexer", () => {
       }
     `);
   });
+  it("Keeps the pricing whitelist off Token (ClickHouse history size)", async (t) => {
+    // Block 21688545 initializes the first mainnet pool, ETH/USDC. Both sides
+    // are whitelist tokens, so each gains the pool as a pricing route.
+    //
+    // The whitelist must land in the Postgres-only TokenWhitelist entity and
+    // never on Token: Token is rewritten on every swap, and ClickHouse keeps
+    // every rewrite forever, so an array on Token is copied into every
+    // history row (it was ~80% of the production ClickHouse database).
+    const indexer = createTestIndexer();
+    const result: any = await indexer.process({
+      chains: { 1: { startBlock: 21688545, endBlock: 21688545 } },
+    });
+    const change = result.changes[0];
+    const pool =
+      "1_0x21c67e77068de97969ba93d4aab21826d33ca12bb9f565d8496e8fda8a82ca27";
+
+    t.expect(change.TokenWhitelist.sets).toHaveLength(2);
+    t.expect(change.TokenWhitelist.sets).toEqual(
+      t.expect.arrayContaining([
+        { id: "1_0x0000000000000000000000000000000000000000", pools: [pool] },
+        { id: "1_0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", pools: [pool] },
+      ])
+    );
+    for (const token of change.Token.sets) {
+      t.expect(token).not.toHaveProperty("whitelistPools");
+    }
+  });
 });

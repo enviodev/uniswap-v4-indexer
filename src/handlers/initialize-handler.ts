@@ -2,12 +2,29 @@
  * Initialize event handlers for Uniswap v4 pools
  */
 
-import { indexer, BigDecimal } from "envio";
+import { indexer, BigDecimal, type EvmOnEventContext } from "envio";
 import { getChainConfig } from "../utils/chains";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 import { getTokenMetadata } from "../utils/tokenMetadata";
 import { findNativePerToken } from "../utils/pricing";
 import { sanitizeBD } from "../utils";
+
+/**
+ * Appends a pool to a token's pricing whitelist. The whitelist is its own
+ * Postgres-only entity (see TokenWhitelist in schema.graphql) so that the
+ * array is not copied into ClickHouse history on every Token update.
+ */
+async function addWhitelistPool(
+  context: EvmOnEventContext,
+  tokenId: string,
+  poolId: string
+) {
+  const existing = await context.TokenWhitelist.get(tokenId);
+  context.TokenWhitelist.set({
+    id: tokenId,
+    pools: [...(existing?.pools ?? []), poolId],
+  });
+}
 
 indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event, context }) => {
   // Get chain config for whitelist tokens and pools to skip
@@ -110,7 +127,6 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
       totalValueLockedUSD: new BigDecimal("0"),
       totalValueLockedUSDUntracked: new BigDecimal("0"),
       derivedETH: new BigDecimal("0"),
-      whitelistPools: [], // Initialize empty array
     };
   } else {
     token0 = {
@@ -143,7 +159,6 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
       totalValueLockedUSD: new BigDecimal("0"),
       totalValueLockedUSDUntracked: new BigDecimal("0"),
       derivedETH: new BigDecimal("0"),
-      whitelistPools: [], // Initialize empty array
     };
   } else {
     token1 = {
@@ -156,25 +171,13 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
   if (
     chainConfig.whitelistTokens.includes(event.params.currency0.toLowerCase())
   ) {
-    token1 = {
-      ...token1,
-      whitelistPools: [
-        ...token1.whitelistPools,
-        `${event.chainId}_${event.params.id}`,
-      ],
-    };
+    await addWhitelistPool(context, token1Id, `${event.chainId}_${event.params.id}`);
   }
 
   if (
     chainConfig.whitelistTokens.includes(event.params.currency1.toLowerCase())
   ) {
-    token0 = {
-      ...token0,
-      whitelistPools: [
-        ...token0.whitelistPools,
-        `${event.chainId}_${event.params.id}`,
-      ],
-    };
+    await addWhitelistPool(context, token0Id, `${event.chainId}_${event.params.id}`);
   }
 
   // Now update derivedETH values

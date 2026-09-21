@@ -33,15 +33,22 @@ const STABLECOINS = [USDC];
 
 const tokenId = (addr: string) => `${CHAIN}_${addr}`;
 
+/**
+ * TokenWhitelist rows, keyed by token id. The whitelist is its own
+ * Postgres-only entity (see schema.graphql), so makeToken registers it here
+ * rather than returning it on the Token.
+ */
+const whitelists = new Map<string, string[]>();
+
 /** Minimal Token entity for pricing purposes. */
 function makeToken(
   addr: string,
   opts: { derivedETH?: BigDecimal; whitelistPools?: string[] } = {}
 ) {
+  whitelists.set(tokenId(addr), opts.whitelistPools ?? []);
   return {
     id: tokenId(addr),
     derivedETH: opts.derivedETH ?? bd(0),
-    whitelistPools: opts.whitelistPools ?? [],
   } as any;
 }
 
@@ -85,6 +92,12 @@ function makeContext(pools: any[], tokens: any[]) {
     },
     Pool: { get: async (id: string) => poolMap.get(id) },
     Token: { get: async (id: string) => tokenMap.get(id) },
+    TokenWhitelist: {
+      get: async (id: string) => {
+        const pools = whitelists.get(id);
+        return pools ? { id, pools } : undefined;
+      },
+    },
   } as any;
 }
 

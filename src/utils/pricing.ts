@@ -84,7 +84,7 @@ export async function findNativePerToken(
     return ONE_BD;
   }
 
-  const whiteList = token.whitelistPools;
+  const whiteList = (await context.TokenWhitelist.get(token.id))?.pools ?? [];
   let largestLiquidityETH = ZERO_BD;
   let priceSoFar = ZERO_BD;
 
@@ -94,7 +94,7 @@ export async function findNativePerToken(
   if (stablecoinAddresses.includes(tokenAddress)) {
     priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD);
   } else {
-    // Pool IDs already include chainId since we store them that way in whitelistPools
+    // Pool IDs already include chainId since we store them that way in TokenWhitelist.pools
     const pools = await Promise.all(
       whiteList.map((poolAddress) => context.Pool.get(poolAddress))
     );

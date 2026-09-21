@@ -108,7 +108,20 @@ type Token @storage(postgres: true, clickhouse: true) {
   totalValueLockedUSD: BigDecimal!
   totalValueLockedUSDUntracked: BigDecimal!
   derivedETH: BigDecimal!
-  whitelistPools: [String!]! # Changed from Pool reference to String for simplicity
+}
+
+# Pools a token can be priced through (pool ids, chainId-prefixed). Read only
+# by findNativePerToken, written only when a pool is initialized.
+#
+# Deliberately a separate, Postgres-only entity rather than a field on Token.
+# ClickHouse keeps every entity change forever (its history table is its
+# source of truth; only Postgres prunes history), and Token is rewritten on
+# every swap and liquidity change. As a Token field this array (up to ~1,600
+# ids for WETH/USDC-like tokens) was copied into each of those history rows
+# and made up ~80% of the whole ClickHouse database (2.7 TiB of 3.2 TiB).
+type TokenWhitelist @storage(postgres: true, clickhouse: false) {
+  id: ID! # same id as the Token: {chainId}_{address}
+  pools: [String!]!
 }
 
 # stores for USD calculations
