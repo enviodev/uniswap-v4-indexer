@@ -110,17 +110,12 @@ type Token @storage(postgres: true, clickhouse: true) {
   derivedETH: BigDecimal!
 }
 
-# Pools a token can be priced through (pool ids, chainId-prefixed). Read only
-# by findNativePerToken, written only when a pool is initialized.
-#
-# Deliberately a separate, Postgres-only entity rather than a field on Token.
-# ClickHouse keeps every entity change forever (its history table is its
-# source of truth; only Postgres prunes history), and Token is rewritten on
-# every swap and liquidity change. As a Token field this array (up to ~1,600
-# ids for WETH/USDC-like tokens) was copied into each of those history rows
-# and made up ~80% of the whole ClickHouse database (2.7 TiB of 3.2 TiB).
-type TokenWhitelist @storage(postgres: true, clickhouse: false) {
-  id: ID! # same id as the Token: {chainId}_{address}
+# Pools a token can be priced through, written on pool Initialize and read by
+# findNativePerToken. Kept off Token and out of ClickHouse on purpose:
+# ClickHouse stores every entity change forever, Token is rewritten on every
+# swap, and this array (~1,600 ids for WETH/USDC) was ~80% of that database.
+type TokenWhitelistPools @storage(postgres: true, clickhouse: false) {
+  id: ID! # same id as the Token
   pools: [String!]!
 }
 

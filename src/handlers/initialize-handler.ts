@@ -9,18 +9,14 @@ import { getTokenMetadata } from "../utils/tokenMetadata";
 import { findNativePerToken } from "../utils/pricing";
 import { sanitizeBD } from "../utils";
 
-/**
- * Appends a pool to a token's pricing whitelist. The whitelist is its own
- * Postgres-only entity (see TokenWhitelist in schema.graphql) so that the
- * array is not copied into ClickHouse history on every Token update.
- */
+/** Appends a pool to a token's pricing whitelist (TokenWhitelistPools). */
 async function addWhitelistPool(
   context: EvmOnEventContext,
   tokenId: string,
   poolId: string
-) {
-  const existing = await context.TokenWhitelist.get(tokenId);
-  context.TokenWhitelist.set({
+): Promise<void> {
+  const existing = await context.TokenWhitelistPools.get(tokenId);
+  context.TokenWhitelistPools.set({
     id: tokenId,
     pools: [...(existing?.pools ?? []), poolId],
   });
@@ -167,17 +163,19 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
     };
   }
 
+  const poolId = `${event.chainId}_${event.params.id}`;
+
   // Update whitelist pools first
   if (
     chainConfig.whitelistTokens.includes(event.params.currency0.toLowerCase())
   ) {
-    await addWhitelistPool(context, token1Id, `${event.chainId}_${event.params.id}`);
+    await addWhitelistPool(context, token1Id, poolId);
   }
 
   if (
     chainConfig.whitelistTokens.includes(event.params.currency1.toLowerCase())
   ) {
-    await addWhitelistPool(context, token0Id, `${event.chainId}_${event.params.id}`);
+    await addWhitelistPool(context, token0Id, poolId);
   }
 
   // Now update derivedETH values
@@ -224,7 +222,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
 
   // Create new pool with prices
   context.Pool.set({
-    id: `${event.chainId}_${event.params.id}`,
+    id: poolId,
     name: poolName,
     createdAtTimestamp: BigInt(event.block.timestamp),
     createdAtBlockNumber: BigInt(event.block.number),
