@@ -2,12 +2,25 @@
  * Initialize event handlers for Uniswap v4 pools
  */
 
-import { indexer, BigDecimal } from "envio";
+import { indexer, BigDecimal, type EvmOnEventContext } from "envio";
 import { getChainConfig } from "../utils/chains";
 import { sqrtPriceX96ToTokenPrices } from "../utils/pricing";
 import { getTokenMetadata } from "../utils/tokenMetadata";
 import { findNativePerToken } from "../utils/pricing";
 import { sanitizeBD } from "../utils";
+
+/** Appends a pool to a token's pricing whitelist (TokenWhitelistPools). */
+async function addWhitelistPool(
+  context: EvmOnEventContext,
+  tokenId: string,
+  poolId: string
+): Promise<void> {
+  const existing = await context.TokenWhitelistPools.get(tokenId);
+  context.TokenWhitelistPools.set({
+    id: tokenId,
+    pools: [...(existing?.pools ?? []), poolId],
+  });
+}
 
 indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event, context }) => {
   // Get chain config for whitelist tokens and pools to skip
@@ -110,7 +123,6 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
       totalValueLockedUSD: new BigDecimal("0"),
       totalValueLockedUSDUntracked: new BigDecimal("0"),
       derivedETH: new BigDecimal("0"),
-      whitelistPools: [], // Initialize empty array
     };
   } else {
     token0 = {
@@ -143,7 +155,6 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
       totalValueLockedUSD: new BigDecimal("0"),
       totalValueLockedUSDUntracked: new BigDecimal("0"),
       derivedETH: new BigDecimal("0"),
-      whitelistPools: [], // Initialize empty array
     };
   } else {
     token1 = {
@@ -152,29 +163,19 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
     };
   }
 
+  const poolId = `${event.chainId}_${event.params.id}`;
+
   // Update whitelist pools first
   if (
     chainConfig.whitelistTokens.includes(event.params.currency0.toLowerCase())
   ) {
-    token1 = {
-      ...token1,
-      whitelistPools: [
-        ...token1.whitelistPools,
-        `${event.chainId}_${event.params.id}`,
-      ],
-    };
+    await addWhitelistPool(context, token1Id, poolId);
   }
 
   if (
     chainConfig.whitelistTokens.includes(event.params.currency1.toLowerCase())
   ) {
-    token0 = {
-      ...token0,
-      whitelistPools: [
-        ...token0.whitelistPools,
-        `${event.chainId}_${event.params.id}`,
-      ],
-    };
+    await addWhitelistPool(context, token0Id, poolId);
   }
 
   // Now update derivedETH values
@@ -221,7 +222,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Initialize" }, async ({ event
 
   // Create new pool with prices
   context.Pool.set({
-    id: `${event.chainId}_${event.params.id}`,
+    id: poolId,
     name: poolName,
     createdAtTimestamp: BigInt(event.block.timestamp),
     createdAtBlockNumber: BigInt(event.block.number),

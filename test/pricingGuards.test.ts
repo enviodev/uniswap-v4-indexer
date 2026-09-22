@@ -88,8 +88,20 @@ function makeContext(pools: any[], tokens: any[]) {
   } as any;
 }
 
-const priceFor = (context: any, token: any) =>
-  findNativePerToken(context, token, WETH, STABLECOINS, MIN_NATIVE_LOCKED);
+/** Prices `token`, serving its fixture whitelist from TokenWhitelistPools. */
+const priceFor = (context: any, token: any) => {
+  context.TokenWhitelistPools = {
+    get: async (id: string) =>
+      id === token.id ? { id, pools: token.whitelistPools } : undefined,
+  };
+  return findNativePerToken(
+    context,
+    token,
+    WETH,
+    STABLECOINS,
+    MIN_NATIVE_LOCKED
+  );
+};
 
 describe("findNativePerToken imbalance guard", () => {
   const weth = makeToken(WETH, { derivedETH: bd(1) });

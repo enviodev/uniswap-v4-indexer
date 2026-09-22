@@ -58,4 +58,28 @@ describe("Uniswap V4 Indexer", () => {
       }
     `);
   });
+  it("Keeps the pricing whitelist off Token", async (t) => {
+    // Block 21688545 initializes the first mainnet pool, ETH/USDC. Both sides
+    // are whitelist tokens, so each gains the pool as a pricing route. The
+    // route must land in TokenWhitelistPools, never on Token (see schema).
+    const indexer = createTestIndexer();
+    const result = await indexer.process({
+      chains: { 1: { startBlock: 21688545, endBlock: 21688545 } },
+    });
+    const change = result.changes[0]!;
+    const pool =
+      "1_0x21c67e77068de97969ba93d4aab21826d33ca12bb9f565d8496e8fda8a82ca27";
+
+    t.expect(change.TokenWhitelistPools?.sets).toHaveLength(2);
+    t.expect(change.TokenWhitelistPools?.sets).toEqual(
+      t.expect.arrayContaining([
+        { id: "1_0x0000000000000000000000000000000000000000", pools: [pool] },
+        { id: "1_0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", pools: [pool] },
+      ])
+    );
+    t.expect(change.Token?.sets).toHaveLength(2);
+    for (const token of change.Token?.sets ?? []) {
+      t.expect(token).not.toHaveProperty("whitelistPools");
+    }
+  });
 });
