@@ -93,6 +93,8 @@ const getRpcUrl = (chainId: number): string => {
         process.env.ENVIO_ROBINHOOD_RPC_URL ||
         "https://rpc.mainnet.chain.robinhood.com"
       );
+    case 5042:
+      return process.env.ENVIO_ARC_RPC_URL || "https://arc.drpc.org";
     // Add generic fallback for any chain
     default:
       throw new Error(`No RPC URL configured for chainId ${chainId}`);
