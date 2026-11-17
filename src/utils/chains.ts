@@ -283,29 +283,30 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
       decimals: BigInt(18),
     },
   },
-  [ChainId.BLAST]: {
-    poolManagerAddress: "0x1631559198a9e474033433b2958dabc135ab6446",
-    stablecoinWrappedNativePoolId:
-      "0x83e7c9f12348a95a5fe02c8af7074dd52defd1e108e19e51234c49da56d7c635",
-    stablecoinIsToken0: true,
-    wrappedNativeAddress: "0x4300000000000000000000000000000000000004", // WETH
-    minimumNativeLocked: new BigDecimal("1"),
-    stablecoinAddresses: [
-      "0x4300000000000000000000000000000000000003", // USDB
-    ],
-    whitelistTokens: [
-      "0x4300000000000000000000000000000000000004", // WETH
-      "0x4300000000000000000000000000000000000003", // USDB
-      "0x0000000000000000000000000000000000000000", // Native ETH
-    ],
-    tokenOverrides: [],
-    poolsToSkip: [],
-    nativeTokenDetails: {
-      symbol: "ETH",
-      name: "Ethereum",
-      decimals: BigInt(18),
-    },
-  },
+  // Blast (81457) shut down in Nov 2026 and is no longer in config.yaml.
+  // [ChainId.BLAST]: {
+  //   poolManagerAddress: "0x1631559198a9e474033433b2958dabc135ab6446",
+  //   stablecoinWrappedNativePoolId:
+  //     "0x83e7c9f12348a95a5fe02c8af7074dd52defd1e108e19e51234c49da56d7c635",
+  //   stablecoinIsToken0: true,
+  //   wrappedNativeAddress: "0x4300000000000000000000000000000000000004", // WETH
+  //   minimumNativeLocked: new BigDecimal("1"),
+  //   stablecoinAddresses: [
+  //     "0x4300000000000000000000000000000000000003", // USDB
+  //   ],
+  //   whitelistTokens: [
+  //     "0x4300000000000000000000000000000000000004", // WETH
+  //     "0x4300000000000000000000000000000000000003", // USDB
+  //     "0x0000000000000000000000000000000000000000", // Native ETH
+  //   ],
+  //   tokenOverrides: [],
+  //   poolsToSkip: [],
+  //   nativeTokenDetails: {
+  //     symbol: "ETH",
+  //     name: "Ethereum",
+  //     decimals: BigInt(18),
+  //   },
+  // },
   [ChainId.ZORA]: {
     poolManagerAddress: "0x0575338e4c17006ae181b47900a84404247ca30f",
     stablecoinWrappedNativePoolId:
