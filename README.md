@@ -20,7 +20,7 @@ This indexer tracks all key events from Uniswap V4 `PoolManager` and `PositionMa
 - `Transfer` / `Approval` - ERC-6909 token transfers and approvals
 
 **Chains:**
-Ethereum, Optimism, Base, Arbitrum, Polygon, Blast, Zora, Avalanche, BNB Chain, Unichain, World Chain, Soneium, Ink, Linea, Celo
+Ethereum, Optimism, Base, Arbitrum, Polygon, Zora, Avalanche, BNB Chain, Unichain, World Chain, Soneium, Ink, Linea, Celo
 
 ## What's Indexed
 
