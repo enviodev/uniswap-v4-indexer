@@ -36,6 +36,12 @@ export async function getNativePriceInUSD(
   stablecoinWrappedNativePoolId: string,
   stablecoinIsToken0: boolean
 ): Promise<BigDecimal> {
+  // Chains whose native token is itself a USD stablecoin (Arc: native USDC)
+  // have no native/stable pool to read. They set the pool id to "" and the
+  // native price is $1 by definition.
+  if (stablecoinWrappedNativePoolId === "") {
+    return ONE_BD;
+  }
   const poolId = `${chainId}_${stablecoinWrappedNativePoolId}`;
   const stablecoinWrappedNativePool = await context.Pool.get(poolId);
 

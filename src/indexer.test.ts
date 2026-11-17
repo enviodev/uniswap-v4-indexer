@@ -82,4 +82,18 @@ describe("Uniswap V4 Indexer", () => {
       t.expect(token).not.toHaveProperty("whitelistPools");
     }
   });
+
+  it("Prices Arc's native USDC at $1 with no native/stable pool", async (t) => {
+    // Arc has no wrapped native and no native/stable pool, so its config sets
+    // stablecoinWrappedNativePoolId to "" and the native price is $1. Replay
+    // from PoolManager deployment through Arc's first v4 swap (block 1954876).
+    const indexer = createTestIndexer();
+    const result = await indexer.process({
+      chains: { 5042: { startBlock: 1948011, endBlock: 1954876 } },
+    });
+    const bundles = result.changes.flatMap((c) => c.Bundle?.sets ?? []);
+    const swapBundle = bundles.at(-1);
+    t.expect(swapBundle?.id).toBe("5042");
+    t.expect(swapBundle?.ethPriceUSD.toString()).toBe("1");
+  });
 });
