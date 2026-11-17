@@ -20,6 +20,7 @@ export enum ChainId {
   INK = 57073,
   MEGAETH = 4326,
   ROBINHOOD = 4663,
+  ARC = 5042,
 }
 
 // Native token details interface
@@ -561,8 +562,7 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
   [ChainId.ROBINHOOD]: {
     poolManagerAddress: "0x8366a39cc670b4001a1121b8f6a443a643e40951",
     // Native ETH/USDG 0.05% pool (fee 500, tickSpacing 10, no hooks), the most
-    // active ETH/USDG pool on chain. The upstream subgraph still carries a zero
-    // placeholder here (its TODO predates the pool being seeded).
+    // active ETH/USDG pool on chain. Matches upstream v4-subgraph #87.
     stablecoinWrappedNativePoolId:
       "0x387bf619da4d3fb62bb276482693dba1b9b3520f573cabdfe033384a24125982",
     stablecoinIsToken0: false, // currency0 = native ETH (0x0), currency1 = USDG
@@ -581,6 +581,39 @@ export const CHAIN_CONFIGS: { [chainId in EvmChainId]: ChainConfig } = {
     nativeTokenDetails: {
       symbol: "ETH",
       name: "Ethereum",
+      decimals: BigInt(18),
+    },
+  },
+  [ChainId.ARC]: {
+    // Circle's USDC-native L1: gas is paid in USDC and there is no wrapped
+    // native, so USDC is the reference token and the native price is $1. The
+    // empty pool id opts into that in getNativePriceInUSD. Ported from upstream
+    // v4-subgraph #81, with mainnet EURC/USYC addresses (upstream ships the
+    // testnet ones) taken from docs.arc.io/arc/references/contract-addresses.
+    poolManagerAddress: "0x8366a39cc670b4001a1121b8f6a443a643e40951",
+    stablecoinWrappedNativePoolId: "",
+    stablecoinIsToken0: false,
+    wrappedNativeAddress: "0x3600000000000000000000000000000000000000", // USDC (ERC-20 interface)
+    // Denominated in the native token, which is USDC here, so ~$2k like ~1 ETH elsewhere.
+    minimumNativeLocked: new BigDecimal("2000"),
+    stablecoinAddresses: [
+      "0x3600000000000000000000000000000000000000", // USDC
+    ],
+    whitelistTokens: [
+      "0x0000000000000000000000000000000000000000", // Native USDC
+      "0x3600000000000000000000000000000000000000", // USDC
+      "0xbef5f6d51cb62b58e6a8f77868681825c6fe21c1", // EURC
+      "0x8a5d989bbb96929f689b0200f435f53da42bf490", // USYC
+      "0x171a4217b86a807a64eb94757db6849fb4bdbaa0", // cirBTC
+      "0x128cc466b61f542da60c70e3aa11c10e19b84edb", // WETH (bridged)
+    ],
+    tokenOverrides: [],
+    poolsToSkip: [],
+    nativeTokenDetails: {
+      // address(0) is native USDC, which has 18 decimals. The ERC-20 interface
+      // at 0x3600... reports 6 and is read on-chain like any other token.
+      symbol: "USDC",
+      name: "USD Coin",
       decimals: BigInt(18),
     },
   },
