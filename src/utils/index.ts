@@ -17,6 +17,14 @@ export function safeDiv(amount0: BigDecimal, amount1: BigDecimal): BigDecimal {
 }
 
 /**
+ * `a.times(b)`, skipping the multiplication when either side is zero.
+ * Unpriced tokens have derivedETH 0, so many USD values are products with 0.
+ */
+export function times(a: BigDecimal, b: BigDecimal): BigDecimal {
+  return a.isZero() || b.isZero() ? ZERO_BD : a.times(b);
+}
+
+/**
  * `value.div(10^places)` without long division: shifting the decimal point is
  * exact, then rounding to 20 places matches what `.div` would return.
  */

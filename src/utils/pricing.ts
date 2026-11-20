@@ -134,15 +134,32 @@ export async function findNativePerToken(
   stablecoinAddresses: string[],
   minimumNativeLocked: BigDecimal
 ): Promise<BigDecimal> {
-  const sep = token.id.indexOf("_");
-  const chainId = token.id.slice(0, sep);
-  const tokenAddress = token.id.slice(sep + 1);
+  const chainId = token.id.slice(0, token.id.indexOf("_"));
+  return findNativePerTokenWithBundle(
+    context,
+    await context.Bundle.get(chainId),
+    token,
+    wrappedNativeAddress,
+    stablecoinAddresses,
+    minimumNativeLocked
+  );
+}
+
+/** findNativePerToken for a caller that already holds the chain's Bundle. */
+export async function findNativePerTokenWithBundle(
+  context: handlerContext,
+  bundle: Bundle | undefined,
+  token: Token,
+  wrappedNativeAddress: string,
+  stablecoinAddresses: string[],
+  minimumNativeLocked: BigDecimal
+): Promise<BigDecimal> {
+  const tokenAddress = token.id.slice(token.id.indexOf("_") + 1);
 
   if (tokenAddress == wrappedNativeAddress || tokenAddress == ADDRESS_ZERO) {
     return ONE_BD;
   }
 
-  const bundle = await context.Bundle.get(chainId);
   if (!bundle) return ZERO_BD;
 
   if (stablecoinAddresses.includes(tokenAddress)) {
@@ -225,12 +242,10 @@ const TWO_BD = new BigDecimal("2");
 
 export function getTrackedAmountUSD(
   bundle: Bundle | undefined,
-  tokenAmount0: BigDecimal,
+  amount0USD: BigDecimal,
   token0Id: string,
-  token0DerivedETH: BigDecimal,
-  tokenAmount1: BigDecimal,
+  amount1USD: BigDecimal,
   token1Id: string,
-  token1DerivedETH: BigDecimal,
   whitelistTokens: string[]
 ): BigDecimal {
   if (!bundle) return ZERO_BD;
@@ -245,23 +260,15 @@ export function getTrackedAmountUSD(
 
   // both are whitelist tokens, return sum of both amounts
   if (token0Whitelisted && token1Whitelisted) {
-    const price0USD = token0DerivedETH.times(bundle.ethPriceUSD);
-    const price1USD = token1DerivedETH.times(bundle.ethPriceUSD);
-    return tokenAmount0.times(price0USD).plus(tokenAmount1.times(price1USD));
+    return amount0USD.plus(amount1USD);
   }
-
   // take double value of the whitelisted token amount
   if (token0Whitelisted) {
-    const price0USD = token0DerivedETH.times(bundle.ethPriceUSD);
-    return tokenAmount0.times(price0USD).times(TWO_BD);
+    return amount0USD.times(TWO_BD);
   }
-
-  // take double value of the whitelisted token amount
   if (token1Whitelisted) {
-    const price1USD = token1DerivedETH.times(bundle.ethPriceUSD);
-    return tokenAmount1.times(price1USD).times(TWO_BD);
+    return amount1USD.times(TWO_BD);
   }
-
   // neither token is on white list, tracked amount is 0
   return ZERO_BD;
 }

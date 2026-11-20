@@ -11,13 +11,14 @@ import { getChainConfig } from "../utils/chains";
 import {
   convertTokenToDecimal,
   safeDiv,
+  times,
   sanitizeBD,
   divByPowerOfTen,
   half,
 } from "../utils/index";
 import { ADDRESS_ZERO, ZERO_BD } from "../utils/constants";
 import {
-  findNativePerToken,
+  findNativePerTokenWithBundle,
   getNativePriceInUSD,
   getTrackedAmountUSD,
   sqrtPriceX96ToTokenPrices,
@@ -70,15 +71,17 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
   // Update tokens' derivedETH values first. They price against the Bundle as
   // stored before this swap, like the subgraph.
   const [token0DerivedETHRaw, token1DerivedETHRaw] = await Promise.all([
-    findNativePerToken(
+    findNativePerTokenWithBundle(
       context,
+      existingBundle,
       existingToken0,
       chainConfig.wrappedNativeAddress,
       chainConfig.stablecoinAddresses,
       chainConfig.minimumNativeLocked
     ),
-    findNativePerToken(
+    findNativePerTokenWithBundle(
       context,
+      existingBundle,
       existingToken1,
       chainConfig.wrappedNativeAddress,
       chainConfig.stablecoinAddresses,
@@ -93,6 +96,11 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
   const token0DerivedETH = sanitizeBD(token0DerivedETHRaw);
   const token1DerivedETH = sanitizeBD(token1DerivedETHRaw);
   const ethPrice = bundle.ethPriceUSD;
+  // USD per token. BigDecimal multiplication is exact, so a * derivedETH * ethPrice
+  // equals a * (derivedETH * ethPrice), and this one product serves every USD
+  // value below. Unpriced tokens (derivedETH 0) are common, hence `times`.
+  const price0USD = times(token0DerivedETH, ethPrice);
+  const price1USD = times(token1DerivedETH, ethPrice);
 
   const prices = sqrtPriceX96ToTokenPrices(
     event.params.sqrtPriceX96,
@@ -113,17 +121,15 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
   // Get absolute amounts for volume
   const amount0Abs = amount0.abs();
   const amount1Abs = amount1.abs();
-  const amount0USD = amount0Abs.times(token0DerivedETH).times(ethPrice);
-  const amount1USD = amount1Abs.times(token1DerivedETH).times(ethPrice);
-  // Get tracked amount USD
+  const amount0USD = times(amount0Abs, price0USD);
+  const amount1USD = times(amount1Abs, price1USD);
+  // Get tracked amount USD (amountNUSD is amountNAbs at its token's USD price)
   const trackedAmountUSD = getTrackedAmountUSD(
     existingBundle,
-    amount0Abs,
+    amount0USD,
     existingToken0.id,
-    token0DerivedETH,
-    amount1Abs,
+    amount1USD,
     existingToken1.id,
-    token1DerivedETH,
     chainConfig.whitelistTokens
   );
   const amountTotalUSDTracked = half(trackedAmountUSD);
@@ -146,10 +152,10 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
   const currentPoolTvlUSD = pool.totalValueLockedUSD;
   const totalValueLockedToken0 = pool.totalValueLockedToken0.plus(amount0);
   const totalValueLockedToken1 = pool.totalValueLockedToken1.plus(amount1);
-  const poolTvlETH = totalValueLockedToken0
-    .times(token0DerivedETH)
-    .plus(totalValueLockedToken1.times(token1DerivedETH));
-  const poolTvlUSD = sanitizeBD(poolTvlETH.times(ethPrice));
+  const poolTvlETH = times(totalValueLockedToken0, token0DerivedETH).plus(
+    times(totalValueLockedToken1, token1DerivedETH)
+  );
+  const poolTvlUSD = sanitizeBD(times(poolTvlETH, ethPrice));
   const swapFee = BigInt(event.params.fee);
   context.Pool.set({
     ...pool,
@@ -189,7 +195,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
     ),
     feesUSD: existingToken0.feesUSD.plus(feesUSD),
     txCount: existingToken0.txCount + 1n,
-    totalValueLockedUSD: token0Tvl.times(token0DerivedETH.times(ethPrice)),
+    totalValueLockedUSD: times(token0Tvl, price0USD),
   });
   context.Token.set({
     ...existingToken1,
@@ -202,7 +208,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
     ),
     feesUSD: existingToken1.feesUSD.plus(feesUSD),
     txCount: existingToken1.txCount + 1n,
-    totalValueLockedUSD: token1Tvl.times(token1DerivedETH.times(ethPrice)),
+    totalValueLockedUSD: times(token1Tvl, price1USD),
   });
 
   // PoolManager aggregates (TVL: swap this pool's old value for its new one)
@@ -220,7 +226,7 @@ indexer.onEvent({ contract: "PoolManager", event: "Swap" }, async ({ event, cont
     totalFeesETH: poolManager.totalFeesETH.plus(feesETH),
     totalFeesUSD: poolManager.totalFeesUSD.plus(feesUSD),
     totalValueLockedETH: managerTvlETH,
-    totalValueLockedUSD: managerTvlETH.times(ethPrice),
+    totalValueLockedUSD: times(managerTvlETH, ethPrice),
     numberOfSwaps: poolManager.numberOfSwaps + 1n,
     hookedSwaps: isHookedPool
       ? poolManager.hookedSwaps + 1n

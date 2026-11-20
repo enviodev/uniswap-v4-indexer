@@ -6,6 +6,7 @@
  * Unsubscribe are immutable per-event records.
  */
 import { indexer } from "envio";
+import { ADDRESS_ZERO } from "../utils/constants";
 
 // Positions are per-chain: PositionManager tokenIds collide across chains
 const positionId = (chainId: number, tokenId: bigint) =>
@@ -23,8 +24,11 @@ indexer.onEvent(
     const id = positionId(event.chainId, event.params.id);
 
     // Mint (from == zero address) creates the position; later transfers only
-    // change ownership
-    const position = (await context.Position.get(id)) ?? {
+    // change ownership. A mint's tokenId is new, so it skips the lookup (one
+    // database read per batch fewer during backfill).
+    const isMint = event.params.from === ADDRESS_ZERO;
+    const existing = isMint ? undefined : await context.Position.get(id);
+    const position = existing ?? {
       id,
       tokenId: event.params.id,
       owner: event.params.to,
