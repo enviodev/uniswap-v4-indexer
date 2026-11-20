@@ -1,13 +1,45 @@
-import { BigDecimal, type EvmOnEventContext, type Pool, type Token } from "envio";
-
-import { exponentToBigDecimal, safeDiv } from "../utils/index";
+import {
+  BigDecimal,
+  type Bundle,
+  type EvmOnEventContext,
+  type Pool,
+  type Token,
+} from "envio";
 
 type handlerContext = EvmOnEventContext;
 import { ADDRESS_ZERO, ONE_BD, ZERO_BD, ZERO_BI } from "./constants";
 import { NativeTokenDetails } from "./nativeTokenDetails";
+import { safeDiv } from "./index";
 
-const Q192 = BigInt(2) ** BigInt(192);
+const Q192 = 2n ** 192n;
+const SCALE_20 = 10n ** 20n;
+const SCALE_40 = 10n ** 40n;
 
+/** round(n / d) with halves rounded up, for n >= 0 and d > 0. */
+function divRoundHalfUp(n: bigint, d: bigint): bigint {
+  return (2n * n + d) / (2n * d);
+}
+
+const pow10Cache = new Map<bigint, bigint>();
+function pow10(exp: bigint): bigint {
+  let cached = pow10Cache.get(exp);
+  if (cached === undefined) {
+    cached = 10n ** exp;
+    pow10Cache.set(exp, cached);
+  }
+  return cached;
+}
+
+/**
+ * Token prices from a pool's sqrtPriceX96, in integer arithmetic.
+ *
+ * It returns exactly what the BigDecimal version did, step by step:
+ *   price1 = sqrtPrice^2 / 2^192          (rounded to 20 places, half up)
+ *            * 10^decimals0 / 10^decimals1 (rounded to 20 places, half up)
+ *   price0 = 1 / price1                   (rounded to 20 places, 0 if price1 is 0)
+ * Each rounding is the one bignumber.js applies to `.div`, so the stored values
+ * don't change. Doing it on bigints skips three long divisions per call.
+ */
 export function sqrtPriceX96ToTokenPrices(
   sqrtPriceX96: bigint,
   token0: Token,
@@ -19,15 +51,19 @@ export function sqrtPriceX96ToTokenPrices(
   const token1Decimals =
     token1.id == ADDRESS_ZERO ? nativeTokenDetails.decimals : token1.decimals;
 
-  const num = new BigDecimal((sqrtPriceX96 * sqrtPriceX96).toString());
-  const denom = new BigDecimal(Q192.toString());
-  const price1 = num
-    .div(denom)
-    .times(exponentToBigDecimal(token0Decimals))
-    .div(exponentToBigDecimal(token1Decimals));
+  // Both values are scaled by 10^20.
+  const ratio = divRoundHalfUp(sqrtPriceX96 * sqrtPriceX96 * SCALE_20, Q192);
+  const price1Scaled = divRoundHalfUp(
+    ratio * pow10(token0Decimals > 0n ? token0Decimals : 0n),
+    pow10(token1Decimals > 0n ? token1Decimals : 0n)
+  );
+  const price0Scaled =
+    price1Scaled === 0n ? 0n : divRoundHalfUp(SCALE_40, price1Scaled);
 
-  const price0 = safeDiv(new BigDecimal("1"), price1);
-  return [price0, price1];
+  return [
+    new BigDecimal(`${price0Scaled}e-20`),
+    new BigDecimal(`${price1Scaled}e-20`),
+  ];
 }
 
 export async function getNativePriceInUSD(
@@ -76,6 +112,21 @@ export const MAX_PRICING_POOL_VALUE_IMBALANCE = new BigDecimal("1000");
  * Search through graph to find derived Eth per token.
  * @todo update to be derived ETH (add stablecoin estimates)
  **/
+// 1 / ethPriceUSD prices every stablecoin. The native price only moves when the
+// stablecoin/native pool trades, so the last inverse is reused until it does.
+let lastEthPriceUSD: BigDecimal | undefined;
+let lastInverse: BigDecimal = ZERO_BD;
+function inverseNativePrice(ethPriceUSD: BigDecimal): BigDecimal {
+  if (
+    lastEthPriceUSD === undefined ||
+    (lastEthPriceUSD !== ethPriceUSD && !lastEthPriceUSD.eq(ethPriceUSD))
+  ) {
+    lastInverse = safeDiv(ONE_BD, ethPriceUSD);
+    lastEthPriceUSD = ethPriceUSD;
+  }
+  return lastInverse;
+}
+
 export async function findNativePerToken(
   context: handlerContext,
   token: Token,
@@ -83,78 +134,82 @@ export async function findNativePerToken(
   stablecoinAddresses: string[],
   minimumNativeLocked: BigDecimal
 ): Promise<BigDecimal> {
-  const tokenAddress = token.id.split("_")[1]!;
-  const chainId = token.id.split("_")[0]!; // Make sure this is being used for Bundle lookup
+  const sep = token.id.indexOf("_");
+  const chainId = token.id.slice(0, sep);
+  const tokenAddress = token.id.slice(sep + 1);
 
   if (tokenAddress == wrappedNativeAddress || tokenAddress == ADDRESS_ZERO) {
     return ONE_BD;
   }
 
-  let largestLiquidityETH = ZERO_BD;
-  let priceSoFar = ZERO_BD;
-
   const bundle = await context.Bundle.get(chainId);
   if (!bundle) return ZERO_BD;
 
   if (stablecoinAddresses.includes(tokenAddress)) {
-    priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD);
-  } else {
-    // Pool ids already carry the chainId (see TokenWhitelistPools in schema).
-    const whiteList =
-      (await context.TokenWhitelistPools.get(token.id))?.pools ?? [];
-    const pools = await Promise.all(
-      whiteList.map((poolAddress) => context.Pool.get(poolAddress))
-    );
+    // Nothing to preload; the preload result is thrown away.
+    return context.isPreload ? ZERO_BD : inverseNativePrice(bundle.ethPriceUSD);
+  }
 
-    const tokenFetches: {
-      pool: Pool;
-      tokenId: string;
-      isToken0: boolean;
-    }[] = [];
-    for (const pool of pools) {
-      if (pool && pool.liquidity > ZERO_BI) {
-        const poolToken0 = pool.token0.split("_")[1];
-        const poolToken1 = pool.token1.split("_")[1];
-        if (poolToken0 == tokenAddress) {
-          tokenFetches.push({ pool, tokenId: pool.token1, isToken0: false });
-        }
-        if (poolToken1 == tokenAddress) {
-          tokenFetches.push({ pool, tokenId: pool.token0, isToken0: true });
-        }
+  // Pool ids already carry the chainId (see TokenWhitelistPools in schema).
+  const whiteList =
+    (await context.TokenWhitelistPools.get(token.id))?.pools ?? [];
+  const pools = await Promise.all(
+    whiteList.map((poolAddress) => context.Pool.get(poolAddress))
+  );
+
+  const tokenFetches: {
+    pool: Pool;
+    tokenId: string;
+    isToken0: boolean;
+  }[] = [];
+  for (const pool of pools) {
+    if (pool && pool.liquidity > ZERO_BI) {
+      // Pool token ids are `${chainId}_${address}`, like token.id.
+      if (pool.token0 == token.id) {
+        tokenFetches.push({ pool, tokenId: pool.token1, isToken0: false });
+      }
+      if (pool.token1 == token.id) {
+        tokenFetches.push({ pool, tokenId: pool.token0, isToken0: true });
       }
     }
-    const tokens = await Promise.all(
-      tokenFetches.map((f) => context.Token.get(f.tokenId))
-    );
+  }
+  const tokens = await Promise.all(
+    tokenFetches.map((f) => context.Token.get(f.tokenId))
+  );
 
-    for (const [i, { pool, isToken0 }] of tokenFetches.entries()) {
-      const token = tokens[i];
-      if (token) {
-        const ethLocked = isToken0
-          ? pool.totalValueLockedToken0.times(token.derivedETH)
-          : pool.totalValueLockedToken1.times(token.derivedETH);
-        const candidatePrice = isToken0
-          ? pool.token0Price.times(token.derivedETH)
-          : pool.token1Price.times(token.derivedETH);
-        // Value the candidate price implies for OUR token's side of the pool.
-        // Reject prices that value it far beyond the pool's verifiable side —
-        // see MAX_PRICING_POOL_VALUE_IMBALANCE.
-        const ourSideBalance = isToken0
-          ? pool.totalValueLockedToken1
-          : pool.totalValueLockedToken0;
-        const impliedOurSideETH = ourSideBalance.times(candidatePrice);
-        const withinImbalanceBound = impliedOurSideETH.lte(
-          ethLocked.times(MAX_PRICING_POOL_VALUE_IMBALANCE)
-        );
-        if (
-          ethLocked.gt(largestLiquidityETH) &&
-          ethLocked.gt(minimumNativeLocked) &&
-          withinImbalanceBound
-        ) {
-          largestLiquidityETH = ethLocked;
-          priceSoFar = candidatePrice;
-        }
-      }
+  // The preload pass only needs the loads above; its result is thrown away.
+  if (context.isPreload) {
+    return ZERO_BD;
+  }
+
+  let largestLiquidityETH = ZERO_BD;
+  let priceSoFar = ZERO_BD;
+  for (let i = 0; i < tokenFetches.length; i++) {
+    const otherToken = tokens[i];
+    if (!otherToken) continue;
+    const { pool, isToken0 } = tokenFetches[i]!;
+    const ethLocked = isToken0
+      ? pool.totalValueLockedToken0.times(otherToken.derivedETH)
+      : pool.totalValueLockedToken1.times(otherToken.derivedETH);
+    // Cheap checks first: most pools lose here, before the price maths.
+    if (!ethLocked.gt(largestLiquidityETH) || !ethLocked.gt(minimumNativeLocked)) {
+      continue;
+    }
+    const candidatePrice = isToken0
+      ? pool.token0Price.times(otherToken.derivedETH)
+      : pool.token1Price.times(otherToken.derivedETH);
+    // Value the candidate price implies for OUR token's side of the pool.
+    // Reject prices that value it far beyond the pool's verifiable side —
+    // see MAX_PRICING_POOL_VALUE_IMBALANCE.
+    const ourSideBalance = isToken0
+      ? pool.totalValueLockedToken1
+      : pool.totalValueLockedToken0;
+    const impliedOurSideETH = ourSideBalance.times(candidatePrice);
+    if (
+      impliedOurSideETH.lte(ethLocked.times(MAX_PRICING_POOL_VALUE_IMBALANCE))
+    ) {
+      largestLiquidityETH = ethLocked;
+      priceSoFar = candidatePrice;
     }
   }
   return priceSoFar;
@@ -166,47 +221,45 @@ export async function findNativePerToken(
  * If both are, return sum of two amounts
  * If neither is, return 0
  */
-export async function getTrackedAmountUSD(
-  context: handlerContext,
+const TWO_BD = new BigDecimal("2");
+
+export function getTrackedAmountUSD(
+  bundle: Bundle | undefined,
   tokenAmount0: BigDecimal,
-  token0: Token,
+  token0Id: string,
+  token0DerivedETH: BigDecimal,
   tokenAmount1: BigDecimal,
-  token1: Token,
-  chainId: string,
+  token1Id: string,
+  token1DerivedETH: BigDecimal,
   whitelistTokens: string[]
-): Promise<BigDecimal> {
-  const bundle = await context.Bundle.get(chainId);
+): BigDecimal {
   if (!bundle) return ZERO_BD;
 
-  const price0USD = token0.derivedETH.times(bundle.ethPriceUSD);
-  const price1USD = token1.derivedETH.times(bundle.ethPriceUSD);
-
   // Strip chainId prefix from token ids for whitelist comparison
-  const token0Address = token0.id.split("_")[1]!;
-  const token1Address = token1.id.split("_")[1]!;
+  const token0Whitelisted = whitelistTokens.includes(
+    token0Id.slice(token0Id.indexOf("_") + 1)
+  );
+  const token1Whitelisted = whitelistTokens.includes(
+    token1Id.slice(token1Id.indexOf("_") + 1)
+  );
 
   // both are whitelist tokens, return sum of both amounts
-  if (
-    whitelistTokens.includes(token0Address) &&
-    whitelistTokens.includes(token1Address)
-  ) {
+  if (token0Whitelisted && token1Whitelisted) {
+    const price0USD = token0DerivedETH.times(bundle.ethPriceUSD);
+    const price1USD = token1DerivedETH.times(bundle.ethPriceUSD);
     return tokenAmount0.times(price0USD).plus(tokenAmount1.times(price1USD));
   }
 
   // take double value of the whitelisted token amount
-  if (
-    whitelistTokens.includes(token0Address) &&
-    !whitelistTokens.includes(token1Address)
-  ) {
-    return tokenAmount0.times(price0USD).times(new BigDecimal("2"));
+  if (token0Whitelisted) {
+    const price0USD = token0DerivedETH.times(bundle.ethPriceUSD);
+    return tokenAmount0.times(price0USD).times(TWO_BD);
   }
 
   // take double value of the whitelisted token amount
-  if (
-    !whitelistTokens.includes(token0Address) &&
-    whitelistTokens.includes(token1Address)
-  ) {
-    return tokenAmount1.times(price1USD).times(new BigDecimal("2"));
+  if (token1Whitelisted) {
+    const price1USD = token1DerivedETH.times(bundle.ethPriceUSD);
+    return tokenAmount1.times(price1USD).times(TWO_BD);
   }
 
   // neither token is on white list, tracked amount is 0
