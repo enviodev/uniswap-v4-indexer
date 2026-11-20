@@ -1,5 +1,4 @@
 type Swap
-  @storage(postgres: true, clickhouse: false)
   @index(fields: ["pool", ["timestamp", "DESC"]]) {
   id: ID!
   transaction: String! # Instead of Transaction reference
@@ -21,7 +20,7 @@ type Swap
   fee: BigInt!
 }
 
-type PoolManager @storage(postgres: true, clickhouse: false) {
+type PoolManager {
   id: ID!
   poolCount: BigInt!
   txCount: BigInt!
@@ -41,7 +40,6 @@ type PoolManager @storage(postgres: true, clickhouse: false) {
 }
 
 type Pool
-  @storage(postgres: true, clickhouse: false)
   @index(fields: ["hooks", ["totalValueLockedUSD", "DESC"]]) {
   id: ID!
   name: String!
@@ -79,7 +77,6 @@ type Pool
 }
 
 type Tick
-  @storage(postgres: true, clickhouse: false)
   @index(fields: ["pool", "tickIdx"]) {
   id: ID! # <pool address>#<tickIdx>
   pool: Pool! # Pointer back to Pool
@@ -92,7 +89,7 @@ type Tick
   createdAtBlockNumber: BigInt!
 }
 
-type Token @storage(postgres: true, clickhouse: false) {
+type Token {
   id: ID!
   symbol: String!
   name: String!
@@ -114,19 +111,19 @@ type Token @storage(postgres: true, clickhouse: false) {
 # findNativePerToken. Kept off Token and out of ClickHouse on purpose:
 # ClickHouse stores every entity change forever, Token is rewritten on every
 # swap, and this array (~1,600 ids for WETH/USDC) was ~80% of that database.
-type TokenWhitelistPools @storage(postgres: true, clickhouse: false) {
+type TokenWhitelistPools {
   id: ID! # same id as the Token
   pools: [String!]!
 }
 
 # stores for USD calculations
-type Bundle @storage(postgres: true, clickhouse: false) {
+type Bundle {
   id: ID!
   # price of ETH in usd
   ethPriceUSD: BigDecimal!
 }
 
-type HookStats @storage(postgres: true, clickhouse: false) {
+type HookStats {
   id: ID! # hook address
   numberOfPools: BigInt!
   numberOfSwaps: BigInt!
@@ -168,7 +165,7 @@ type HookStats @storage(postgres: true, clickhouse: false) {
   swapAccess: String # none | other | temporal | governance | allowlist
 }
 
-type Position @storage(postgres: true, clickhouse: false) {
+type Position {
   id: ID! # <chainId>_<tokenId>
   tokenId: BigInt! @index
   owner: String! @index # address of current owner
@@ -180,7 +177,7 @@ type Position @storage(postgres: true, clickhouse: false) {
   transfers: [Transfer!]! @derivedFrom(field: "position")
 }
 
-type Transfer @storage(postgres: true, clickhouse: false) {
+type Transfer {
   id: ID!
   tokenId: BigInt! @index
   from: String! # address of previous owner
@@ -192,7 +189,7 @@ type Transfer @storage(postgres: true, clickhouse: false) {
   position: Position!
 }
 
-type Subscribe @storage(postgres: true, clickhouse: false) {
+type Subscribe {
   id: ID!
   tokenId: BigInt! @index
   address: String! # address of subscriber
@@ -203,7 +200,7 @@ type Subscribe @storage(postgres: true, clickhouse: false) {
   position: Position!
 }
 
-type Unsubscribe @storage(postgres: true, clickhouse: false) {
+type Unsubscribe {
   id: ID!
   tokenId: BigInt! @index
   address: String! # address of unsubscriber
@@ -215,7 +212,6 @@ type Unsubscribe @storage(postgres: true, clickhouse: false) {
 }
 
 type ModifyLiquidity
-  @storage(postgres: true, clickhouse: false)
   @index(fields: ["pool", ["timestamp", "DESC"]])
   @index(fields: ["pool", "transaction"]) {
   id: ID!
