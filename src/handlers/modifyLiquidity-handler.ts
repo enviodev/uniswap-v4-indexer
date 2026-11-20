@@ -127,79 +127,62 @@ indexer.onEvent({ contract: "PoolManager", event: "ModifyLiquidity" }, async ({ 
     .plus(amount1.times(existingToken1.derivedETH))
     .times(bundle.ethPriceUSD);
 
-  // Update pool TVL and txCount
-  let pool = {
+  // Pool: TVL, txCount, and liquidity when the position is in range
+  const inRange =
+    existingPool.tick !== null &&
+    existingPool.tick !== undefined &&
+    event.params.tickLower <= existingPool.tick &&
+    event.params.tickUpper > existingPool.tick;
+  const totalValueLockedToken0 =
+    existingPool.totalValueLockedToken0.plus(amount0);
+  const totalValueLockedToken1 =
+    existingPool.totalValueLockedToken1.plus(amount1);
+  const poolTvlETH = totalValueLockedToken0
+    .times(existingToken0.derivedETH)
+    .plus(totalValueLockedToken1.times(existingToken1.derivedETH));
+  const poolTvlUSD = sanitizeBD(poolTvlETH.times(bundle.ethPriceUSD));
+  // Store current pool TVL for later
+  const currentPoolTvlETH = existingPool.totalValueLockedETH;
+  const currentPoolTvlUSD = existingPool.totalValueLockedUSD;
+  const pool = {
     ...existingPool,
     txCount: existingPool.txCount + 1n,
-    totalValueLockedToken0: existingPool.totalValueLockedToken0.plus(amount0),
-    totalValueLockedToken1: existingPool.totalValueLockedToken1.plus(amount1),
+    totalValueLockedToken0,
+    totalValueLockedToken1,
+    liquidity: inRange
+      ? existingPool.liquidity + event.params.liquidityDelta
+      : existingPool.liquidity,
+    totalValueLockedETH: poolTvlETH,
+    totalValueLockedUSD: poolTvlUSD,
   };
-  // Only update liquidity if position is in range and tick is initialized
-  if (
-    pool.tick !== null &&
-    pool.tick !== undefined &&
-    event.params.tickLower <= pool.tick &&
-    event.params.tickUpper > pool.tick
-  ) {
-    pool = {
-      ...pool,
-      liquidity: pool.liquidity + event.params.liquidityDelta,
-    };
-  }
-  // Update token TVL and txCount
-  let token0 = {
+  // Tokens: TVL and txCount
+  const token0Tvl = existingToken0.totalValueLocked.plus(amount0);
+  const token1Tvl = existingToken1.totalValueLocked.plus(amount1);
+  const token0 = {
     ...existingToken0,
     txCount: existingToken0.txCount + 1n,
-    totalValueLocked: existingToken0.totalValueLocked.plus(amount0),
+    totalValueLocked: token0Tvl,
+    totalValueLockedUSD: token0Tvl.times(
+      existingToken0.derivedETH.times(bundle.ethPriceUSD)
+    ),
   };
-  let token1 = {
+  const token1 = {
     ...existingToken1,
     txCount: existingToken1.txCount + 1n,
-    totalValueLocked: existingToken1.totalValueLocked.plus(amount1),
-  };
-  // Store current pool TVL for later
-  const currentPoolTvlETH = pool.totalValueLockedETH;
-  const currentPoolTvlUSD = pool.totalValueLockedUSD;
-  // After updating token TVLs, calculate ETH and USD values
-  pool = {
-    ...pool,
-    totalValueLockedETH: pool.totalValueLockedToken0
-      .times(token0.derivedETH)
-      .plus(pool.totalValueLockedToken1.times(token1.derivedETH)),
-  };
-  pool = {
-    ...pool,
-    totalValueLockedUSD: sanitizeBD(
-      pool.totalValueLockedETH.times(bundle.ethPriceUSD)
+    totalValueLocked: token1Tvl,
+    totalValueLockedUSD: token1Tvl.times(
+      existingToken1.derivedETH.times(bundle.ethPriceUSD)
     ),
   };
-  // Update token totalValueLockedUSD
-  token0 = {
-    ...token0,
-    totalValueLockedUSD: token0.totalValueLocked.times(
-      token0.derivedETH.times(bundle.ethPriceUSD)
-    ),
-  };
-  token1 = {
-    ...token1,
-    totalValueLockedUSD: token1.totalValueLocked.times(
-      token1.derivedETH.times(bundle.ethPriceUSD)
-    ),
-  };
-  // Update PoolManager
-  let poolManager = {
+  // PoolManager: swap this pool's old TVL for its new one
+  const managerTvlETH = existingPoolManager.totalValueLockedETH
+    .minus(currentPoolTvlETH)
+    .plus(poolTvlETH);
+  const poolManager = {
     ...existingPoolManager,
     txCount: existingPoolManager.txCount + 1n,
-    // Reset and recalculate TVL
-    totalValueLockedETH: existingPoolManager.totalValueLockedETH
-      .minus(currentPoolTvlETH)
-      .plus(pool.totalValueLockedETH),
-  };
-  poolManager = {
-    ...poolManager,
-    totalValueLockedUSD: poolManager.totalValueLockedETH.times(
-      bundle.ethPriceUSD
-    ),
+    totalValueLockedETH: managerTvlETH,
+    totalValueLockedUSD: managerTvlETH.times(bundle.ethPriceUSD),
   };
 
   // Create ModifyLiquidity entity

@@ -1,23 +1,40 @@
 import { BigDecimal } from "envio";
 import { ZERO_BD, ONE_BD, ZERO_BI } from "./constants";
 
-export function exponentToBigDecimal(decimals: bigint): BigDecimal {
-  let resultString = "1";
-
-  for (let i = 0; i < Number(decimals); i++) {
-    resultString += "0";
-  }
-
-  return new BigDecimal(resultString);
-}
+// bignumber.js defaults, which every `.div` in this indexer relies on: results
+// keep 20 decimal places, rounded half up. The fast paths below reproduce that
+// rounding exactly, so they return the same values as the `.div` they replace.
+const DIV_DP = 20;
+const ROUND_HALF_UP = BigDecimal.ROUND_HALF_UP;
 
 // return 0 if denominator is 0 in division
 export function safeDiv(amount0: BigDecimal, amount1: BigDecimal): BigDecimal {
-  if (amount1.eq(ZERO_BD)) {
+  if (amount1.isZero()) {
     return ZERO_BD;
   } else {
     return amount0.div(amount1);
   }
+}
+
+/**
+ * `a.times(b)`, skipping the multiplication when either side is zero.
+ * Unpriced tokens have derivedETH 0, so many USD values are products with 0.
+ */
+export function times(a: BigDecimal, b: BigDecimal): BigDecimal {
+  return a.isZero() || b.isZero() ? ZERO_BD : a.times(b);
+}
+
+/**
+ * `value.div(10^places)` without long division: shifting the decimal point is
+ * exact, then rounding to 20 places matches what `.div` would return.
+ */
+export function divByPowerOfTen(value: BigDecimal, places: number): BigDecimal {
+  return value.shiftedBy(-places).decimalPlaces(DIV_DP, ROUND_HALF_UP);
+}
+
+/** `value.div(2)`, computed as an exact halving rounded like `.div`. */
+export function half(value: BigDecimal): BigDecimal {
+  return value.times(0.5).decimalPlaces(DIV_DP, ROUND_HALF_UP);
 }
 
 // Cap BigDecimal precision at 40 decimal places. Postgres btree indexes have a
@@ -25,8 +42,16 @@ export function safeDiv(amount0: BigDecimal, amount1: BigDecimal): BigDecimal {
 // derivedETH on a manipulated oracle pool) can fail INSERTs on indexed numeric
 // columns. Apply at indexed-column writes and at price-source values that
 // propagate downstream (derivedETH, ethPriceUSD).
+//
+// Most values already fit and are returned as they are. The rest are rounded
+// in place, which gives the same value as the old `toFixed(40)` string
+// round-trip (both round half up) without building and parsing a string.
 export function sanitizeBD(value: BigDecimal): BigDecimal {
-  return new BigDecimal(value.toFixed(40));
+  const dp = value.decimalPlaces();
+  if (dp === null || dp <= 40) {
+    return value;
+  }
+  return value.decimalPlaces(40, ROUND_HALF_UP);
 }
 
 export function hexToBigInt(hex: string): bigint {
@@ -90,7 +115,8 @@ export function convertTokenToDecimal(
   if (exchangeDecimals == ZERO_BI) {
     return new BigDecimal(tokenAmount.toString());
   }
-  return new BigDecimal(tokenAmount.toString()).div(
-    exponentToBigDecimal(exchangeDecimals)
+  return divByPowerOfTen(
+    new BigDecimal(tokenAmount.toString()),
+    Number(exchangeDecimals)
   );
 }
