@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       envio:
-        specifier: 3.17.0
-        version: 3.17.0
+        specifier: 3.17.1
+        version: 3.17.1
     devDependencies:
       '@types/node':
         specifier: 24.12.2
@@ -970,8 +970,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  envio-darwin-arm64@3.17.0:
-    resolution: {integrity: sha512-VvKVPZ29cL3HvbXGnt54sVduaYnltQioVEb491qqPuyz8J2FPthiOMwuVUs3pyKGb30mh93ZIVToMHWldWuqMg==}
+  envio-darwin-arm64@3.17.1:
+    resolution: {integrity: sha512-vUSfF66HJFbz/Qx9OtiUjajMx2XHXFkcWpxVP/MsqFkSa2Qzobbd6dQ6uy7pTQrN2rkYDG5C1IvrdAtDiGdP/Q==}
     cpu: [arm64]
     os: [darwin]
 
@@ -980,8 +980,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  envio-darwin-x64@3.17.0:
-    resolution: {integrity: sha512-Oz+Nm+tRr4zyS6WqgK6YOPzasOkVfEM8g4WnDuA03UEH/zeFyokFw43PllusGed14q2Mxf0ATf1jhnnimTM3hg==}
+  envio-darwin-x64@3.17.1:
+    resolution: {integrity: sha512-08sx4UHSLclFZzzS2wki+QoYtixR0gxgkmjghTQ0ZOY7HH1HT5JbqAHjVM2/hsOkJVYXPX9wt+U0CIWX3Li1eQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -990,14 +990,14 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  envio-linux-arm64@3.17.0:
-    resolution: {integrity: sha512-qMM1lK6pQEeKdjgQE7TSbDHqK7r/haxHBrO14yk3TyzTL/IzHSB9rSAi75viHXQTlG0V0aTmWT1ix1LlbGW95Q==}
+  envio-linux-arm64@3.17.1:
+    resolution: {integrity: sha512-j/vlWqFWNXTvOiAQ2GE5kb7FxfC0JebcHSMJQlp2APxdZTuVSq+K9WDawBXNCDa+reo1//9BhdJzQ+xeNtW//g==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  envio-linux-x64-musl@3.17.0:
-    resolution: {integrity: sha512-+GuM7u8aM7nHUHzaW+uewa9YbC3K9UcCYKW28rztDu6oezZVkAhjV1TNmWdmnQNmKu38GMoNmVGrjuSgSBmAoA==}
+  envio-linux-x64-musl@3.17.1:
+    resolution: {integrity: sha512-a2Popl4s7pasxf142ux0go6E1+SMksgH/lAZnz+FUE7AuS5WuLK/Bu9TboAMJFKQrS/RRIUkA26zM7H5hm43iQ==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
@@ -1007,8 +1007,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  envio-linux-x64@3.17.0:
-    resolution: {integrity: sha512-kLxJq5qb7qAouQrXpMRTVPJ9BqrY6Qr7v1e6pzQBLQkPJUeA5b8RiNmR+4lsmclarVRLkBnoWNacSn3needr+A==}
+  envio-linux-x64@3.17.1:
+    resolution: {integrity: sha512-cxaxXRxl2rL+0g4GfYIp2KVkI6k4aBZL7axPmabYy3a8jUkCFxdRDmkHM7hSzcylceDOjy49Gz28rfhy4r+iWg==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
@@ -1017,8 +1017,8 @@ packages:
     resolution: {integrity: sha512-xyo0mJc/+lAP0Og36Mdbn1m5xHXJXYjZ5E8s4eJQwjS3FFsEi8Z7lQc6qCHZjYtdRdGoGK2RLBMdEh5t+TRvrA==}
     hasBin: true
 
-  envio@3.17.0:
-    resolution: {integrity: sha512-l0/5V0wZV73H9ImFf+8evHya3wPbqmbsUQvIK3cZKYnZxloMfrulUn9/ona3GtmwAJC2LDfyOLNg+oXMkApUAw==}
+  envio@3.17.1:
+    resolution: {integrity: sha512-ewPFsB90cHdckeFci/G/GPd1vNIpWm6AEXsj/ebRXq1yXANO/evquP3zOD4Lt1hbR6r3r5g/aSpcIjqwqBftYg==}
     engines: {node: '>=22.15.0'}
     hasBin: true
 
@@ -2568,28 +2568,28 @@ snapshots:
   envio-darwin-arm64@2.24.0:
     optional: true
 
-  envio-darwin-arm64@3.17.0:
+  envio-darwin-arm64@3.17.1:
     optional: true
 
   envio-darwin-x64@2.24.0:
     optional: true
 
-  envio-darwin-x64@3.17.0:
+  envio-darwin-x64@3.17.1:
     optional: true
 
   envio-linux-arm64@2.24.0:
     optional: true
 
-  envio-linux-arm64@3.17.0:
+  envio-linux-arm64@3.17.1:
     optional: true
 
-  envio-linux-x64-musl@3.17.0:
+  envio-linux-x64-musl@3.17.1:
     optional: true
 
   envio-linux-x64@2.24.0:
     optional: true
 
-  envio-linux-x64@3.17.0:
+  envio-linux-x64@3.17.1:
     optional: true
 
   envio@2.24.0(typescript@5.2.2):
@@ -2613,7 +2613,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  envio@3.17.0:
+  envio@3.17.1:
     dependencies:
       '@rescript/runtime': 12.3.1
       bignumber.js: 9.3.1
@@ -2622,11 +2622,11 @@ snapshots:
       express: 4.22.3
       rescript-schema: 9.5.1
     optionalDependencies:
-      envio-darwin-arm64: 3.17.0
-      envio-darwin-x64: 3.17.0
-      envio-linux-arm64: 3.17.0
-      envio-linux-x64: 3.17.0
-      envio-linux-x64-musl: 3.17.0
+      envio-darwin-arm64: 3.17.1
+      envio-darwin-x64: 3.17.1
+      envio-linux-arm64: 3.17.1
+      envio-linux-x64: 3.17.1
+      envio-linux-x64-musl: 3.17.1
     transitivePeerDependencies:
       - rescript
       - supports-color
