@@ -3,11 +3,6 @@ name: uniswap-v4-indexer
 disable_default_cross_chain: true
 storage:
   postgres: true
-  # ClickHouse is off for now: on Envio Cloud every ClickHouse insert waits on
-  # the cross-region Keeper (~2 s per batch), which capped sync speed.
-  # To turn it back on, set this to true and the entities' @storage back to
-  # clickhouse: true (TokenWhitelistPools stays false).
-  clickhouse: false
 contracts:
   - name: PoolManager
     events:
