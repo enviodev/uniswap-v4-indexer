@@ -41,27 +41,23 @@ contracts:
           transaction_fields:
             - "hash"
             - "from"
+# Chain order sets the worker layout. With ENVIO_PG_MAX_CONNECTIONS >= 8 envio
+# splits chains across 4 worker processes, dealing them in this order and
+# reversing direction each pass (worker 1, 2, 3, 4, 4, 3, 2, 1, 1, ...). A chain
+# runs on one worker thread, so Base, with ~58% of all events, is first and
+# shares its worker only with chains in positions 8, 9, 16 and 17, which are
+# nearly empty. Handled events per chain (HyperSync sample, 2026-11-20):
+#   Base ~1.05B, Robinhood ~250M, BSC ~240M, Unichain ~77M, Ethereum ~49M,
+#   World Chain ~34M, Polygon ~31M, Arbitrum ~30M, Monad ~29M, OP ~20M,
+#   Arc ~11M, Soneium ~10M, Avalanche ~4M, Ink ~2M, Celo, MegaETH, Zora and
+#   Linea < 1M each.
+#
+# start_block is each chain's first PoolManager event (or earlier). Nothing is
+# indexed before it, and envio measures sync progress from start_block, so a
+# chain whose v4 deployment came late in its history no longer looks half done.
 chains:
-  - id: 1
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e
-      - name: PoolManager
-        address:
-          - "0x000000000004444c5dc75cB358380D2e3dE08A90"
-  - id: 10
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
-      - name: PoolManager
-        address:
-          - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
   - id: 8453
-    start_block: 0
+    start_block: 25350988
     contracts:
       - name: PositionManager
         address:
@@ -69,17 +65,53 @@ chains:
       - name: PoolManager
         address:
           - 0x498581ff718922c3f8e6a244956af099b2652b2b
-  - id: 42161
-    start_block: 0
+  - id: 4663
+    start_block: 9070
     contracts:
       - name: PositionManager
         address:
-          - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
+          - 0x58daec3116aae6d93017baaea7749052e8a04fa7
       - name: PoolManager
         address:
-          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+          - 0x8366a39cc670b4001a1121b8f6a443a643e40951
+  - id: 56
+    start_block: 45970610
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x7a4a5c919ae2541aed11041a1aeee68f1287f95b
+      - name: PoolManager
+        address:
+          - 0x28e2ea090877bf75740558f6bfb36a5ffee9e9df
+  - id: 130
+    start_block: 25565
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x4529a01c7a0410167c5740c487a8de60232617bf
+      - name: PoolManager
+        address:
+          - 0x1F98400000000000000000000000000000000004
+  - id: 1
+    start_block: 21688329
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e
+      - name: PoolManager
+        address:
+          - "0x000000000004444c5dc75cB358380D2e3dE08A90"
+  - id: 480
+    start_block: 9111872
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xc585e0f504613b5fbf874f21af14c65260fb41fa
+      - name: PoolManager
+        address:
+          - 0xb1860d529182ac3bc1f51fa2abd56662b7d13f33
   - id: 137
-    start_block: 0
+    start_block: 66980384
     contracts:
       - name: PositionManager
         address:
@@ -87,6 +119,107 @@ chains:
       - name: PoolManager
         address:
           - 0x67366782805870060151383f4bbff9dab53e5cd6
+  - id: 42220
+    start_block: 43985160
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xf7965f3981e4d5bc383bfbcb61501763e9068ca9
+      - name: PoolManager
+        address:
+          - 0x288dc841a52fca2707c6947b3a777c5e56cd87bc
+  - id: 59144
+    start_block: 28974969
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xddcad5775b2816a87495f207731b3571d7ee3c76
+      - name: PoolManager
+        address:
+          - 0x248083fb965359d82b06c1f5322480dcfc1ad857
+  - id: 42161
+    start_block: 297842872
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xd88f38f930b7952f2db2432cb002e7abbf3dd869
+      - name: PoolManager
+        address:
+          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  - id: 143
+    start_block: 29255895
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016
+      - name: PoolManager
+        address:
+          - 0x188d586ddcf52439676ca21a244753fa19f9ea8e
+  - id: 10
+    start_block: 130947675
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x3C3Ea4B57a46241e54610e5f022e5c45859A1017
+      - name: PoolManager
+        address:
+          - 0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3
+  - id: 5042
+    start_block: 1948011
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x6049c9a0e26405c0985f9e3685c87d0ae917f82b
+      - name: PoolManager
+        address:
+          - 0x8366a39cc670b4001a1121b8f6a443a643e40951
+  - id: 1868
+    hypersync_config:
+      url: https://1868.hypersync.xyz
+    start_block: 2473300
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
+      - name: PoolManager
+        address:
+          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
+  - id: 43114
+    start_block: 56195376
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xb74b1f14d2754acfcbbe1a221023a5cf50ab8acd
+      - name: PoolManager
+        address:
+          - 0x06380c0e0912312b5150364b9dc4542ba0dbbc85
+  - id: 7777777
+    start_block: 25434534
+    contracts:
+      - name: PositionManager
+        address:
+          - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
+      - name: PoolManager
+        address:
+          - 0x0575338e4c17006ae181b47900a84404247ca30f
+  - id: 4326
+    start_block: 7009653
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x9ae0921e981aaa7308f176f8d4f9129b9247c89d
+      - name: PoolManager
+        address:
+          - 0xacb7e78fa05d562e0a5d3089ec896d57d057d38e
+  - id: 57073
+    start_block: 4580556
+    contracts:
+      - name: PositionManager
+        address:
+          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
+      - name: PoolManager
+        address:
+          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
   # Blast (81457) shut down in Nov 2026; HyperSync stopped advancing. Kept for reference.
   # - id: 81457
   #   start_block: 0
@@ -97,122 +230,3 @@ chains:
   #     - name: PoolManager
   #       address:
   #         - 0x1631559198a9e474033433b2958dabc135ab6446
-  - id: 7777777
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xf66c7b99e2040f0d9b326b3b7c152e9663543d63
-      - name: PoolManager
-        address:
-          - 0x0575338e4c17006ae181b47900a84404247ca30f
-  - id: 57073
-    start_block: 4580556
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
-      - name: PoolManager
-        address:
-          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-  - id: 1868
-    hypersync_config:
-      url: https://1868.hypersync.xyz
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x1b35d13a2e2528f192637f14b05f0dc0e7deb566
-      - name: PoolManager
-        address:
-          - 0x360e68faccca8ca495c1b759fd9eee466db9fb32
-  - id: 43114
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xb74b1f14d2754acfcbbe1a221023a5cf50ab8acd
-      - name: PoolManager
-        address:
-          - 0x06380c0e0912312b5150364b9dc4542ba0dbbc85
-  - id: 56
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x7a4a5c919ae2541aed11041a1aeee68f1287f95b
-      - name: PoolManager
-        address:
-          - 0x28e2ea090877bf75740558f6bfb36a5ffee9e9df
-  - id: 130
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x4529a01c7a0410167c5740c487a8de60232617bf
-      - name: PoolManager
-        address:
-          - 0x1F98400000000000000000000000000000000004
-  - id: 480
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xc585e0f504613b5fbf874f21af14c65260fb41fa
-      - name: PoolManager
-        address:
-          - 0xb1860d529182ac3bc1f51fa2abd56662b7d13f33
-  - id: 143
-    start_block: 0
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016
-      - name: PoolManager
-        address:
-          - 0x188d586ddcf52439676ca21a244753fa19f9ea8e
-  - id: 59144
-    start_block: 28974969
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xddcad5775b2816a87495f207731b3571d7ee3c76
-      - name: PoolManager
-        address:
-          - 0x248083fb965359d82b06c1f5322480dcfc1ad857
-  - id: 42220
-    start_block: 43985160
-    contracts:
-      - name: PositionManager
-        address:
-          - 0xf7965f3981e4d5bc383bfbcb61501763e9068ca9
-      - name: PoolManager
-        address:
-          - 0x288dc841a52fca2707c6947b3a777c5e56cd87bc
-  - id: 4326
-    start_block: 7009653
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x9ae0921e981aaa7308f176f8d4f9129b9247c89d
-      - name: PoolManager
-        address:
-          - 0xacb7e78fa05d562e0a5d3089ec896d57d057d38e
-  - id: 4663
-    start_block: 9070
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x58daec3116aae6d93017baaea7749052e8a04fa7
-      - name: PoolManager
-        address:
-          - 0x8366a39cc670b4001a1121b8f6a443a643e40951
-  - id: 5042
-    start_block: 1948011
-    contracts:
-      - name: PositionManager
-        address:
-          - 0x6049c9a0e26405c0985f9e3685c87d0ae917f82b
-      - name: PoolManager
-        address:
-          - 0x8366a39cc670b4001a1121b8f6a443a643e40951
